@@ -1,0 +1,133 @@
+
+import { ClientFormValues } from "../types";
+
+export function getSampleFormData(): ClientFormValues {
+  return {
+    applicant: "John Michael Smith",
+    co_applicant: "Sarah Jane Smith",
+    consultant_name: "CON002 - Jane Doe",
+    processor_name: "CON005 - Sarah Wilson",
+    total_debt: 125000,
+    payoff_amount: 85000,
+    status: "Open",
+    entry_date: new Date().toISOString().split('T')[0],
+    applicant_contact: "(555) 123-4567",
+    applicant_email: "john.smith@email.com",
+    coapplicant_contact: "(555) 987-6543",
+    coapplicant_email: "sarah.smith@email.com",
+    co_applicant_total_debt: 55000,
+    
+    // Name breakdown fields
+    applicant_title: "Mr.",
+    applicant_first_name: "John",
+    applicant_mi: "M",
+    applicant_last_name: "Smith",
+    applicant_suffix: "",
+    applicant_maiden_name: "",
+    applicant_is_consultant: false,
+    
+    // Address fields
+    applicant_address: "123 Main Street",
+    applicant_city: "Springfield",
+    applicant_county: "Clark County",
+    applicant_state: "California",
+    applicant_zip_code: "90210",
+    applicant_time_at_address: "5 years",
+    applicant_previous_address: "456 Oak Avenue",
+    applicant_previous_address_time: "3 years",
+    
+    // Contact fields
+    applicant_home_phone: "(555) 123-4567",
+    applicant_other_phone: "(555) 123-9999",
+    applicant_fax: "(555) 123-4568",
+    
+    // Employment fields
+    applicant_employment_status: "employed",
+    applicant_business_owner: "no",
+    applicant_employer_name: "ABC Corporation",
+    applicant_employer_address: "789 Business Blvd",
+    applicant_employer_city: "Springfield",
+    applicant_employer_state: "California",
+    applicant_employer_zip: "90210",
+    applicant_occupation: "Software Engineer",
+    applicant_monthly_salary: 8500,
+    applicant_employer_phone: "(555) 555-0123",
+    applicant_start_date: "2020-01-14",
+    applicant_end_date: "2025-06-11",
+    applicant_additional_income: 1200,
+    applicant_additional_income_source: "Freelance Consulting",
+    applicant_supervisor: "Robert Johnson",
+    
+    // Demographics
+    applicant_dob: "1985-03-15",
+    applicant_ssn: "123-45-6789",
+    applicant_birth_place: "California",
+    applicant_race: "White",
+    applicant_marital_status: "Married",
+    applicant_anniversary: "2010-06-20",
+    applicant_spouse_name: "Sarah Jane Smith",
+    applicant_spouse_occupation: "Teacher",
+    applicant_dependents_count: 2,
+    
+    // Co-applicant fields
+    coapplicant_title: "Mrs.",
+    coapplicant_first_name: "Sarah",
+    coapplicant_mi: "J",
+    coapplicant_last_name: "Smith",
+    coapplicant_suffix: "",
+    coapplicant_maiden_name: "Johnson",
+    coapplicant_is_consultant: false,
+    coapplicant_address: "123 Main Street",
+    coapplicant_city: "Springfield",
+    coapplicant_county: "Clark County",
+    coapplicant_state: "California",
+    coapplicant_zip_code: "90210",
+    coapplicant_time_at_address: "5 years",
+    coapplicant_previous_address: "456 Oak Avenue",
+    coapplicant_previous_address_time: "3 years",
+    coapplicant_home_phone: "(555) 987-6543",
+    coapplicant_other_phone: "(555) 987-9999",
+    coapplicant_fax: "(555) 987-6544",
+    coapplicant_employment_status: "employed",
+    coapplicant_business_owner: "no",
+    coapplicant_employer_name: "Springfield Elementary",
+    coapplicant_employer_address: "321 School Street",
+    coapplicant_employer_city: "Springfield",
+    coapplicant_employer_state: "California",
+    coapplicant_employer_zip: "90210",
+    coapplicant_occupation: "Elementary Teacher",
+    coapplicant_monthly_salary: 4500,
+    coapplicant_employer_phone: "(555) 555-0456",
+    coapplicant_start_date: "2018-08-20",
+    coapplicant_additional_income: 800,
+    coapplicant_additional_income_source: "Tutoring",
+    coapplicant_dob: "1987-07-22",
+    coapplicant_ssn: "987-65-4321",
+    coapplicant_birth_place: "Texas",
+    coapplicant_race: "Hispanic",
+    coapplicant_marital_status: "Married",
+    coapplicant_anniversary: "2010-06-20",
+    coapplicant_spouse_name: "John Michael Smith",
+    coapplicant_spouse_occupation: "Software Engineer",
+    coapplicant_dependents_count: 2,
+    
+    // Initialize empty household members arrays
+    household_members: [],
+    coapplicant_household_members: [],
+    
+    // Initialize empty liabilities array
+    liabilities: [],
+    
+    // Underwriting fields
+    underwriting_address: "",
+    underwriting_city: "",
+    underwriting_state: "",
+    underwriting_client_id: "",
+    underwriting_credit_scores: "",
+    underwriting_cnh_option: "",
+    underwriting_tud_option: "",
+    underwriting_terms: "",
+    underwriting_programs: "",
+    underwriting_notes: "",
+  };
+}

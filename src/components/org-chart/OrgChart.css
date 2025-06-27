@@ -1,0 +1,47 @@
+
+.org-chart-container {
+  background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
+  border-radius: 8px;
+  min-height: 400px;
+}
+
+.org-node {
+  position: relative;
+}
+
+.org-connection {
+  z-index: 1;
+}
+
+.org-children {
+  z-index: 2;
+}
+
+/* Smooth animations for expand/collapse */
+.org-node .org-children {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .org-children {
+    flex-direction: column;
+    space-x: 0;
+    gap: 1rem;
+  }
+  
+  .org-connection .relative {
+    display: none; /* Hide horizontal lines on mobile */
+  }
+}

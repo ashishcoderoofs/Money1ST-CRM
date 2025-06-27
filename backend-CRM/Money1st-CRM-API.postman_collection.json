@@ -1,0 +1,438 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Money1st CRM API",
+		"description": "Complete API collection for Money1st CRM Backend with authentication, user management, and admin operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Login - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('jwt_token', response.token);",
+									"    pm.test('Login successful', () => {",
+									"        pm.expect(response.success).to.be.true;",
+									"        pm.expect(response.token).to.not.be.empty;",
+									"    });",
+									"} else {",
+									"    pm.test('Login failed', () => {",
+									"        pm.expect.fail('Login failed with status: ' + pm.response.code);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@money1st.com\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Login with admin credentials. Sets JWT token automatically."
+					}
+				},
+				{
+					"name": "Login - Field Builder",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john.doe@money1st.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "profile"]
+						},
+						"description": "Get current user's profile information"
+					}
+				},
+				{
+					"name": "Register New User (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"consultantId\": \"CON003\",\n    \"entryDate\": \"2025-06-27\",\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\",\n    \"email\": \"test.user@money1st.com\",\n    \"password\": \"password123\",\n    \"role\": \"Field Trainer\",\n    \"mobile\": \"+1234567892\",\n    \"address\": \"789 Test Ave\",\n    \"city\": \"Test City\",\n    \"state\": \"TX\",\n    \"zipCode\": \"12345\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👥 User Management",
+			"item": [
+				{
+					"name": "List All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users"]
+						}
+					}
+				},
+				{
+					"name": "List Users with Pagination",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users?page=1&limit=5",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Search Users by Role",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users?role=Field Builder",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users"],
+							"query": [
+								{
+									"key": "role",
+									"value": "Field Builder"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Search Users by Name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users?search=john",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users"],
+							"query": [
+								{
+									"key": "search",
+									"value": "john"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Specific User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/USER_ID_HERE",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", "USER_ID_HERE"]
+						},
+						"description": "Replace USER_ID_HERE with actual user ID"
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"position\": \"Senior Field Builder\",\n    \"title\": \"Mr.\",\n    \"mobile\": \"+1234567899\",\n    \"workPhone\": \"+1234567800\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/USER_ID_HERE",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", "USER_ID_HERE"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👑 Admin Operations",
+			"item": [
+				{
+					"name": "Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/dashboard/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "dashboard", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Admin User List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"]
+						}
+					}
+				},
+				{
+					"name": "Create User (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"consultantId\": \"CON004\",\n    \"entryDate\": \"2025-06-27\",\n    \"firstName\": \"Admin\",\n    \"lastName\": \"Created\",\n    \"email\": \"admin.created@money1st.com\",\n    \"password\": \"password123\",\n    \"role\": \"Sr. BMA\",\n    \"mobile\": \"+1234567893\",\n    \"address\": \"456 Admin St\",\n    \"city\": \"Admin City\",\n    \"state\": \"AC\",\n    \"zipCode\": \"54321\",\n    \"position\": \"Senior Business Associate\",\n    \"title\": \"Ms.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"]
+						}
+					}
+				},
+				{
+					"name": "Bulk Update Users",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userIds\": [\"USER_ID_1\", \"USER_ID_2\"],\n    \"updates\": {\n        \"position\": \"Updated via Bulk\",\n        \"status\": \"Active\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/bulk",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", "bulk"]
+						},
+						"description": "Replace USER_ID_1 and USER_ID_2 with actual user IDs"
+					}
+				},
+				{
+					"name": "Toggle User Status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/USER_ID_HERE/toggle-status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", "USER_ID_HERE", "toggle-status"]
+						},
+						"description": "Toggle between Active/Inactive status"
+					}
+				},
+				{
+					"name": "Delete User (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/USER_ID_HERE",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", "USER_ID_HERE"]
+						},
+						"description": "Permanently delete a user (Admin only)"
+					}
+				}
+			]
+		},
+		{
+			"name": "🔍 Testing & Validation",
+			"item": [
+				{
+					"name": "Test Invalid Login",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"invalid@email.com\",\n    \"password\": \"wrongpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Should return 401 Unauthorized"
+					}
+				},
+				{
+					"name": "Test Invalid Registration Data",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"consultantId\": \"\",\n    \"entryDate\": \"invalid-date\",\n    \"firstName\": \"\",\n    \"email\": \"invalid-email\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Should return 400 Bad Request with validation errors"
+					}
+				},
+				{
+					"name": "Test Access Without Token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users"]
+						},
+						"description": "Should return 401 - Access denied"
+					}
+				}
+			]
+		},
+		{
+			"name": "🏥 System Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Check server health and uptime"
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,134 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Money 1st Financial CRM Design System */
+
+@layer base {
+  :root {
+    --background: 210 40% 98%; /* Light navy-tinted background */
+    --foreground: 210 84% 16%; /* Navy text */
+
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 210 84% 16%; /* Navy text on cards */
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 84% 16%;
+
+    --primary: 210 84% 31%; /* #0e4d92 - Navy blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 51 100% 50%; /* #ffd700 - Gold */
+    --secondary-foreground: 210 84% 16%;
+
+    --muted: 210 40% 95%;
+    --muted-foreground: 210 20% 50%;
+
+    --accent: 51 100% 50%; /* Gold accent */
+    --accent-foreground: 210 84% 16%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 40% 85%;
+    --input: 210 40% 85%;
+    --ring: 210 84% 31%; /* Navy focus ring */
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 210 84% 16%;
+    --sidebar-primary: 210 84% 31%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 95%;
+    --sidebar-accent-foreground: 210 84% 16%;
+    --sidebar-border: 210 40% 85%;
+    --sidebar-ring: 210 84% 31%;
+  }
+
+  .dark {
+    --background: 210 84% 16%; /* Dark navy */
+    --foreground: 210 40% 98%;
+
+    --card: 210 70% 20%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 210 70% 20%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 84% 31%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 51 100% 50%;
+    --secondary-foreground: 210 84% 16%;
+
+    --muted: 210 70% 20%;
+    --muted-foreground: 210 40% 65%;
+
+    --accent: 51 100% 50%;
+    --accent-foreground: 210 84% 16%;
+
+    --destructive: 0 62% 54%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 50% 30%;
+    --input: 210 50% 30%;
+    --ring: 210 84% 31%;
+    
+    --sidebar-background: 210 84% 16%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 84% 31%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 70% 20%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 210 50% 30%;
+    --sidebar-ring: 210 84% 31%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: Arial, sans-serif;
+  }
+}
+
+/* Money 1st Financial theme utilities */
+@layer utilities {
+  .text-m1f-primary {
+    color: #0e4d92;
+  }
+  
+  .text-m1f-gold {
+    color: #ffd700;
+  }
+  
+  .bg-m1f-light {
+    background-color: #f8f9ff;
+  }
+  
+  .bg-m1f-card {
+    background-color: #ffffff;
+  }
+  
+  .bg-m1f-primary {
+    background-color: #0e4d92;
+  }
+  
+  .bg-m1f-gold {
+    background-color: #ffd700;
+  }
+  
+  .border-m1f-primary {
+    border-color: #0e4d92;
+  }
+  
+  .shadow-m1f {
+    box-shadow: 0 4px 12px rgba(14, 77, 146, 0.15);
+  }
+}
