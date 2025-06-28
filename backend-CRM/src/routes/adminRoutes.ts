@@ -8,20 +8,10 @@ import {
   updateUserRole,
   deleteMultipleUsers,
   getUserActivity,
-  resetUserPassword,
-  getPermissions
+  resetUserPassword
 } from '../controllers/adminController';
-import {
-  getPagePermissions,
-  createPagePermission,
-  toggleRolePermission,
-  initializeDefaultPages,
-  getUserPagePermissions,
-  deletePagePermission
-} from '../controllers/pagePermissionController';
 import { authenticate, authorizeAdmin } from '../middleware/auth';
 import { validateRegistration, validateBulkUpdate } from '../middleware/validation';
-import { validateObjectId, validateRequiredFields, validateQueryParams } from '../middleware/paramValidation';
 
 const router = Router();
 
@@ -269,7 +259,7 @@ router.delete('/users/bulk', deleteMultipleUsers);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponse'
  */
-router.patch('/users/:id/toggle-status', validateObjectId('id'), toggleUserStatus);
+router.patch('/users/:id/toggle-status', toggleUserStatus);
 
 /**
  * @swagger
@@ -305,7 +295,7 @@ router.patch('/users/:id/toggle-status', validateObjectId('id'), toggleUserStatu
  *             schema:
  *               $ref: '#/components/schemas/ApiResponse'
  */
-router.patch('/users/:id/role', validateObjectId('id'), validateRequiredFields(['role']), updateUserRole);
+router.patch('/users/:id/role', updateUserRole);
 
 /**
  * @swagger
@@ -342,186 +332,6 @@ router.patch('/users/:id/role', validateObjectId('id'), validateRequiredFields([
  *             schema:
  *               $ref: '#/components/schemas/ApiResponse'
  */
-router.patch('/users/:id/reset-password', validateObjectId('id'), resetUserPassword);
-
-/**
- * @swagger
- * /api/admin/permissions:
- *   get:
- *     summary: Get system permissions and role hierarchy (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Permissions and role hierarchy retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
- *                   properties:
- *                     roleHierarchy:
- *                       type: object
- *                       description: Role hierarchy with numeric levels
- *                     permissions:
- *                       type: object
- *                       description: Permissions for each role
- *                     currentUser:
- *                       type: object
- *                       properties:
- *                         role:
- *                           type: string
- *                         permissions:
- *                           type: array
- *                           items:
- *                             type: string
- *                         level:
- *                           type: number
- */
-router.get('/permissions', getPermissions);
-
-/**
- * @swagger
- * /api/admin/page-permissions:
- *   get:
- *     summary: Get all page permissions (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Page permissions retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       pageName:
- *                         type: string
- *                         example: Dashboard
- *                       rolePermissions:
- *                         type: object
- *                         properties:
- *                           Admin:
- *                             type: boolean
- *                           'Field Builder':
- *                             type: boolean
- *                           'Field Trainer':
- *                             type: boolean
- *                           'Sr. BMA':
- *                             type: boolean
- *                           BMA:
- *                             type: boolean
- *                           IBA:
- *                             type: boolean
- *   post:
- *     summary: Create or update page permission (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [pageName]
- *             properties:
- *               pageName:
- *                 type: string
- *                 example: Dashboard
- *               rolePermissions:
- *                 type: object
- *               description:
- *                 type: string
- *     responses:
- *       200:
- *         description: Page permission updated successfully
- *       201:
- *         description: Page permission created successfully
- */
-router.get('/page-permissions', getPagePermissions);
-router.post('/page-permissions', createPagePermission);
-
-/**
- * @swagger
- * /api/admin/page-permissions/{pageName}/toggle:
- *   patch:
- *     summary: Toggle role permission for a specific page (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: pageName
- *         required: true
- *         schema:
- *           type: string
- *         description: Page name
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [role]
- *             properties:
- *               role:
- *                 type: string
- *                 enum: [Admin, Field Builder, Field Trainer, Sr. BMA, BMA, IBA]
- *     responses:
- *       200:
- *         description: Role permission toggled successfully
- */
-router.patch('/page-permissions/:pageName/toggle', toggleRolePermission);
-
-/**
- * @swagger
- * /api/admin/page-permissions/initialize:
- *   post:
- *     summary: Initialize default page permissions (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Default pages initialized successfully
- */
-router.post('/page-permissions/initialize', initializeDefaultPages);
-
-/**
- * @swagger
- * /api/admin/page-permissions/{pageName}:
- *   delete:
- *     summary: Delete page permission (Admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: pageName
- *         required: true
- *         schema:
- *           type: string
- *         description: Page name
- *     responses:
- *       200:
- *         description: Page permission deleted successfully
- */
-router.delete('/page-permissions/:pageName', deletePagePermission);
+router.patch('/users/:id/reset-password', resetUserPassword);
 
 export default router;

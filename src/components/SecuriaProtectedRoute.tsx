@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Navigate, Link } from "react-router-dom";
@@ -11,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 export default function SecuriaProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole(user?.id ?? null);
+  const [canAccess, setCanAccess] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -19,17 +19,19 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
   // Check Securia access - Only Admin users are allowed
   useEffect(() => {
     if (!user) {
+      setCanAccess(false);
       return;
     }
     
     // Only Admin users can access Securia
     if (role === "Admin") {
-      console.log("Admin role detected for Securia access");
-      // For now, bypass the re-authentication and go straight to content
-      // TODO: Implement re-authentication if needed
-      setIsAuthenticated(true);
+      console.log("Admin role detected for Securia access - require re-authentication");
+      setCanAccess(true);
+      // Don't bypass authentication - require re-auth for security
+      setIsAuthenticated(false);
     } else {
       console.log("Non-admin role detected, denying Securia access");
+      setCanAccess(false);
       setIsAuthenticated(false);
     }
   }, [user, role]);
@@ -48,18 +50,66 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
     setIsVerifying(true);
     
     try {
-      // For MongoDB backend, we'll implement re-authentication later
-      // For now, just validate that the email matches and grant access
-      if (email.trim() === user?.email && password.trim().length >= 6) {
-        toast({
-          title: "Success",
-          description: "Securia access granted",
-        });
-        setIsAuthenticated(true);
+      // Re-authenticate against main CRM auth system to verify identity
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const endpoint = `${apiUrl}/api/securia/reauth`;
+      
+      console.log("Making Securia reauth request to:", endpoint);
+      
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+      });
+
+      let data;
+      try {
+        // Check if response has content before trying to parse JSON
+        const text = await response.text();
+        if (text.trim()) {
+          data = JSON.parse(text);
+        } else {
+          data = { success: false, message: "Server returned empty response" };
+        }
+      } catch (jsonError) {
+        console.error("Failed to parse JSON response:", jsonError);
+        data = { success: false, message: "Invalid server response" };
+      }
+
+      if (response.ok && data.success) {
+        // Verify that the re-authenticated user matches the current user
+        if (data.user && data.user.email === user?.email) {
+          toast({
+            title: "Success",
+            description: "Securia access granted",
+          });
+          setIsAuthenticated(true);
+        } else {
+          toast({
+            title: "Error",
+            description: "Authentication failed. User mismatch.",
+            variant: "destructive",
+          });
+          setPassword("");
+        }
       } else {
+        // Handle different error status codes
+        let errorMessage = data.message || "Authentication failed";
+        if (response.status === 400) {
+          errorMessage = data.message || "Invalid credentials provided";
+        } else if (response.status === 401) {
+          errorMessage = "Invalid credentials or access denied";
+        } else if (response.status === 403) {
+          errorMessage = "Access forbidden - Admin role required";
+        } else if (response.status >= 500) {
+          errorMessage = "Server error - please try again later";
+        }
+        
         toast({
           title: "Error",
-          description: "Invalid credentials. Access denied.",
+          description: errorMessage,
           variant: "destructive",
         });
         setPassword("");
@@ -68,7 +118,7 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
       console.error("Securia authentication error:", error);
       toast({
         title: "Error", 
-        description: "Authentication failed. Please try again.",
+        description: "Network error. Please check your connection and try again.",
         variant: "destructive",
       });
       setPassword("");
@@ -77,7 +127,7 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
     }
   };
 
-  if (authLoading || roleLoading) {
+  if (authLoading || roleLoading || canAccess === null) {
     return <div className="p-8 text-center">Loading...</div>;
   }
 
@@ -85,8 +135,7 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
     return <Navigate to="/login" replace />;
   }
 
-  // Only Admin users can access Securia
-  if (role !== "Admin") {
+  if (!canAccess) {
     return (
       <div className="p-8 text-center">
         <Card className="max-w-md mx-auto">
