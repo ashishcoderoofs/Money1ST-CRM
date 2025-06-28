@@ -513,6 +513,16 @@ curl http://localhost:3000/health
 #   "timestamp": "2025-01-27T...",
 #   "uptime": "X seconds"
 # }
+
+# 4. Test file upload (requires authentication)
+curl -X POST http://localhost:3000/api/attachments/upload \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "files=@test.txt" \
+  -F "recordId=test123" \
+  -F "category=document"
+
+# 5. Access interactive documentation
+# Visit: http://localhost:3000/api-docs
 ```
 
 ## 📋 Next Steps
@@ -522,13 +532,23 @@ The backend is fully implemented and ready for production use. To get started:
 1. **Environment Setup**: Copy `.env.example` to `.env` and configure your values
 2. **Database**: Ensure MongoDB is running and accessible
 3. **Admin User**: Create first admin user via registration endpoint
-4. **🆕 API Documentation**: Explore endpoints at [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
-5. **Frontend Integration**: Connect your React frontend to these API endpoints
-6. **Deployment**: Follow the production checklist for deployment
+4. **🆕 File Storage**: Ensure proper permissions for `uploads/` directory
+5. **🆕 API Documentation**: Explore endpoints at [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+6. **Frontend Integration**: Connect your React frontend to these API endpoints
+7. **🆕 Page Permissions**: Initialize default page permissions via admin endpoint
+8. **Deployment**: Follow the production checklist for deployment
+
+## 📚 Additional Documentation
+
+- **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)**: Complete API reference with examples
+- **[ATTACHMENT_SYSTEM.md](./ATTACHMENT_SYSTEM.md)**: File attachment system implementation guide
+- **[PAGE_PERMISSIONS_GUIDE.md](./PAGE_PERMISSIONS_GUIDE.md)**: Page access permissions system guide
+- **[Swagger UI](http://localhost:3000/api-docs)**: Interactive API documentation (when server is running)
 
 ---
 
-**Last Updated**: June 2025  
+**Last Updated**: January 2025  
 **Status**: ✅ Production Ready  
+**Features**: Complete CRM Backend + File Attachments + Page Permissions  
 **TypeScript**: Fully typed with zero compilation errors  
-**🆕 Documentation**: Interactive Swagger/OpenAPI 3.0
+**🆕 Documentation**: Interactive Swagger/OpenAPI 3.0 + Comprehensive Guides
