@@ -19,7 +19,7 @@ export function useAttachments(recordId: string, category: string) {
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token');
+    return localStorage.getItem('authToken') || localStorage.getItem('token');
   };
 
   // Get auth headers

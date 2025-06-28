@@ -62,7 +62,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   if (roleLoading || (role && pageAccesses.some(p => p.accessQuery.isLoading))) {
     return (
       <div className="min-h-screen flex bg-m1f-card">
-        <aside className="w-60 bg-m1f-card px-4 py-8 border-r border-m1f-primary/20 text-m1f-primary hidden md:flex flex-col gap-8 shadow-m1f">
+        <aside className="w-60 bg-m1f-card px-4 py-8 border-r border-m1f-primary/20 text-m1f-primary flex flex-col gap-8 shadow-m1f">
           <Link to="/home" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-m1f-primary rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-m1f-gold font-black text-sm">$1</span>
@@ -84,7 +84,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex bg-m1f-card">
-      <aside className="w-60 bg-m1f-card px-4 py-8 border-r border-m1f-primary/20 text-m1f-primary hidden md:flex flex-col gap-8 shadow-m1f">
+      <aside className="w-60 bg-m1f-card px-4 py-8 border-r border-m1f-primary/20 text-m1f-primary flex flex-col gap-8 shadow-m1f">
         <Link to="/home" className="flex items-center gap-3">
           <div className="w-10 h-10 bg-m1f-primary rounded-lg flex items-center justify-center flex-shrink-0">
             <span className="text-m1f-gold font-black text-sm">$1</span>
@@ -130,6 +130,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="flex-1 min-h-screen bg-m1f-light flex flex-col">
+        {/* Mobile header - disabled since sidebar is always visible */}
+        {/* 
         <header className="md:hidden p-4 flex items-center justify-between border-b border-m1f-primary/20 bg-m1f-card">
           <Link to="/home" className="flex items-center gap-3">
             <div className="w-8 h-8 bg-m1f-primary rounded-lg flex items-center justify-center flex-shrink-0">
@@ -139,6 +141,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </Link>
           <LogoutButton />
         </header>
+        */}
         <section className="px-4 py-8 w-full flex-1">{children}</section>
       </main>
     </div>

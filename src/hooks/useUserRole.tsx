@@ -1,31 +1,30 @@
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type UserRole = "Admin" | "Field Builder" | "Field Trainer" | "Sr. BMA" | "BMA" | "IBA";
 
 export function useUserRole(userId: string | null) {
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (!userId) {
+    if (!userId || !user) {
       setRole(null);
       setLoading(false);
       return;
     }
     
-    setLoading(true);
-    supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single()
-      .then(({ data }) => {
-        setRole(data?.role as UserRole ?? null);
-        setLoading(false);
-      });
-  }, [userId]);
+    // Get role directly from the user object returned by authentication
+    if (user.role) {
+      setRole(user.role as UserRole);
+      setLoading(false);
+    } else {
+      setRole(null);
+      setLoading(false);
+    }
+  }, [userId, user]);
 
   return { role, loading };
 }

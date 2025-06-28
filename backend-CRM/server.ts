@@ -12,6 +12,7 @@ import morgan from 'morgan';
 import authRoutes from './src/routes/authRoutes';
 import userRoutes from './src/routes/userRoutes';
 import adminRoutes from './src/routes/adminRoutes';
+import attachmentRoutes from './src/routes/attachmentRoutes';
 
 // Import middleware
 import { errorHandler } from './src/middleware/errorHandler';
@@ -66,6 +67,7 @@ setupSwagger(app);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/attachments', attachmentRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
