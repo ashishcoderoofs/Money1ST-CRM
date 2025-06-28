@@ -2,6 +2,11 @@
 
 This document describes the file attachment system that replaces Supabase storage functionality with a backend API solution.
 
+## 📚 Interactive API Documentation
+
+**🔗 Swagger UI**: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+> Navigate to the "Attachments" section in Swagger for interactive testing of all file operations.
+
 ## Backend Components
 
 ### 1. Database Model (Attachment.ts)

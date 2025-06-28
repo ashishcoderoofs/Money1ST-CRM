@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
 export interface PagePermission {
@@ -15,22 +15,21 @@ export interface PagePermission {
 type UserRole = "Admin" | "Field Builder" | "Field Trainer" | "Sr. BMA" | "BMA" | "IBA";
 
 export function usePagePermissions() {
+  const { apiCall } = useAuth();
+  
   return useQuery({
     queryKey: ["page-permissions"],
     queryFn: async () => {
       console.log("Fetching page permissions...");
-      const { data, error } = await supabase
-        .from("page_permissions")
-        .select("*")
-        .order("page_name", { ascending: true });
-
-      if (error) {
-        console.error("Error fetching page permissions:", error);
-        throw error;
+      const response = await apiCall('/api/admin/permissions');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch page permissions');
       }
-
-      console.log("Fetched permissions:", data);
-      return data as PagePermission[];
+      
+      const data = await response.json();
+      console.log("Fetched permissions:", data.permissions);
+      return data.permissions as PagePermission[];
     },
     staleTime: 10 * 60 * 1000, // 10 minutes - longer stale time for better performance
   });
@@ -38,22 +37,21 @@ export function usePagePermissions() {
 
 export function useUpdatePagePermission() {
   const queryClient = useQueryClient();
+  const { apiCall } = useAuth();
   
   return useMutation({
     mutationFn: async ({ id, can_access }: { id: string; can_access: boolean }) => {
-      const { data, error } = await supabase
-        .from("page_permissions")
-        .update({ can_access })
-        .eq("id", id)
-        .select()
-        .single();
+      const response = await apiCall(`/api/admin/permissions/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ can_access })
+      });
 
-      if (error) {
-        console.error("Error updating page permission:", error);
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update permission');
       }
 
-      return data;
+      return response.json();
     },
     onSuccess: () => {
       // Only invalidate page-permissions query to prevent multiple notifications
@@ -79,6 +77,8 @@ export function useUpdatePagePermission() {
 }
 
 export function useUserPageAccess(userRole: UserRole | null, pageName: string) {
+  const { user, apiCall } = useAuth();
+  
   return useQuery({
     queryKey: ["user-page-access", userRole, pageName],
     queryFn: async () => {
@@ -95,61 +95,51 @@ export function useUserPageAccess(userRole: UserRole | null, pageName: string) {
         return true;
       }
       
-      // First check if the current user has overall system access
-      const { data: { user } } = await supabase.auth.getUser();
+      // Check if current user is authenticated and active
       if (!user) {
         console.log("No authenticated user");
         return false;
       }
 
-      const { data: userProfile, error: userError } = await supabase
-        .from("profiles")
-        .select("has_access")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (userError) {
-        console.error("Error checking user access:", userError);
-        return false;
-      }
-
-      // If user doesn't have system access, deny access regardless of page permissions
-      const hasAccess = userProfile?.has_access ?? true;
-      console.log(`User has system access: ${hasAccess}`);
-      
-      if (hasAccess === false) {
-        console.log("User system access is disabled");
+      // Check if user is active (assuming isActive field exists in user object)
+      if (user.status !== 'active') {
+        console.log("User is not active");
         return false;
       }
       
-      // Check page-specific permissions
-      const { data, error } = await supabase
-        .from("page_permissions")
-        .select("can_access")
-        .eq("page_name", pageName)
-        .eq("role_name", userRole)
-        .maybeSingle();
+      // Check page-specific permissions via API
+      try {
+        const response = await apiCall(`/api/admin/permissions/check?role=${userRole}&page=${pageName}`);
+        
+        if (!response.ok) {
+          console.error("Error checking page access");
+          // Fall back to default permissions on error
+          const defaultAccess = getDefaultPermission(userRole, pageName);
+          console.log(`Using default permission due to error: ${defaultAccess}`);
+          return defaultAccess;
+        }
 
-      if (error) {
+        const data = await response.json();
+        
+        // If specific permission found, use it
+        if (data.hasPermission !== undefined) {
+          const canAccess = data.hasPermission;
+          console.log(`Page access result: ${canAccess} for role ${userRole} on page ${pageName}`);
+          return canAccess;
+        }
+
+        // If no specific permission found, use default permissions based on role
+        console.log(`No permission record found for role ${userRole} on page ${pageName} - using defaults`);
+        const defaultAccess = getDefaultPermission(userRole, pageName);
+        console.log(`Using default permission for ${userRole} on ${pageName}: ${defaultAccess}`);
+        return defaultAccess;
+      } catch (error) {
         console.error("Error checking page access:", error);
         // Fall back to default permissions on error
         const defaultAccess = getDefaultPermission(userRole, pageName);
         console.log(`Using default permission due to error: ${defaultAccess}`);
         return defaultAccess;
       }
-
-      // If specific permission found, use it
-      if (data !== null) {
-        const canAccess = data.can_access;
-        console.log(`Page access result: ${canAccess} for role ${userRole} on page ${pageName}`);
-        return canAccess;
-      }
-
-      // If no specific permission found, use default permissions based on role
-      console.log(`No permission record found for role ${userRole} on page ${pageName} - using defaults`);
-      const defaultAccess = getDefaultPermission(userRole, pageName);
-      console.log(`Using default permission for ${userRole} on ${pageName}: ${defaultAccess}`);
-      return defaultAccess;
     },
     enabled: !!userRole,
     staleTime: 5 * 60 * 1000, // 5 minutes stale time

@@ -1,19 +1,18 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
 type UserRole = "Admin" | "Field Builder" | "Field Trainer" | "Sr. BMA" | "BMA" | "IBA";
 
 const pages = [
   "Dashboard",
-  "Securia", 
+  "Contacts",
+  "Deals",
+  "Tasks",
   "Reports",
-  "Organizational Chart",
-  "Branch Development",
-  "FNA Training",
-  "Admin",
-  "Analytics"
+  "User Management",
+  "Securia Access"
 ];
 
 const roles: UserRole[] = ["Admin", "Field Builder", "Field Trainer", "Sr. BMA", "BMA", "IBA"];
@@ -22,115 +21,114 @@ const roles: UserRole[] = ["Admin", "Field Builder", "Field Trainer", "Sr. BMA",
 const defaultPermissions: Record<UserRole, Record<string, boolean>> = {
   "Admin": {
     "Dashboard": true,
-    "Securia": true,
+    "Contacts": true,
+    "Deals": true,
+    "Tasks": true,
     "Reports": true,
-    "Organizational Chart": true,
-    "Branch Development": true,
-    "FNA Training": true,
-    "Admin": true,
-    "Analytics": true
+    "User Management": true,
+    "Securia Access": true
   },
   "Field Builder": {
     "Dashboard": true,
-    "Securia": true,
+    "Contacts": true,
+    "Deals": true,
+    "Tasks": true,
     "Reports": true,
-    "Organizational Chart": true,
-    "Branch Development": true,
-    "FNA Training": true,
-    "Admin": false,
-    "Analytics": true
+    "User Management": false,
+    "Securia Access": true
   },
   "Field Trainer": {
     "Dashboard": true,
-    "Securia": true,
+    "Contacts": true,
+    "Deals": true,
+    "Tasks": true,
     "Reports": true,
-    "Organizational Chart": true,
-    "Branch Development": true,
-    "FNA Training": true,
-    "Admin": false,
-    "Analytics": true
+    "User Management": false,
+    "Securia Access": false
   },
   "Sr. BMA": {
     "Dashboard": true,
-    "Securia": true,
-    "Reports": true,
-    "Organizational Chart": true,
-    "Branch Development": false,
-    "FNA Training": true,
-    "Admin": false,
-    "Analytics": true
+    "Contacts": true,
+    "Deals": true,
+    "Tasks": true,
+    "Reports": false,
+    "User Management": false,
+    "Securia Access": false
   },
   "BMA": {
     "Dashboard": true,
-    "Securia": false,
-    "Reports": true,
-    "Organizational Chart": true,
-    "Branch Development": false,
-    "FNA Training": true,
-    "Admin": false,
-    "Analytics": false
+    "Contacts": true,
+    "Deals": true,
+    "Tasks": true,
+    "Reports": false,
+    "User Management": false,
+    "Securia Access": false
   },
   "IBA": {
     "Dashboard": true,
-    "Securia": false,
-    "Reports": true,
-    "Organizational Chart": true,
-    "Branch Development": false,
-    "FNA Training": true,
-    "Admin": false,
-    "Analytics": false
+    "Contacts": true,
+    "Deals": true,
+    "Tasks": true,
+    "Reports": false,
+    "User Management": false,
+    "Securia Access": false
   }
 };
 
 export function usePopulatePermissions() {
   const queryClient = useQueryClient();
+  const { user, apiCall } = useAuth();
   
   return useMutation({
     mutationFn: async ({ forceRefresh = false }: { forceRefresh?: boolean } = {}) => {
       console.log("Starting permission population...");
+      console.log("User state:", user);
+      console.log("User authenticated:", !!user);
+      console.log("User role:", user?.role);
       
-      // Use service role for admin operations to bypass RLS
-      const { data: { user } } = await supabase.auth.getUser();
+      // Check if user is authenticated
       if (!user) {
+        console.error("Permission population failed: User not authenticated");
         throw new Error("User not authenticated");
       }
 
-      // Check user role first
-      const { data: userProfile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (!userProfile || userProfile.role !== 'Admin') {
+      // Check if user is admin
+      if (user.role !== 'Admin') {
+        console.error("Permission population failed: User is not admin. Current role:", user.role);
         throw new Error("Only administrators can populate permissions");
       }
 
       if (forceRefresh) {
         console.log("Force refresh: deleting existing permissions");
         // Delete existing permissions first
-        const { error: deleteError } = await supabase
-          .from("page_permissions")
-          .delete()
-          .neq("id", "00000000-0000-0000-0000-000000000000");
-
-        if (deleteError) {
-          console.error("Error deleting existing permissions:", deleteError);
-          // Continue anyway - might be due to RLS
+        try {
+          const response = await apiCall('/api/admin/permissions/reset', {
+            method: 'DELETE'
+          });
+          
+          if (!response.ok) {
+            console.error("Error deleting existing permissions");
+            // Continue anyway
+          }
+        } catch (error) {
+          console.error("Error deleting existing permissions:", error);
+          // Continue anyway
         }
       }
 
       // Check existing permissions
-      const { data: existing, error: checkError } = await supabase
-        .from("page_permissions")
-        .select("*");
-
-      if (checkError) {
-        console.error("Error checking existing permissions:", checkError);
+      let existingPermissions: any[] = [];
+      try {
+        const response = await apiCall('/api/admin/permissions');
+        if (response.ok) {
+          const data = await response.json();
+          existingPermissions = data.permissions || [];
+        }
+      } catch (error) {
+        console.error("Error checking existing permissions:", error);
         // Continue with empty array if we can't check
       }
 
-      const existingPermissions = existing || [];
       const expectedCount = pages.length * roles.length;
       
       console.log(`Found ${existingPermissions.length} existing permissions, expected ${expectedCount}`);
@@ -163,25 +161,25 @@ export function usePopulatePermissions() {
       if (permissionsToInsert.length > 0) {
         console.log("Inserting missing permissions:", permissionsToInsert);
 
-        // Insert permissions one by one to handle RLS issues better
-        const insertedPermissions = [];
-        for (const permission of permissionsToInsert) {
-          const { data, error } = await supabase
-            .from("page_permissions")
-            .insert([permission])
-            .select()
-            .single();
+        // Insert permissions via API
+        try {
+          const response = await apiCall('/api/admin/permissions/bulk', {
+            method: 'POST',
+            body: JSON.stringify({ permissions: permissionsToInsert })
+          });
 
-          if (error) {
-            console.error(`Error inserting permission for ${permission.role_name} on ${permission.page_name}:`, error);
-            // Continue with other permissions even if one fails
-          } else if (data) {
-            insertedPermissions.push(data);
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to insert permissions');
           }
-        }
 
-        console.log("Successfully inserted permissions:", insertedPermissions);
-        return [...existingPermissions, ...insertedPermissions];
+          const result = await response.json();
+          console.log("Successfully inserted permissions:", result);
+          return [...existingPermissions, ...(result.permissions || [])];
+        } catch (error) {
+          console.error("Error inserting permissions:", error);
+          throw error;
+        }
       }
 
       console.log("No missing permissions to insert");

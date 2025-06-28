@@ -2,7 +2,7 @@
 import LogoutButton from "./LogoutButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useUserPageAccess } from "@/hooks/usePagePermissions";
+import { useUserPagePermissions } from "@/hooks/usePagePermissionsAPI";
 import { usePopulatePermissions } from "@/hooks/usePopulatePermissions";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,55 +11,86 @@ import { useEffect, useMemo } from "react";
 
 const pages = [
   { to: "/home", label: "Home", pageName: "Home", requiresPermission: false },
-  { to: "/organizational-chart", label: "Organizational Chart", pageName: "Organizational Chart" },
   { to: "/dashboard", label: "Dashboard", pageName: "Dashboard" },
-  { to: "/securia", label: "Securia", pageName: "Securia" },
-  { to: "/analytics", label: "Analytics", pageName: "Analytics" },
-  { to: "/branch-development", label: "Branch Development", pageName: "Branch Development" },
-  { to: "/fna-training", label: "FNA Training", pageName: "FNA Training" },
+  { to: "/contacts", label: "Contacts", pageName: "Contacts" },
+  { to: "/deals", label: "Deals", pageName: "Deals" },
+  { to: "/tasks", label: "Tasks", pageName: "Tasks" },
   { to: "/reports", label: "Reports", pageName: "Reports" },
-  { to: "/admin", label: "Admin", pageName: "Admin" }
+  { to: "/admin", label: "Admin", pageName: "User Management" },
+  { to: "/securia", label: "Securia Access", pageName: "Securia Access" }
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole(user?.id ?? null);
   const location = useLocation();
   const populatePermissions = usePopulatePermissions();
 
-  // Get access permissions for each page that requires permission
-  const pageAccesses = pages.map(page => ({
-    ...page,
-    accessQuery: page.requiresPermission === false ? 
-      { isLoading: false, data: true } : 
-      useUserPageAccess(role, page.pageName)
-  }));
+  // Get user's page permissions from the API
+  const { data: userPermissions, isLoading: permissionsLoading, error: permissionsError } = useUserPagePermissions();
+
+  // Debug logging
+  console.log('Layout Debug:', {
+    role,
+    userPermissions,
+    permissionsLoading,
+    permissionsError,
+    authLoading,
+    roleLoading
+  });
 
   // Calculate accessible pages based on actual permission data
   const accessiblePages = useMemo(() => {
-    if (!role) return [];
+    console.log('Calculating accessible pages:', { role, userPermissions, permissionsLoading, permissionsError });
     
-    return pageAccesses.filter(page => {
-      // If permission data is loaded, use it
-      if (!page.accessQuery.isLoading && page.accessQuery.data !== undefined) {
-        return page.accessQuery.data === true;
+    if (!role) {
+      console.log('No role, returning empty array');
+      return [];
+    }
+    
+    // TEMPORARY: Always show all pages for Admin as fallback until API is working
+    if (role === 'Admin') {
+      console.log('Admin user detected, showing all pages');
+      return pages;
+    }
+    
+    // If permissions are still loading or error, use fallback logic
+    if (permissionsLoading || permissionsError) {
+      console.log('Permissions loading or error, using fallback logic for non-admin');
+      return [pages[0]]; // Just show Home page for non-admin
+    }
+    
+    if (!userPermissions) {
+      console.log('No userPermissions data for non-admin');
+      return [pages[0]]; // Just show Home page
+    }
+    
+    const filtered = pages.filter(page => {
+      // Home page is always accessible
+      if (page.requiresPermission === false) {
+        return true;
       }
       
-      // While loading, don't show any pages to avoid flashing content
-      return false;
+      // Check if user has permission for this page
+      const hasPermission = userPermissions.permissions[page.pageName] === true;
+      console.log(`Page ${page.pageName}: ${hasPermission}`);
+      return hasPermission;
     });
-  }, [pageAccesses, role]);
+    
+    console.log('Final accessible pages:', filtered);
+    return filtered;
+  }, [role, userPermissions, permissionsLoading, permissionsError]);
 
   // Initialize permissions when user role is loaded - but only once per role
   useEffect(() => {
-    if (role && role === 'Admin' && !populatePermissions.isPending) {
+    if (!authLoading && user && role && role === 'Admin' && !populatePermissions.isPending) {
       console.log("Ensuring permissions exist for admin role:", role);
       populatePermissions.mutate({ forceRefresh: false });
     }
-  }, [role]);
+  }, [authLoading, user, role]);
 
-  // Show loading only if role is loading or permissions are loading
-  if (roleLoading || (role && pageAccesses.some(p => p.accessQuery.isLoading))) {
+  // Show loading only if auth or role are loading (not permissions, as we have fallback logic)
+  if (authLoading || roleLoading) {
     return (
       <div className="min-h-screen flex bg-m1f-card">
         <aside className="w-60 bg-m1f-card px-4 py-8 border-r border-m1f-primary/20 text-m1f-primary flex flex-col gap-8 shadow-m1f">

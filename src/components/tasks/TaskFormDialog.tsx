@@ -66,7 +66,13 @@ export function TaskFormDialog({
   });
 
   const handleSubmit = (values: TaskFormData) => {
-    onSubmit(values);
+    // Convert "none" values back to empty strings for API compatibility
+    const sanitizedValues = {
+      ...values,
+      contact_id: values.contact_id === "none" ? "" : values.contact_id,
+      deal_id: values.deal_id === "none" ? "" : values.deal_id,
+    };
+    onSubmit(sanitizedValues);
     if (!initialValues) {
       form.reset();
     }
@@ -226,7 +232,7 @@ export function TaskFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No contact</SelectItem>
+                        <SelectItem value="none">No contact</SelectItem>
                         {contacts.map((contact) => (
                           <SelectItem key={contact.id} value={contact.id}>
                             {contact.first_name} {contact.last_name}
@@ -252,7 +258,7 @@ export function TaskFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No deal</SelectItem>
+                        <SelectItem value="none">No deal</SelectItem>
                         {deals.map((deal) => (
                           <SelectItem key={deal.id} value={deal.id}>
                             {deal.title}

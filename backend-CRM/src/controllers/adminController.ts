@@ -229,6 +229,18 @@ export const toggleUserStatus = async (req: AuthRequest, res: Response): Promise
   try {
     const { id } = req.params;
 
+    // Validate user ID parameter
+    if (!id || id === 'undefined' || id === 'null') {
+      res.status(400).json({ error: 'Valid user ID is required' });
+      return;
+    }
+
+    // Check if it's a valid MongoDB ObjectId
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      res.status(400).json({ error: 'Invalid user ID format' });
+      return;
+    }
+
     if (id === req.user!._id.toString()) {
       res.status(400).json({ error: 'Cannot toggle your own account status' });
       return;
@@ -264,6 +276,18 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
   try {
     const { id } = req.params;
     let { role } = req.body;
+
+    // Validate user ID parameter
+    if (!id || id === 'undefined' || id === 'null') {
+      res.status(400).json({ error: 'Valid user ID is required' });
+      return;
+    }
+
+    // Check if it's a valid MongoDB ObjectId
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      res.status(400).json({ error: 'Invalid user ID format' });
+      return;
+    }
 
     if (id === req.user!._id.toString()) {
       res.status(400).json({ error: 'Cannot change your own role' });
@@ -423,5 +447,102 @@ export const resetUserPassword = async (req: AuthRequest, res: Response): Promis
   } catch (error) {
     logger.error('Reset password error:', error);
     res.status(500).json({ error: 'Failed to reset password' });
+  }
+};
+
+// Get system permissions and role hierarchy
+export const getPermissions = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // Define role hierarchy and permissions
+    const roleHierarchy = {
+      'Admin': 6,
+      'Field Builder': 5,
+      'Field Trainer': 4,
+      'Sr. BMA': 3,
+      'BMA': 2,
+      'IBA': 1
+    };
+
+    const permissions = {
+      'Admin': [
+        'user.create',
+        'user.read',
+        'user.update',
+        'user.delete',
+        'user.bulk_update',
+        'user.reset_password',
+        'user.toggle_status',
+        'dashboard.view',
+        'admin.access',
+        'attachment.upload',
+        'attachment.download',
+        'attachment.delete',
+        'attachment.update'
+      ],
+      'Field Builder': [
+        'user.read',
+        'user.update_self',
+        'attachment.upload',
+        'attachment.download',
+        'attachment.delete_own',
+        'attachment.update_own'
+      ],
+      'Field Trainer': [
+        'user.read',
+        'user.update_self',
+        'attachment.upload',
+        'attachment.download',
+        'attachment.delete_own',
+        'attachment.update_own'
+      ],
+      'Sr. BMA': [
+        'user.read',
+        'user.update_self',
+        'attachment.upload',
+        'attachment.download',
+        'attachment.delete_own',
+        'attachment.update_own'
+      ],
+      'BMA': [
+        'user.read',
+        'user.update_self',
+        'attachment.upload',
+        'attachment.download',
+        'attachment.delete_own',
+        'attachment.update_own'
+      ],
+      'IBA': [
+        'user.read',
+        'user.update_self',
+        'attachment.upload',
+        'attachment.download',
+        'attachment.delete_own',
+        'attachment.update_own'
+      ]
+    };
+
+    const currentUserRole = req.user?.role;
+    const currentUserPermissions = permissions[currentUserRole as keyof typeof permissions] || [];
+
+    res.json({
+      success: true,
+      data: {
+        roleHierarchy,
+        permissions,
+        currentUser: {
+          role: currentUserRole,
+          permissions: currentUserPermissions,
+          level: roleHierarchy[currentUserRole as keyof typeof roleHierarchy] || 0
+        }
+      }
+    });
+
+    logger.info(`Permissions retrieved by user: ${req.user?.email}`);
+  } catch (error) {
+    logger.error('Error getting permissions:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
   }
 };

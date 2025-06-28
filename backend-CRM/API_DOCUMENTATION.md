@@ -1,9 +1,26 @@
 # Money1st CRM Nexus - API Documentation
 
 ## 📚 Interactive Documentation
+
 **🔗 Swagger UI**: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+**🔗 OpenAPI Spec**: [http://localhost:3000/api-docs.json](http://localhost:3000/api-docs.json)
 
 > **💡 Recommended**: Use the interactive Swagger documentation for testing and exploring all endpoints with real-time examples!
+
+### Swagger Features
+- **🧪 Interactive Testing**: Test all endpoints directly from the browser
+- **📋 Complete Schemas**: View all request/response models
+- **🔐 Authentication**: Built-in JWT token management
+- **📖 Real-time Examples**: Live request/response examples
+- **📥 Export Options**: Download OpenAPI specification
+- **🎯 Endpoint Discovery**: Browse all available endpoints by category
+
+### Categories in Swagger UI
+- **Authentication** - Login, register, profile management
+- **Users** - User management with role-based access
+- **Admin** - Administrative operations (Admin only)
+- **🆕 Attachments** - File upload and management system
+- **🆕 Page Permissions** - Page access control management
 
 ## Base URL
 ```
@@ -536,176 +553,35 @@ Reset user password.
 - Password must be at least 6 characters long
 - Cannot reset own password through this endpoint
 
-**Access:** Admin
+### GET /api/admin/permissions
+Get system permissions and role hierarchy.
 
-**Request Body:**
-```json
-{
-  "name": "New User",
-  "email": "newuser@example.com",
-  "password": "password123",
-  "role": "Field Builder"
-}
-```
+**Access:** Admin only
 
 **Response:**
 ```json
 {
   "success": true,
-  "user": {
-    "id": "60f7b3b3b3b3b3b3b3b3b3b3",
-    "name": "New User",
-    "email": "newuser@example.com",
-    "role": "Field Builder",
-    "isActive": true,
-    "createdBy": {
-      "name": "Admin User",
-      "email": "admin@example.com",
-      "role": "Admin"
+  "permissions": {
+    "roles": [
+      "Admin",
+      "Field Builder",
+      "Field Trainer",
+      "Sr. BMA",
+      "BMA",
+      "IBA"
+    ],
+    "hierarchy": {
+      "Admin": 6,
+      "Field Builder": 5,
+      "Field Trainer": 4,
+      "Sr. BMA": 3,
+      "BMA": 2,
+      "IBA": 1
     }
-  },
-  "message": "User created successfully"
-}
-```
-
-### PUT /api/admin/users/bulk
-Bulk update multiple users.
-
-**Access:** Admin
-
-**Request Body:**
-```json
-{
-  "userIds": [
-    "60f7b3b3b3b3b3b3b3b3b3b1",
-    "60f7b3b3b3b3b3b3b3b3b3b2",
-    "60f7b3b3b3b3b3b3b3b3b3b3"
-  ],
-  "updates": {
-    "role": "Senior BM",
-    "isActive": true
   }
 }
 ```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "3 users updated successfully",
-  "modifiedCount": 3
-}
-```
-
-**Restrictions:**
-- Cannot bulk update your own account
-- Role assignment follows hierarchy rules
-- Minimum 1 user ID required
-
-### PATCH /api/admin/users/:id/toggle-status
-Toggle user active/inactive status.
-
-**Access:** Admin
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "User activated successfully",
-  "user": {
-    "id": "60f7b3b3b3b3b3b3b3b3b3b3",
-    "email": "user@example.com",
-    "isActive": true
-  }
-}
-```
-
-**Restrictions:**
-- Cannot toggle your own account status
-
----
-
-## Error Responses
-
-### Common Error Format
-```json
-{
-  "error": "Error message description"
-}
-```
-
-### HTTP Status Codes
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request (validation errors)
-- `401` - Unauthorized (authentication required)
-- `403` - Forbidden (insufficient permissions)
-- `404` - Not Found
-- `500` - Internal Server Error
-
-### Example Error Responses
-
-**Validation Error (400):**
-```json
-{
-  "error": "\"email\" must be a valid email"
-}
-```
-
-**Authentication Error (401):**
-```json
-{
-  "error": "Access denied. No token provided"
-}
-```
-
-**Authorization Error (403):**
-```json
-{
-  "error": "Access denied. Insufficient permissions"
-}
-```
-
-**Not Found Error (404):**
-```json
-{
-  "error": "User not found"
-}
-```
-
----
-
-## Rate Limiting
-- **Window:** 15 minutes
-- **Limit:** 100 requests per IP
-- **Response when exceeded:** 429 Too Many Requests
-
----
-
-## Security Features
-- JWT token authentication
-- Password hashing with bcrypt
-- Role-based access control
-- Rate limiting
-- Input validation
-- CORS protection
-- Security headers (Helmet.js)
-
----
-
-## 🆕 Recent Updates (June 2025)
-
-### **New Features Added:**
-- **🔗 Interactive Swagger Documentation**: Complete OpenAPI 3.0 specification
-- **📊 Advanced Admin Panel**: Comprehensive user management capabilities
-- **⚡ Bulk Operations**: Update/delete multiple users simultaneously
-- **📈 User Analytics**: Activity tracking and registration trends
-- **🔐 Enhanced Security**: Updated role hierarchy and permission system
-- **🎯 Role Management**: Direct role assignment and password reset capabilities
-
-### **Updated Role Hierarchy:**
-- **Previous**: Field Builder < Field Trainer < Sr. BMA < BMA < IBA < Admin
-- **🆕 Current**: Admin > Field Builder > Field Trainer > Sr. BMA > BMA > IBA
 
 ### **New Admin Endpoints:**
 - `GET /api/admin/users/activity` - User analytics
@@ -714,6 +590,24 @@ Toggle user active/inactive status.
 - `PATCH /api/admin/users/:id/toggle-status` - Toggle user status
 - `PATCH /api/admin/users/:id/role` - Update user role
 - `PATCH /api/admin/users/:id/reset-password` - Reset passwords
+- `GET /api/admin/permissions` - Get system permissions and role hierarchy
+- **🆕 Page Permissions Endpoints:**
+  - `GET /api/admin/page-permissions` - Get all page permissions
+  - `POST /api/admin/page-permissions` - Create/update page permission
+  - `PATCH /api/admin/page-permissions/{pageName}/toggle` - Toggle role access to page
+  - `POST /api/admin/page-permissions/initialize` - Initialize default pages
+  - `DELETE /api/admin/page-permissions/{pageName}` - Delete page permission
+
+### **New User Endpoints:**
+- `GET /api/users/page-permissions` - Get current user's page access permissions
+
+### **New File Attachment System:**
+- `POST /api/attachments/upload` - Upload file attachments
+- `GET /api/attachments/{recordId}/{category}` - List attachments
+- `GET /api/attachments/file/{id}` - Download file
+- `DELETE /api/attachments/{id}` - Delete attachment
+- `PUT /api/attachments/{id}` - Update attachment metadata
+- `GET /api/attachments/stats/{recordId}` - Get attachment statistics
 
 ### **Documentation Improvements:**
 - Interactive Swagger UI at `/api-docs`
@@ -738,3 +632,270 @@ BCRYPT_SALT_ROUNDS=12
 **Last Updated**: June 2025  
 **Version**: 2.0  
 **Interactive Docs**: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+
+---
+
+## 📚 Interactive Swagger Documentation
+
+**🔗 Primary Documentation**: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+**🔗 OpenAPI Specification**: [http://localhost:3000/api-docs.json](http://localhost:3000/api-docs.json)
+
+> **⚡ Quick Start**: For immediate API testing and exploration, visit the Swagger UI above. This documentation provides comprehensive details, while Swagger offers interactive testing.
+
+### 🎯 Why Use Swagger UI?
+
+- **🧪 Live Testing**: Execute API calls directly from your browser
+- **📋 Complete Schemas**: View all request/response models with examples
+- **🔐 Built-in Auth**: Test protected endpoints with JWT token management
+- **📖 Real-time Validation**: Immediate feedback on request formatting
+- **📥 Export Options**: Download OpenAPI specification for tools like Postman
+- **🎯 Organized by Tags**: Endpoints grouped by functionality
+
+### 📂 API Categories
+
+| Category | Description | Endpoints |
+|----------|-------------|-----------|
+| **Authentication** | User login, registration, profile | 3 endpoints |
+| **Users** | User management with RBAC | 4 endpoints |
+| **Admin** | Administrative operations | 12+ endpoints |
+| **🆕 Attachments** | File upload and management | 7 endpoints |
+| **🆕 Page Permissions** | Page access control | 6 endpoints |
+
+### 🔧 Swagger Setup
+
+1. **Start the server**: `npm start`
+2. **Open Swagger UI**: Navigate to [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+3. **Authenticate**: Click "Authorize" and enter your JWT token
+4. **Test endpoints**: Expand any endpoint and click "Try it out"
+
+### 🧪 Testing with Swagger
+
+#### Step 1: Get Authentication Token
+1. Go to **Authentication > POST /api/auth/login**
+2. Click "Try it out"
+3. Enter credentials:
+   ```json
+   {
+     "email": "admin@money1st.com",
+     "password": "admin123"
+   }
+   ```
+4. Click "Execute"
+5. Copy the `token` from the response
+
+#### Step 2: Authorize in Swagger
+1. Click the "🔒 Authorize" button at the top of the page
+2. Enter: `Bearer YOUR_TOKEN_HERE`
+3. Click "Authorize"
+
+#### Step 3: Test Protected Endpoints
+Now you can test any protected endpoint directly in the browser!
+
+**Popular Testing Scenarios:**
+- **User Management**: Try `GET /api/admin/users` to list all users
+- **Page Permissions**: Use `POST /api/admin/page-permissions/initialize` to set up default pages
+- **File Upload**: Test `POST /api/attachments/upload` with file uploads
+- **Toggle Permissions**: Use `PATCH /api/admin/page-permissions/{pageName}/toggle`
+
+---
+
+## 🆕 Page Access Permissions System
+
+### Overview
+The system now includes granular page-level access control, allowing administrators to manage which roles can access specific pages/modules in the application.
+
+### Available Pages
+- **Dashboard** - Main system overview
+- **Securia** - Securia management module
+- **Reports** - Analytics and reporting
+- **Organizational Chart** - Company structure
+- **Branch Development** - Branch management
+- **FNA Training** - Financial Needs Analysis training
+- **Admin** - Administrative functions
+
+### API Endpoints
+
+#### Get All Page Permissions
+```http
+GET /api/admin/page-permissions
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "pageName": "Dashboard",
+      "rolePermissions": {
+        "Admin": true,
+        "Field Builder": true,
+        "Field Trainer": true,
+        "Sr. BMA": true,
+        "BMA": true,
+        "IBA": true
+      },
+      "description": "Main dashboard with system overview"
+    }
+  ]
+}
+```
+
+#### Toggle Role Permission
+```http
+PATCH /api/admin/page-permissions/{pageName}/toggle
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "role": "Field Trainer"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Field Trainer access to Securia granted",
+  "data": {
+    "pageName": "Securia",
+    "role": "Field Trainer",
+    "hasAccess": true,
+    "allPermissions": {
+      "Admin": true,
+      "Field Builder": true,
+      "Field Trainer": true,
+      "Sr. BMA": false,
+      "BMA": false,
+      "IBA": false
+    }
+  }
+}
+```
+
+#### Initialize Default Pages
+```http
+POST /api/admin/page-permissions/initialize
+Authorization: Bearer {token}
+```
+
+#### Get User's Page Permissions
+```http
+GET /api/users/page-permissions
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "role": "Field Builder",
+    "permissions": {
+      "Dashboard": true,
+      "Securia": true,
+      "Reports": true,
+      "Organizational Chart": true,
+      "Branch Development": true,
+      "FNA Training": true,
+      "Admin": false
+    }
+  }
+}
+```
+
+### Frontend Integration
+```javascript
+// Check if user can access a page
+const checkPageAccess = async (pageName) => {
+  const response = await fetch('/api/users/page-permissions');
+  const { data } = await response.json();
+  return data.permissions[pageName];
+};
+
+// Toggle role permission (Admin only)
+const toggleRolePermission = async (pageName, role) => {
+  const response = await fetch(`/api/admin/page-permissions/${pageName}/toggle`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ role })
+  });
+  return response.json();
+};
+```
+
+---
+
+## 🆕 File Attachment System
+
+### Overview
+Complete file attachment system replacing Supabase storage with backend API solution.
+
+### Key Features
+- File upload with metadata tracking
+- Organized storage by category and record
+- Download and deletion capabilities
+- File type validation and size limits
+- Role-based access control
+
+### API Endpoints
+
+#### Upload File
+```http
+POST /api/attachments/upload
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+Form Data:
+- file: (binary file)
+- recordId: string
+- category: string (note, contact, deal, client, document, image, other)
+- description?: string
+- tags?: string (JSON array)
+```
+
+#### List Attachments
+```http
+GET /api/attachments/{recordId}/{category}?page=1&limit=50
+Authorization: Bearer {token}
+```
+
+#### Download File
+```http
+GET /api/attachments/file/{attachmentId}
+Authorization: Bearer {token}
+```
+
+#### Delete Attachment
+```http
+DELETE /api/attachments/{attachmentId}
+Authorization: Bearer {token}
+```
+
+### File Storage Structure
+```
+uploads/
+├── client/
+│   ├── client-123/
+│   │   ├── 1640995200000-contract.pdf
+│   │   └── 1640995300000-photo.jpg
+├── deal/
+│   └── deal-456/
+│       └── 1640995400000-proposal.docx
+└── note/
+    └── note-789/
+        └── 1640995500000-attachment.txt
+```
+
+### Security Features
+- Authentication required for all operations
+- Users can only delete/update their own uploads (unless admin)
+- File type validation
+- File size limits (10MB per file)
+- Secure file paths preventing directory traversal
+
+---

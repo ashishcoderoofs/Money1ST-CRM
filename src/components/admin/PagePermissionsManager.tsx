@@ -1,56 +1,100 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { usePagePermissions, useUpdatePagePermission } from "@/hooks/usePagePermissions";
-import { Shield, Settings } from "lucide-react";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { 
+  usePagePermissions, 
+  useTogglePagePermission
+} from '@/hooks/usePagePermissionsAPI';
+import { Shield } from 'lucide-react';
 
-const pages = [
-  "Dashboard",
-  "Securia", 
-  "Reports",
-  "Organizational Chart",
-  "Branch Development",
-  "FNA Training",
-  "Admin"
-];
+// Types
+interface PagePermission {
+  pageName: string;
+  description?: string;
+  rolePermissions: {
+    Admin: boolean;
+    'Field Builder': boolean;
+    'Field Trainer': boolean;
+    'Sr. BMA': boolean;
+    BMA: boolean;
+    IBA: boolean;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
 
-const roles = ["Admin", "Field Builder", "Field Trainer", "Sr. BMA", "BMA", "IBA"] as const;
+const ROLES = ['Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA'];
 
 export function PagePermissionsManager() {
-  const { data: permissions = [], isLoading } = usePagePermissions();
-  const updatePermission = useUpdatePagePermission();
+  // API Hooks
+  const { data: pagePermissions = [], isLoading } = usePagePermissions();
+  const togglePermissionMutation = useTogglePagePermission();
 
-  const getPermission = (pageName: string, roleName: string) => {
-    return permissions.find(p => p.page_name === pageName && p.role_name === roleName);
-  };
-
-  const handleToggle = async (pageName: string, roleName: string, currentAccess: boolean) => {
-    const permission = getPermission(pageName, roleName);
-    if (permission) {
-      await updatePermission.mutateAsync({
-        id: permission.id,
-        can_access: !currentAccess
-      });
+  // Event Handlers
+  const handleTogglePermission = async (pageName: string, role: string) => {
+    try {
+      await togglePermissionMutation.mutateAsync({ pageName, role });
+    } catch (error) {
+      console.error('Error toggling permission:', error);
     }
   };
 
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case "Admin":
-        return "destructive";
-      case "Field Builder":
-        return "default";
-      case "Field Trainer":
-        return "secondary";
-      case "Sr. BMA":
-        return "outline";
-      default:
-        return "secondary";
-    }
+  const getRoleColor = (role: string): string => {
+    const colors: Record<string, string> = {
+      'Admin': 'bg-red-500',
+      'Field Builder': 'bg-blue-500',
+      'Field Trainer': 'bg-yellow-500',
+      'Sr. BMA': 'bg-green-500',
+      'BMA': 'bg-orange-500',
+      'IBA': 'bg-purple-500',
+    };
+    return colors[role] || 'bg-gray-500';
   };
+
+  // Render Functions
+  const renderPageRow = (page: PagePermission) => (
+    <div key={page.pageName} className="border-b border-gray-200 last:border-b-0">
+      <div className="grid grid-cols-8 gap-4 p-4 items-center">
+        <div className="col-span-2">
+          <div>
+            <h3 className="font-medium text-sm">{page.pageName}</h3>
+            {page.description && (
+              <p className="text-xs text-muted-foreground mt-1">{page.description}</p>
+            )}
+          </div>
+        </div>
+        {ROLES.map(role => (
+          <div key={role} className="flex justify-center">
+            <Switch
+              checked={page.rolePermissions[role as keyof typeof page.rolePermissions]}
+              onCheckedChange={() => handleTogglePermission(page.pageName, role)}
+              disabled={togglePermissionMutation.isPending}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderHeader = () => (
+    <div className="grid grid-cols-8 gap-4 p-4 bg-gray-50 border-b">
+      <div className="col-span-2">
+        <h3 className="font-semibold text-sm">Page</h3>
+      </div>
+      {ROLES.map(role => (
+        <div key={role} className="text-center">
+          <Badge 
+            variant="outline" 
+            className={`text-xs text-white ${getRoleColor(role)}`}
+          >
+            {role}
+          </Badge>
+        </div>
+      ))}
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -62,62 +106,43 @@ export function PagePermissionsManager() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-4">Loading permissions...</div>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5" />
-          Page Access Permissions
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Manage which roles can access different pages in the system
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-[200px]">Page</TableHead>
-                {roles.map((role) => (
-                  <TableHead key={role} className="text-center min-w-[120px]">
-                    <Badge variant={getRoleBadgeVariant(role)} className="text-xs">
-                      {role}
-                    </Badge>
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pages.map((page) => (
-                <TableRow key={page}>
-                  <TableCell className="font-medium">{page}</TableCell>
-                  {roles.map((role) => {
-                    const permission = getPermission(page, role);
-                    const canAccess = permission?.can_access || false;
-                    
-                    return (
-                      <TableCell key={role} className="text-center">
-                        <Switch
-                          checked={canAccess}
-                          onCheckedChange={() => handleToggle(page, role, canAccess)}
-                          disabled={updatePermission.isPending}
-                        />
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Page Access Permissions
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Manage which roles can access different pages in the system
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {pagePermissions.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Shield className="h-12 w-12 mx-auto mb-4 opacity-20" />
+              <p>No page permissions configured.</p>
+              <p className="text-sm">Click "Initialize Defaults" to set up common pages.</p>
+            </div>
+          ) : (
+            <div className="border rounded-lg">
+              {renderHeader()}
+              {pagePermissions.map(renderPageRow)}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

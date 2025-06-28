@@ -1,6 +1,6 @@
 # Money1st CRM Nexus - Backend API
 
-A comprehensive TypeScript Node.js backend server for Money1st CRM system with JWT authentication, role-based access control (RBAC), complete consultant management features, and **interactive Swagger/OpenAPI documentation**.
+A comprehensive TypeScript Node.js backend server for Money1st CRM system with JWT authentication, role-based access control (RBAC), complete consultant management features, **file attachment system**, **page access permissions**, and **interactive Swagger/OpenAPI documentation**.
 
 ## ✅ Current Status
 
@@ -11,6 +11,8 @@ A comprehensive TypeScript Node.js backend server for Money1st CRM system with J
 - Comprehensive validation using Joi schemas
 - All CRUD operations for user management
 - Admin dashboard with bulk operations
+- **🆕 File Attachment System**: Complete file upload/download with metadata
+- **🆕 Page Access Permissions**: Granular page-level access control by role
 - **🆕 Interactive Swagger/OpenAPI 3.0 documentation**
 - **🆕 Advanced admin endpoints for complete user management**
 - **🆕 Updated role hierarchy (Admin > Field Builder > Field Trainer > Sr. BMA > BMA > IBA)**
@@ -19,16 +21,23 @@ A comprehensive TypeScript Node.js backend server for Money1st CRM system with J
 
 ## 🌟 Features
 
+### Core Features
 - **Comprehensive User Management**: Complete consultant profiles with 30+ fields
 - **Authentication & Authorization**: JWT-based authentication with 6-level role hierarchy
 - **Advanced RBAC**: Fine-grained role-based access control system
+- **🆕 File Attachment System**: Upload, download, and manage files with metadata
+- **🆕 Page Access Permissions**: Control access to specific pages by user role
 - **🆕 Interactive API Documentation**: Swagger/OpenAPI 3.0 with testing capabilities
 - **🆕 Advanced Admin Panel**: Complete user management with bulk operations
+
+### Technical Features
 - **Security**: Rate limiting, CORS, Helmet security headers, password hashing
 - **Validation**: Comprehensive request validation using Joi
 - **Logging**: Production-ready logging with Winston
 - **TypeScript**: Full TypeScript support with strict type checking
 - **MongoDB Integration**: Mongoose ODM with proper schema validation
+- **File Storage**: Local file system with organized directory structure
+- **Middleware**: Reusable validation and authentication middleware
 
 ## � API Documentation
 
@@ -142,29 +151,54 @@ backend/
 │   ├── controllers/           # Business logic
 │   │   ├── authController.ts     # Authentication & registration
 │   │   ├── userController.ts     # User CRUD operations  
-│   │   └── adminController.ts    # Admin operations
+│   │   ├── adminController.ts    # Admin operations
+│   │   ├── attachmentController.ts # File attachment management
+│   │   └── pagePermissionController.ts # Page access permissions
 │   ├── middleware/            # Custom middleware
 │   │   ├── auth.ts              # JWT authentication & RBAC
 │   │   ├── validation.ts        # Input validation (Joi)
+│   │   ├── paramValidation.ts   # Parameter validation helpers
+│   │   ├── upload.ts           # File upload middleware (Multer)
 │   │   └── errorHandler.ts      # Global error handling
 │   ├── models/               # Database schemas
-│   │   └── User.ts              # Complete user/consultant model
+│   │   ├── User.ts              # Complete user/consultant model
+│   │   ├── Attachment.ts        # File attachment metadata
+│   │   └── PagePermission.ts    # Page access permissions
 │   ├── routes/               # API route definitions
 │   │   ├── authRoutes.ts        # Auth endpoints
 │   │   ├── userRoutes.ts        # User management
-│   │   └── adminRoutes.ts       # Admin functions
+│   │   ├── adminRoutes.ts       # Admin functions
+│   │   └── attachmentRoutes.ts  # File attachment endpoints
+│   ├── config/               # Configuration
+│   │   └── swagger.ts           # Swagger/OpenAPI setup
 │   ├── types/                # TypeScript definitions
 │   │   └── index.ts             # Interfaces & types
 │   └── utils/                # Utility functions
 │       └── logger.ts            # Winston logging setup
+├── uploads/                  # File storage directory
+│   ├── note/                   # Note attachments
+│   ├── contact/                # Contact files
+│   ├── deal/                   # Deal documents
+│   ├── client/                 # Client files
+│   ├── document/               # General documents
+│   ├── image/                  # Image files
+│   └── other/                  # Miscellaneous files
 ├── utils/
 │   └── logger.ts             # Shared logging utility
 ├── logs/                     # Log files
+├── docker/                   # Docker configuration
+│   └── docker-compose.yml      # Docker Compose setup
 ├── server.ts                 # Application entry point
+├── bootstrap.ts              # Database initialization
 ├── .env                      # Environment variables
+├── .gitignore               # Git ignore patterns
 ├── tsconfig.json            # TypeScript configuration
 ├── nodemon.json             # Development auto-reload
-└── package.json             # Dependencies & scripts
+├── package.json             # Dependencies & scripts
+├── README.md                # This file
+├── API_DOCUMENTATION.md     # Detailed API documentation
+├── ATTACHMENT_SYSTEM.md     # File attachment system guide
+└── PAGE_PERMISSIONS_GUIDE.md # Page permissions implementation guide
 ```
 
 ## 📝 Usage Examples
@@ -210,36 +244,74 @@ curl -X POST http://localhost:3000/api/admin/users \
   }'
 ```
 
-### Admin Operations
+### File Attachments
 ```bash
-# Dashboard Stats
-curl -X GET http://localhost:3000/api/admin/dashboard/stats \
+# Upload a file with metadata
+curl -X POST http://localhost:3000/api/attachments/upload \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "files=@document.pdf" \
+  -F "recordId=user123" \
+  -F "category=document" \
+  -F "description=Important document"
+
+# List attachments for a record
+curl -X GET "http://localhost:3000/api/attachments/user123/document" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
-# Bulk Update Users
-curl -X PUT http://localhost:3000/api/admin/users/bulk \
+# Download a file
+curl -X GET http://localhost:3000/api/attachments/file/attachment_id \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  --output downloaded_file.pdf
+```
+
+### Page Access Permissions
+```bash
+# Initialize default pages (Admin only)
+curl -X POST http://localhost:3000/api/admin/page-permissions/initialize \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Get all page permissions
+curl -X GET http://localhost:3000/api/admin/page-permissions \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Toggle role access to a page
+curl -X PATCH http://localhost:3000/api/admin/page-permissions/Dashboard/toggle \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{
-    "userIds": ["user1_id", "user2_id"],
-    "updates": {
-      "role": "Sr. BMA",
-      "status": "Active"
-    }
-  }'
+  -d '{"role": "Field Trainer"}'
+
+# Get user's page permissions
+curl -X GET http://localhost:3000/api/users/permissions \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ## 🔒 Security Features
 
+### Authentication & Authorization
 - **Password Security**: bcrypt hashing with configurable salt rounds
-- **JWT Authentication**: Secure token-based authentication
-- **Rate Limiting**: 100 requests per 15 minutes per IP
+- **JWT Authentication**: Secure token-based authentication with expiration
+- **Role-Based Access**: 6-level hierarchical permissions
+- **Session Management**: Stateless JWT tokens with proper expiration
+
+### Network Security
+- **Rate Limiting**: 100 requests per 15 minutes per IP (1000 in development)
 - **CORS Protection**: Configurable cross-origin policies
 - **Security Headers**: Helmet.js for HTTP security headers
 - **Input Validation**: Comprehensive Joi validation schemas
-- **Role-Based Access**: 6-level hierarchical permissions
+
+### File Upload Security
+- **File Type Validation**: Restricted file types based on MIME type
+- **File Size Limits**: 10MB per file, 5 files maximum per upload
+- **Directory Traversal Protection**: Secure file path generation
+- **Virus/Malware Protection**: File type validation and sanitization
+- **Authenticated Access**: All file operations require valid JWT token
+
+### Data Protection
 - **SQL Injection Protection**: MongoDB/Mongoose parameterized queries
-- **Error Handling**: Secure error responses (no data leakage)
+- **XSS Prevention**: Input sanitization and validation
+- **Error Handling**: Secure error responses (no sensitive data leakage)
+- **Environment Variables**: Sensitive data stored in environment variables
+- **Password Policies**: Minimum password requirements
 
 ## 📊 Validation Rules
 
@@ -253,11 +325,20 @@ curl -X PUT http://localhost:3000/api/admin/users/bulk \
 - **Address Fields**: Appropriate length limits
 - **Role**: Must be valid role from hierarchy
 
+### File Upload Validation
+- **File Size**: Maximum 10MB per file
+- **File Count**: Maximum 5 files per upload
+- **File Types**: Restricted by MIME type and extension
+- **Metadata**: recordId and category required
+- **Description**: Maximum 500 characters
+- **Tags**: Array of strings, maximum 50 characters each
+
 ### Field Constraints
 - **Comments/Remarks**: Max 500 characters
 - **Address**: Max 200 characters
 - **Names**: Max 100 characters  
 - **Membership Amount**: Non-negative number
+- **Phone/Fax Numbers**: Valid format, max 20 characters
 
 ## 🔧 Development Tools
 
@@ -356,9 +437,10 @@ For technical support or questions:
 
 ### **User Management** (`/api/users`) - Role-Based Access
 - `GET /api/users` - List users (BMA+ access)
-- `GET /api/users/:id` - Get user by ID (BMA+ access)
+- `GET /api/users/:id` - Get user by ID (BMA+ access) 
 - `PUT /api/users/:id` - Update user (IBA+ access)
 - `DELETE /api/users/:id` - Delete user (Admin only)
+- `GET /api/users/permissions` - Get user's page permissions
 
 ### **🆕 Admin Panel** (`/api/admin`) - Admin Only Access
 
@@ -376,6 +458,33 @@ For technical support or questions:
 - `PATCH /api/admin/users/:id/toggle-status` - Toggle user active/inactive
 - `PATCH /api/admin/users/:id/role` - Change user role/privileges
 - `PATCH /api/admin/users/:id/reset-password` - Reset user password
+
+#### **Page Access Permissions**
+- `GET /api/admin/page-permissions` - Get all page permissions
+- `POST /api/admin/page-permissions` - Create/update page permission
+- `POST /api/admin/page-permissions/initialize` - Initialize default pages
+- `PATCH /api/admin/page-permissions/:pageName/toggle` - Toggle role access
+- `DELETE /api/admin/page-permissions/:pageName` - Delete page permission
+
+### **🆕 File Attachments** (`/api/attachments`) - Authenticated Users
+
+#### **File Operations**
+- `POST /api/attachments/upload` - Upload file(s) with metadata
+- `GET /api/attachments/:recordId/:category` - List attachments for record
+- `GET /api/attachments/details/:id` - Get attachment details
+- `GET /api/attachments/file/:id` - Download file
+- `PUT /api/attachments/:id` - Update attachment metadata
+- `DELETE /api/attachments/:id` - Delete attachment and file
+- `GET /api/attachments/stats/:recordId` - Get attachment statistics
+
+#### **File Categories**
+- `note` - Note attachments
+- `contact` - Contact-related files
+- `deal` - Deal documents
+- `client` - Client files
+- `document` - General documents
+- `image` - Image files
+- `other` - Miscellaneous files
 
 ### **🆕 System**
 - `GET /health` - Health check endpoint

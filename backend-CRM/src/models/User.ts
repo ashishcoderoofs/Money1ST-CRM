@@ -13,7 +13,8 @@ const userSchema = new Schema<IUser>({
   },
   entryDate: {
     type: Date,
-    required: [true, 'Entry date is required']
+    required: [true, 'Entry date is required'],
+    default: Date.now
   },
   position: {
     type: String,

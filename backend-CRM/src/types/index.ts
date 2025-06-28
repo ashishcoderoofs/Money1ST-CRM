@@ -180,4 +180,14 @@ export interface PaginationResult<T> {
   };
 }
 
+export interface PagePermissionRequest {
+  pageName: string;
+  rolePermissions?: Record<UserRole, boolean>;
+  description?: string;
+}
+
+export interface ToggleRolePermissionRequest {
+  role: UserRole;
+}
+
 export type RoleHierarchy = Record<UserRole, number>;

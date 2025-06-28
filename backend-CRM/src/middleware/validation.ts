@@ -6,7 +6,7 @@ export const validateRegistration = (req: Request, res: Response, next: NextFunc
   const schema = Joi.object<RegisterRequest>({
     // Main Information
     consultantId: Joi.string().required().uppercase().trim(),
-    entryDate: Joi.date().required(),
+    entryDate: Joi.date().optional(),
     position: Joi.string().optional().trim(),
     title: Joi.string().optional().trim(),
     firstName: Joi.string().min(2).max(50).required().trim(),

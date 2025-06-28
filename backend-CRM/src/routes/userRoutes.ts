@@ -5,6 +5,7 @@ import {
   updateUser, 
   deleteUser 
 } from '../controllers/userController';
+import { getUserPagePermissions } from '../controllers/pagePermissionController';
 import { authenticate, authorize } from '../middleware/auth';
 import { validateUserUpdate } from '../middleware/validation';
 
@@ -192,6 +193,44 @@ router.get('/', authorize('BMA', 'IBA', 'Admin'), getUsers);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+
+/**
+ * @swagger
+ * /api/users/page-permissions:
+ *   get:
+ *     summary: Get current user's page permissions
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User page permissions retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     role:
+ *                       type: string
+ *                       example: Field Builder
+ *                     permissions:
+ *                       type: object
+ *                       properties:
+ *                         Dashboard:
+ *                           type: boolean
+ *                         Securia:
+ *                           type: boolean
+ *                         Reports:
+ *                           type: boolean
+ */
+router.get('/page-permissions', getUserPagePermissions);
+
 router.get('/:id', authorize('BMA', 'IBA', 'Admin'), getUserById);
 router.put('/:id', authorize('IBA', 'Admin'), validateUserUpdate, updateUser);
 router.delete('/:id', authorize('Admin'), deleteUser);

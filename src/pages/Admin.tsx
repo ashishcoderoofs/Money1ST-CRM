@@ -1,32 +1,18 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { UsersTable } from "@/components/users/UsersTable";
-import { PermissionsMatrix } from "@/components/users/PermissionsMatrix";
 import { PagePermissionsManager } from "@/components/admin/PagePermissionsManager";
-import { AdminUserCreation } from "@/components/users/AdminUserCreation";
-import { UserForm } from "@/components/users/UserForm";
-import { useUsers, useManagers, useUpdateUser, useDeleteUser, useToggleUserAccess } from "@/hooks/users";
-import { useUpdateUserStatus } from "@/hooks/users/useUpdateUserStatus";
+import { AdminUserCreation } from "@/components/admin/AdminUserCreation";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { AdminUsersTable } from "@/components/admin/AdminUsersTable";
+import { PermissionsMatrix } from "@/components/users/PermissionsMatrix";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Users as UsersIcon, Shield, Settings, AlertTriangle, UserPlus } from "lucide-react";
+import { BarChart3, Users as UsersIcon, Shield, Settings, UserPlus } from "lucide-react";
 
 export default function Admin() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole(user?.id ?? null);
-  const [editingUser, setEditingUser] = useState<any>(null);
-
-  const { data: users = [], isLoading: usersLoading } = useUsers();
-  const { data: managers = [] } = useManagers();
-  const updateMutation = useUpdateUser();
-  const deleteMutation = useDeleteUser();
-  const toggleAccessMutation = useToggleUserAccess();
-  const updateStatusMutation = useUpdateUserStatus();
 
   if (!user) {
     return (
@@ -52,48 +38,6 @@ export default function Admin() {
     return <div className="p-8 text-center">Access denied. Only administrators can access this page.</div>;
   }
 
-  const handleUpdateUser = async (values: any) => {
-    if (!editingUser) return;
-    
-    try {
-      await updateMutation.mutateAsync({
-        id: editingUser.id,
-        ...values,
-      });
-      setEditingUser(null);
-    } catch (error) {
-      console.error("Failed to update user:", error);
-    }
-  };
-
-  const handleDeleteUser = async (userId: string) => {
-    try {
-      await deleteMutation.mutateAsync(userId);
-    } catch (error) {
-      console.error("Failed to delete user:", error);
-    }
-  };
-
-  const handleToggleUserAccess = async (userId: string, hasAccess: boolean) => {
-    try {
-      await toggleAccessMutation.mutateAsync({ userId, hasAccess });
-    } catch (error) {
-      console.error("Failed to toggle user access:", error);
-    }
-  };
-
-  const handleUpdateUserStatus = async (userId: string, status: string) => {
-    try {
-      await updateStatusMutation.mutateAsync({ userId, status });
-    } catch (error) {
-      console.error("Failed to update user status:", error);
-    }
-  };
-
-  const handleEditUser = (user: any) => {
-    setEditingUser(user);
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -108,11 +52,15 @@ export default function Admin() {
         </div>
       </div>
 
-      <Tabs defaultValue="users" className="w-full">
+      <Tabs defaultValue="dashboard" className="w-full">
         <TabsList>
+          <TabsTrigger value="dashboard">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Dashboard
+          </TabsTrigger>
           <TabsTrigger value="users">
             <UsersIcon className="h-4 w-4 mr-2" />
-            Users
+            User Management
           </TabsTrigger>
           <TabsTrigger value="create-user">
             <UserPlus className="h-4 w-4 mr-2" />
@@ -128,15 +76,12 @@ export default function Admin() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="dashboard">
+          <AdminDashboard />
+        </TabsContent>
+
         <TabsContent value="users">
-          <UsersTable
-            users={users}
-            onEdit={handleEditUser}
-            onDelete={handleDeleteUser}
-            onToggleAccess={handleToggleUserAccess}
-            onUpdateStatus={handleUpdateUserStatus}
-            isLoading={usersLoading}
-          />
+          <AdminUsersTable />
         </TabsContent>
 
         <TabsContent value="create-user">
@@ -151,33 +96,6 @@ export default function Admin() {
           <PagePermissionsManager />
         </TabsContent>
       </Tabs>
-
-      {editingUser && (
-        <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
-            </DialogHeader>
-            <UserForm
-              onSubmit={handleUpdateUser}
-              initialValues={{
-                first_name: editingUser.first_name,
-                last_name: editingUser.last_name,
-                email: editingUser.email,
-                role: editingUser.role,
-                manager_id: editingUser.manager_id || "no-manager",
-                phone: editingUser.phone || "",
-                can_access_securia: editingUser.can_access_securia,
-                has_access: editingUser.has_access,
-              }}
-              managers={managers}
-              isLoading={updateMutation.isPending}
-              showPasswordReset={true}
-              userId={editingUser.id}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }
