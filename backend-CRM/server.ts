@@ -21,6 +21,8 @@ import logger from './utils/logger';
 // Import Swagger configuration
 import { setupSwagger } from './src/config/swagger';
 
+
+// initialized
 const app: Application = express();
 
 // Security middleware
