@@ -7,6 +7,19 @@ export function AdminDashboard() {
   const { data: dashboardStats, isLoading: statsLoading } = useAdminDashboardStats();
   const { data: userActivity, isLoading: activityLoading } = useAdminUserActivity(30);
 
+  // ✅ System Status Sample Data
+  const systemStatus = {
+    isOnline: true,
+    lastChecked: new Date().toISOString(),
+    uptimeSeconds: 12453, // 3 hours 27 mins
+  };
+
+  const formatUptime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    return `${hrs}h ${mins}m`;
+  };
+
   if (statsLoading || activityLoading) {
     return (
       <div className="space-y-6">
@@ -50,9 +63,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              All registered users
-            </p>
+            <p className="text-xs text-muted-foreground">All registered users</p>
           </CardContent>
         </Card>
 
@@ -63,9 +74,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{stats?.activeUsers || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Currently active
-            </p>
+            <p className="text-xs text-muted-foreground">Currently active</p>
           </CardContent>
         </Card>
 
@@ -76,9 +85,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{stats?.inactiveUsers || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Deactivated accounts
-            </p>
+            <p className="text-xs text-muted-foreground">Deactivated accounts</p>
           </CardContent>
         </Card>
 
@@ -89,9 +96,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{stats?.recentUsers || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Last 30 days
-            </p>
+            <p className="text-xs text-muted-foreground">Last 30 days</p>
           </CardContent>
         </Card>
       </div>
@@ -185,6 +190,32 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* ✅ System Health / Uptime Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className={`h-5 w-5 ${systemStatus.isOnline ? 'text-green-600' : 'text-red-600'}`} />
+            System Health / Uptime Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <p className="text-sm">
+              Status:{" "}
+              <span className={systemStatus.isOnline ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                {systemStatus.isOnline ? "🟢 Online" : "🔴 Offline"}
+              </span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Uptime: {formatUptime(systemStatus.uptimeSeconds)}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Last checked: {new Date(systemStatus.lastChecked).toLocaleTimeString()}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
