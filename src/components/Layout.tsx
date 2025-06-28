@@ -17,7 +17,7 @@ const pages = [
   { to: "/tasks", label: "Tasks", pageName: "Tasks" },
   { to: "/reports", label: "Reports", pageName: "Reports" },
   { to: "/admin", label: "Admin", pageName: "User Management" },
-  { to: "/securia", label: "Securia Access", pageName: "Securia Access" }
+  { to: "/securia", label: "Securia Access", pageName: "Securia" }
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {

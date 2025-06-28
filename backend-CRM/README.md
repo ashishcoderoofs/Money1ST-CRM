@@ -49,9 +49,12 @@ A comprehensive TypeScript Node.js backend server for Money1st CRM system with J
 - **Schema Validation**: Complete request/response examples
 - **Role-Based Access**: Clear permission requirements for each endpoint
 
-## �👥 Role Hierarchy & Permissions
+## �👥 Dynamic Role-Based Access Control (RBAC)
 
-### **🆕 Updated Role Levels (Most to Least Privileges)**
+### **🆕 Data-Driven Permissions System**
+The system uses a **dynamic, database-stored permissions approach** where all API endpoints check permissions against stored data rather than hardcoded role checks. This allows for flexible, runtime-configurable access control.
+
+### **Role Hierarchy (Most to Least Privileges)**
 1. **Admin** (Level 6) - System administrators with full access
 2. **Field Builder** (Level 5) - Senior consultants with management capabilities
 3. **Field Trainer** (Level 4) - Training specialists and supervisors
@@ -59,16 +62,66 @@ A comprehensive TypeScript Node.js backend server for Money1st CRM system with J
 5. **BMA** (Level 2) - Business Management Associates
 6. **IBA** (Level 1) - Independent Business Associates (entry level)
 
-### Permission Matrix
+### **Dynamic Permissions Matrix**
+*Permissions are stored in the database and can be modified at runtime via API endpoints*
 
-| Role | View Users | Edit Users | Delete Users | Create Users | Bulk Operations | Admin Dashboard | Role Changes |
-|------|------------|------------|--------------|--------------|-----------------|-----------------|--------------|
-| Admin | All | All | All | All | ✅ | ✅ | ✅ |
-| Field Builder | Lower levels | Lower levels | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Field Trainer | Lower levels | Lower levels | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Sr. BMA | Lower levels | Lower levels | ❌ | ❌ | ❌ | ❌ | ❌ |
-| BMA | Lower levels | Lower levels | ❌ | ❌ | ❌ | ❌ | ❌ |
-| IBA | Lower levels | Lower levels | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Feature | Description | Default Access Pattern |
+|---------|-------------|-------------------------|
+| Dashboard | View main dashboard | **All Roles** |
+| Contacts | View and manage contacts | **All Roles** |
+| Deals | View and manage deals | **All Roles** |
+| Tasks | View and manage tasks | **All Roles** |
+| Reports | View analytics and reports | **Sr. BMA+** (Admin, Field Builder, Field Trainer, Sr. BMA) |
+| User Management | Create and manage users | **Field Builder+** (Admin, Field Builder) |
+| Securia Access | Access to Securia module | **Admin Only** |
+
+### **API Operation Permissions**
+*Each API endpoint checks against stored permissions data*
+
+| API Endpoint | Permission Key | Default Access |
+|--------------|----------------|----------------|
+| `GET /api/users` | `users.view` | **BMA+** |
+| `POST /api/users` | `users.create` | **Admin Only** |
+| `PUT /api/users/:id` | `users.edit` | **IBA+** (own profile) / **BMA+** (others) |
+| `DELETE /api/users/:id` | `users.delete` | **Admin Only** |
+| `GET /api/admin/dashboard/stats` | `admin.dashboard` | **Admin Only** |
+| `POST /api/attachments/upload` | `attachments.upload` | **All Authenticated** |
+| `GET /api/admin/page-permissions` | `admin.permissions` | **Admin Only** |
+
+### **How Dynamic Permissions Work**
+
+1. **Database Storage**: Permissions are stored in `PagePermission` collection
+2. **Runtime Checks**: All API endpoints use middleware that queries the database
+3. **Flexible Configuration**: Admins can modify permissions without code changes
+4. **Hierarchical Support**: Higher roles inherit lower-level permissions
+5. **Caching**: Permissions are cached for performance with TTL expiration
+
+```typescript
+// Example: Dynamic permission check in middleware
+const checkPermission = (permissionKey: string) => {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const userRole = req.user?.role;
+    const hasPermission = await PermissionService.checkAccess(userRole, permissionKey);
+    
+    if (!hasPermission) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Insufficient permissions',
+        required: permissionKey 
+      });
+    }
+    
+    next();
+  };
+};
+
+// Usage in routes
+router.get('/dashboard/stats', 
+  authenticate, 
+  checkPermission('admin.dashboard'), 
+  getDashboardStats
+);
+```
 
 ## 📊 User Information Structure
 
@@ -264,25 +317,75 @@ curl -X GET http://localhost:3000/api/attachments/file/attachment_id \
   --output downloaded_file.pdf
 ```
 
-### Page Access Permissions
+### Dynamic Permission Management
 ```bash
-# Initialize default pages (Admin only)
+# Initialize default permissions (creates database records)
 curl -X POST http://localhost:3000/api/admin/page-permissions/initialize \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
-# Get all page permissions
+# Get all current permissions configuration
 curl -X GET http://localhost:3000/api/admin/page-permissions \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
-# Toggle role access to a page
-curl -X PATCH http://localhost:3000/api/admin/page-permissions/Dashboard/toggle \
+# Update a specific role's access to a feature
+curl -X PATCH http://localhost:3000/api/admin/page-permissions/Reports/toggle \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"role": "Field Trainer"}'
+  -d '{"role": "BMA"}'
 
-# Get user's page permissions
+# Create new permission rule
+curl -X POST http://localhost:3000/api/admin/page-permissions \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pageName": "Advanced Analytics",
+    "description": "Access to advanced analytics dashboard",
+    "rolePermissions": {
+      "Admin": true,
+      "Field Builder": true,
+      "Field Trainer": false,
+      "Sr. BMA": false,
+      "BMA": false,
+      "IBA": false
+    }
+  }'
+
+# Check user's current permissions
 curl -X GET http://localhost:3000/api/users/permissions \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Administrative Operations
+```bash
+# Dashboard Stats (Admin only - checked against database permissions)
+curl -X GET http://localhost:3000/api/admin/dashboard/stats \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Bulk Update Users (Admin only - dynamic permission check)
+curl -X PUT http://localhost:3000/api/admin/users/bulk \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userIds": ["user1_id", "user2_id"],
+    "updates": {
+      "role": "Sr. BMA",
+      "status": "Active"
+    }
+  }'
+
+# Create new user (permission-based access control)
+curl -X POST http://localhost:3000/api/admin/users \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "consultantId": "CON009",
+    "entryDate": "2025-06-28",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "email": "jane.smith@money1st.com",
+    "password": "securepass456",
+    "role": "Field Trainer"
+  }'
 ```
 
 ## 🔒 Security Features
@@ -429,69 +532,90 @@ For technical support or questions:
 
 
 ## 🚀 API Endpoints Overview
+*All endpoints use dynamic, database-stored permission checks*
 
 ### **Authentication** (`/api/auth`)
 - `POST /api/auth/login` - User login
-- `POST /api/auth/register` - Register new user (Admin/IBA only)
+- `POST /api/auth/register` - Register new user (permission-based access)
 - `GET /api/auth/profile` - Get current user profile
 
-### **User Management** (`/api/users`) - Role-Based Access
-- `GET /api/users` - List users (BMA+ access)
-- `GET /api/users/:id` - Get user by ID (BMA+ access) 
-- `PUT /api/users/:id` - Update user (IBA+ access)
-- `DELETE /api/users/:id` - Delete user (Admin only)
+### **User Management** (`/api/users`) - Dynamic Permission Control
+- `GET /api/users` - List users (permission: `users.view`)
+- `GET /api/users/:id` - Get user by ID (permission: `users.view`)
+- `PUT /api/users/:id` - Update user (permission: `users.edit`)
+- `DELETE /api/users/:id` - Delete user (permission: `users.delete`)
 - `GET /api/users/permissions` - Get user's page permissions
 
-### **🆕 Admin Panel** (`/api/admin`) - Admin Only Access
+### **🆕 Admin Panel** (`/api/admin`) - Permission-Based Access Control
 
 #### **Dashboard & Analytics**
-- `GET /api/admin/dashboard/stats` - Dashboard statistics
-- `GET /api/admin/users/activity` - User activity and trends
+- `GET /api/admin/dashboard/stats` - Dashboard statistics (permission: `admin.dashboard`)
+- `GET /api/admin/users/activity` - User activity (permission: `admin.analytics`)
 
 #### **User Management**
-- `GET /api/admin/users` - Get all users with advanced filtering
-- `POST /api/admin/users` - Create new user
-- `PUT /api/admin/users/bulk` - Bulk update multiple users
-- `DELETE /api/admin/users/bulk` - Delete multiple users
+- `GET /api/admin/users` - Get all users (permission: `admin.users.view`)
+- `POST /api/admin/users` - Create new user (permission: `admin.users.create`)
+- `PUT /api/admin/users/bulk` - Bulk update (permission: `admin.users.bulk`)
+- `DELETE /api/admin/users/bulk` - Bulk delete (permission: `admin.users.delete`)
 
 #### **Individual User Operations**
-- `PATCH /api/admin/users/:id/toggle-status` - Toggle user active/inactive
-- `PATCH /api/admin/users/:id/role` - Change user role/privileges
-- `PATCH /api/admin/users/:id/reset-password` - Reset user password
+- `PATCH /api/admin/users/:id/toggle-status` - Toggle status (permission: `admin.users.edit`)
+- `PATCH /api/admin/users/:id/role` - Change role (permission: `admin.users.role`)
+- `PATCH /api/admin/users/:id/reset-password` - Reset password (permission: `admin.users.edit`)
 
-#### **Page Access Permissions**
-- `GET /api/admin/page-permissions` - Get all page permissions
-- `POST /api/admin/page-permissions` - Create/update page permission
-- `POST /api/admin/page-permissions/initialize` - Initialize default pages
-- `PATCH /api/admin/page-permissions/:pageName/toggle` - Toggle role access
-- `DELETE /api/admin/page-permissions/:pageName` - Delete page permission
+#### **🆕 Dynamic Page Permissions Management**
+- `GET /api/admin/page-permissions` - Get all permissions (permission: `admin.permissions`)
+- `POST /api/admin/page-permissions` - Create/update permission (permission: `admin.permissions`)
+- `POST /api/admin/page-permissions/initialize` - Initialize defaults (permission: `admin.permissions`)
+- `PATCH /api/admin/page-permissions/:pageName/toggle` - Toggle access (permission: `admin.permissions`)
+- `DELETE /api/admin/page-permissions/:pageName` - Delete permission (permission: `admin.permissions`)
 
-### **🆕 File Attachments** (`/api/attachments`) - Authenticated Users
+### **🆕 File Attachments** (`/api/attachments`) - Permission-Based Access
 
 #### **File Operations**
-- `POST /api/attachments/upload` - Upload file(s) with metadata
-- `GET /api/attachments/:recordId/:category` - List attachments for record
-- `GET /api/attachments/details/:id` - Get attachment details
-- `GET /api/attachments/file/:id` - Download file
-- `PUT /api/attachments/:id` - Update attachment metadata
-- `DELETE /api/attachments/:id` - Delete attachment and file
-- `GET /api/attachments/stats/:recordId` - Get attachment statistics
+- `POST /api/attachments/upload` - Upload files (permission: `attachments.upload`)
+- `GET /api/attachments/:recordId/:category` - List attachments (permission: `attachments.view`)
+- `GET /api/attachments/details/:id` - Get details (permission: `attachments.view`)
+- `GET /api/attachments/file/:id` - Download file (permission: `attachments.download`)
+- `PUT /api/attachments/:id` - Update metadata (permission: `attachments.edit`)
+- `DELETE /api/attachments/:id` - Delete attachment (permission: `attachments.delete`)
+- `GET /api/attachments/stats/:recordId` - Get statistics (permission: `attachments.view`)
 
-#### **File Categories**
+#### **File Categories** (Permission-controlled access)
 - `note` - Note attachments
-- `contact` - Contact-related files
+- `contact` - Contact-related files  
 - `deal` - Deal documents
 - `client` - Client files
 - `document` - General documents
 - `image` - Image files
 - `other` - Miscellaneous files
 
-### **🆕 System**
-- `GET /health` - Health check endpoint
-- `GET /api-docs` - **Interactive Swagger documentation**
-- `GET /api-docs.json` - OpenAPI JSON specification
+### **🆕 System & Monitoring**
+- `GET /health` - Health check endpoint (no authentication required)
+- `GET /api-docs` - **Interactive Swagger documentation** (no authentication required)
+- `GET /api-docs.json` - OpenAPI JSON specification (no authentication required)
 
-> **💡 Pro Tip**: Visit [http://localhost:3000/api-docs](http://localhost:3000/api-docs) for interactive API testing!
+> **💡 Dynamic Permissions**: All protected endpoints check permissions against the database in real-time. Admins can modify access without code changes!
+
+### **🔄 Permission System Architecture**
+
+```typescript
+// Example permission check flow:
+// 1. User makes API request
+// 2. Authentication middleware validates JWT
+// 3. Permission middleware queries database for role permissions
+// 4. Access granted/denied based on stored data
+// 5. Optional: Permission cache updated for performance
+
+interface PermissionCheck {
+  endpoint: string;
+  method: string;
+  permission: string;
+  userRole: string;
+  access: boolean;
+  timestamp: Date;
+}
+```
 
 ## ✅ System Verification
 
@@ -527,16 +651,55 @@ curl -X POST http://localhost:3000/api/attachments/upload \
 
 ## 📋 Next Steps
 
-The backend is fully implemented and ready for production use. To get started:
+The backend is fully implemented with **dynamic, data-driven permissions** and ready for production use. To get started:
 
 1. **Environment Setup**: Copy `.env.example` to `.env` and configure your values
 2. **Database**: Ensure MongoDB is running and accessible
-3. **Admin User**: Create first admin user via registration endpoint
-4. **🆕 File Storage**: Ensure proper permissions for `uploads/` directory
-5. **🆕 API Documentation**: Explore endpoints at [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
-6. **Frontend Integration**: Connect your React frontend to these API endpoints
-7. **🆕 Page Permissions**: Initialize default page permissions via admin endpoint
-8. **Deployment**: Follow the production checklist for deployment
+3. **🆕 Bootstrap System**: Run `npm run bootstrap` to create admin user and default permissions
+4. **🆕 Initialize Permissions**: Call `/api/admin/page-permissions/initialize` to set up default permission rules
+5. **🆕 File Storage**: Ensure proper permissions for `uploads/` directory  
+6. **🆕 API Documentation**: Explore endpoints at [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+7. **Frontend Integration**: Connect your React frontend to these permission-aware API endpoints
+8. **🆕 Permission Configuration**: Use admin endpoints to customize role permissions as needed
+9. **Deployment**: Follow the production checklist for deployment
+
+### **🔧 Permission System Setup**
+
+```bash
+# 1. Start the server
+npm run dev
+
+# 2. Create admin user (if not exists)
+npm run bootstrap
+
+# 3. Login as admin to get JWT token
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@money1st.com", "password": "admin123"}'
+
+# 4. Initialize default permissions in database
+curl -X POST http://localhost:3000/api/admin/page-permissions/initialize \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# 5. Customize permissions as needed
+curl -X PATCH http://localhost:3000/api/admin/page-permissions/Reports/toggle \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"role": "BMA"}'
+
+# 6. Verify permissions are working
+curl -X GET http://localhost:3000/api/users/permissions \
+  -H "Authorization: Bearer USER_JWT_TOKEN"
+```
+
+### **🎯 Key Benefits of Dynamic Permissions**
+
+- **Runtime Configuration**: Change permissions without code deployment
+- **Granular Control**: Fine-tune access at feature and operation level  
+- **Audit Trail**: Track permission changes and access attempts
+- **Scalable**: Easy to add new features and permission rules
+- **Frontend Integration**: Frontend can query user permissions for UI control
+- **Performance**: Cached permissions for fast access checks
 
 ## 📚 Additional Documentation
 
