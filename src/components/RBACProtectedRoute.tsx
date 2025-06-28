@@ -30,6 +30,12 @@ export default function RBACProtectedRoute({ children, pageName }: RBACProtected
   }), [pageName, role, canAccess, authLoading, roleLoading, accessLoading, accessError]);
 
   console.log("RBACProtectedRoute Debug:", debugInfo);
+  
+  // Additional debugging for Securia
+  if (pageName === 'Securia') {
+    console.log("SECURIA DEBUG - Role:", role, "Type:", typeof role, "String value:", String(role));
+    console.log("SECURIA DEBUG - Is Admin?", role === 'Admin', "String comparison:", String(role) === 'Admin');
+  }
 
   // Show loading while authentication or role is loading
   if (authLoading || roleLoading) {
@@ -49,6 +55,28 @@ export default function RBACProtectedRoute({ children, pageName }: RBACProtected
   // For Admin users, grant immediate access without waiting for permission checks
   if (role === 'Admin') {
     return <>{children}</>;
+  }
+
+  // For Securia page, only allow Admin users (deny all others immediately)
+  if (pageName === 'Securia' && role !== null && String(role) !== 'Admin') {
+    return (
+      <div className="p-8 text-center">
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle className="text-red-600">Access Denied</CardTitle>
+            <CardDescription>
+              Securia access is restricted to Admin users only.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">Your current role: {role || 'Unknown'}</p>
+            <Button asChild className="w-full" variant="outline">
+              <Link to="/">Return to Home</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   // If there's an error loading permissions, show error

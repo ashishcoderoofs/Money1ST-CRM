@@ -18,9 +18,11 @@ export function useUserRole(userId: string | null) {
     
     // Get role directly from the user object returned by authentication
     if (user.role) {
+      console.log("useUserRole DEBUG - User role:", user.role, "Type:", typeof user.role);
       setRole(user.role as UserRole);
       setLoading(false);
     } else {
+      console.log("useUserRole DEBUG - No role found in user object:", user);
       setRole(null);
       setLoading(false);
     }

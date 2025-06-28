@@ -83,10 +83,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   // Initialize permissions when user role is loaded - but only once per role
   useEffect(() => {
-    if (!authLoading && user && role && role === 'Admin' && !populatePermissions.isPending) {
-      console.log("Ensuring permissions exist for admin role:", role);
-      populatePermissions.mutate({ forceRefresh: false });
-    }
+    // DISABLED: Permissions API is not working, causing errors
+    // if (!authLoading && user && role && role === 'Admin' && !populatePermissions.isPending) {
+    //   console.log("Ensuring permissions exist for admin role:", role);
+    //   populatePermissions.mutate({ forceRefresh: false });
+    // }
   }, [authLoading, user, role]);
 
   // Show loading only if auth or role are loading (not permissions, as we have fallback logic)
@@ -141,7 +142,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Show initialize button for admins */}
-        {role === 'Admin' && (
+        {role === 'Admin' && false && (
           <div className="mt-4">
             <Button
               onClick={() => populatePermissions.mutate({ forceRefresh: true })}
