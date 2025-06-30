@@ -4,8 +4,17 @@ import { Navigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import { ShieldCheck, Lock, Mail, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import clsx from "clsx";
 
 export default function SecuriaProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
@@ -15,28 +24,22 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
   const [password, setPassword] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
 
-  // Check Securia access - Only Admin users are allowed
   useEffect(() => {
     if (!user) {
       setCanAccess(false);
       return;
     }
-    
-    // Only Admin users can access Securia
     if (role === "Admin") {
-      console.log("Admin role detected for Securia access - require re-authentication");
       setCanAccess(true);
-      // Don't bypass authentication - require re-auth for security
       setIsAuthenticated(false);
     } else {
-      console.log("Non-admin role detected, denying Securia access");
       setCanAccess(false);
       setIsAuthenticated(false);
     }
   }, [user, role]);
 
-  // Initialize email field with user's email when user changes
   useEffect(() => {
     setIsAuthenticated(false);
     setPassword("");
@@ -46,81 +49,46 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
   const handleSecuriaLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
-    
     setIsVerifying(true);
-    
+
     try {
-      // Re-authenticate against main CRM auth system to verify identity
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
       const endpoint = `${apiUrl}/api/securia/reauth`;
-      
-      console.log("Making Securia reauth request to:", endpoint);
-      
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password: password.trim() }),
       });
 
       let data;
       try {
-        // Check if response has content before trying to parse JSON
         const text = await response.text();
-        if (text.trim()) {
-          data = JSON.parse(text);
-        } else {
-          data = { success: false, message: "Server returned empty response" };
-        }
+        data = text.trim() ? JSON.parse(text) : { success: false, message: "Server returned empty response" };
       } catch (jsonError) {
-        console.error("Failed to parse JSON response:", jsonError);
+        console.error("Invalid JSON response:", jsonError);
         data = { success: false, message: "Invalid server response" };
       }
 
       if (response.ok && data.success) {
-        // Verify that the re-authenticated user matches the current user
         if (data.user && data.user.email === user?.email) {
-          toast({
-            title: "Success",
-            description: "Securia access granted",
-          });
+          toast({ title: "Success", description: "Securia access granted" });
           setIsAuthenticated(true);
         } else {
-          toast({
-            title: "Error",
-            description: "Authentication failed. User mismatch.",
-            variant: "destructive",
-          });
+          toast({ title: "Error", description: "User mismatch.", variant: "destructive" });
           setPassword("");
         }
       } else {
-        // Handle different error status codes
         let errorMessage = data.message || "Authentication failed";
-        if (response.status === 400) {
-          errorMessage = data.message || "Invalid credentials provided";
-        } else if (response.status === 401) {
-          errorMessage = "Invalid credentials or access denied";
-        } else if (response.status === 403) {
-          errorMessage = "Access forbidden - Admin role required";
-        } else if (response.status >= 500) {
-          errorMessage = "Server error - please try again later";
-        }
-        
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        if (response.status === 400) errorMessage = "Invalid credentials";
+        else if (response.status === 403) errorMessage = "Admin access only";
+        else if (response.status >= 500) errorMessage = "Server error";
+
+        toast({ title: "Error", description: errorMessage, variant: "destructive" });
         setPassword("");
+        setLoginAttempts((prev) => prev + 1);
       }
-    } catch (error) {
-      console.error("Securia authentication error:", error);
-      toast({
-        title: "Error", 
-        description: "Network error. Please check your connection and try again.",
-        variant: "destructive",
-      });
+    } catch (err) {
+      toast({ title: "Network Error", description: "Check your connection.", variant: "destructive" });
       setPassword("");
     } finally {
       setIsVerifying(false);
@@ -141,14 +109,12 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
         <Card className="max-w-md mx-auto">
           <CardHeader>
             <CardTitle className="text-red-600">Access Denied</CardTitle>
-            <CardDescription>
-              Securia access is restricted to Admin users only.
-            </CardDescription>
+            <CardDescription>Admin role is required to access Securia.</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">Your current role: {role ?? "Unknown"}</p>
             <Button asChild className="mt-4 w-full" variant="outline">
-              <Link to="/">Return to Dashboard</Link>
+              <Link to="/">Back to Dashboard</Link>
             </Button>
           </CardContent>
         </Card>
@@ -156,61 +122,84 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
     );
   }
 
-  // If authenticated successfully, show the Securia content
-  if (isAuthenticated) {
-    return <>{children}</>;
-  }
+  if (isAuthenticated) return <>{children}</>;
 
-  // Show secure authentication screen for Admin users
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Securia Access</CardTitle>
-          <CardDescription>
-            Please enter your credentials to access the secure Securia portal
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSecuriaLogin} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <Input 
-                type="email" 
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                maxLength={255}
-              />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-200 px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md"
+      >
+        <Card className="border border-gray-200 shadow-xl backdrop-blur-md bg-white/80">
+          <CardHeader className="text-center space-y-2">
+            <div className="flex justify-center">
+              <ShieldCheck className="w-12 h-12 text-blue-700" />
             </div>
-            <div>
-              <label className="text-sm font-medium">Password</label>
-              <Input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoFocus
-                maxLength={128}
-              />
+            <CardTitle className="text-2xl font-bold">Securia Admin Login</CardTitle>
+            <CardDescription>Only authorized administrators are allowed to proceed.</CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSecuriaLogin} className="space-y-4">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input
+                    type="email"
+                    placeholder="admin@domain.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                    maxLength={255}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10"
+                    required
+                    maxLength={128}
+                  />
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isVerifying || !email.trim() || !password.trim()}
+              >
+                {isVerifying ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="animate-spin w-4 h-4" /> Verifying...
+                  </span>
+                ) : (
+                  "Access Securia"
+                )}
+              </Button>
+              {loginAttempts > 0 && (
+                <p className="text-xs text-center text-red-500">
+                  Warning: {loginAttempts} unsuccessful attempt{loginAttempts > 1 ? "s" : ""}.
+                </p>
+              )}
+            </form>
+            <div className="mt-4 text-center">
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/">← Cancel and return to Dashboard</Link>
+              </Button>
             </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isVerifying || !email.trim() || !password.trim()}
-            >
-              {isVerifying ? "Verifying..." : "Access Securia"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/">Cancel and return to Dashboard</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

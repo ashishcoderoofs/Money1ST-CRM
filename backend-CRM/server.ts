@@ -9,6 +9,7 @@ import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 
 // Import routes
+import securiaRoutes from './src/routes/securiaRoutes';
 import authRoutes from './src/routes/authRoutes';
 import userRoutes from './src/routes/userRoutes';
 import adminRoutes from './src/routes/adminRoutes';
@@ -21,32 +22,46 @@ import logger from './utils/logger';
 // Import Swagger configuration
 import { setupSwagger } from './src/config/swagger';
 
-
-// initialized
+// Initialize app
 const app: Application = express();
 
-// Security middleware
+// ✅ Middleware first
 app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:8080', credentials: true })); // Allow your frontend
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('combined'));
 
-// Rate limiting
+// ✅ Apply rate limiter
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 100 for production, 1000 for development
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000,
   message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
 
-// Logging
-app.use(morgan('combined'));
+// ✅ All routes after middleware
+app.use('/api/securia', securiaRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/attachments', attachmentRoutes);
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// ✅ Swagger setup
+setupSwagger(app);
 
-// Database connection
+// ✅ Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
+// ✅ Database connection
 const connectDB = async (): Promise<void> => {
   try {
     const mongoUri = process.env.MONGODB_URI;
@@ -64,34 +79,14 @@ const connectDB = async (): Promise<void> => {
 
 connectDB();
 
-// Setup Swagger documentation
-setupSwagger(app);
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/attachments', attachmentRoutes);
-
-// Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
-// Error handling middleware
+// ✅ Error & 404 handlers
 app.use(errorHandler);
-
-// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+// ✅ Start server
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
   console.log(`Server running on port ${PORT}`);
