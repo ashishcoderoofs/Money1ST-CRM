@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Users, UserPlus, Briefcase, BarChart3, FileText, Video, BookOpen, AlertCircle } from "lucide-react";
@@ -7,6 +8,7 @@ import { useSecuriaDashboardStats } from "@/hooks/useSecuriaDashboardStats";
 
 export default function Securia() {
   const { data: statsData, isLoading, error } = useSecuriaDashboardStats();
+  const [showAll, setShowAll] = useState(false);
 
   // Show error state if API fails
   if (error && !isLoading) {
@@ -44,15 +46,45 @@ export default function Securia() {
 
   return (
     <div className="space-y-10">
-      {/* Header */}
-      <div className="bg-gray-800 text-white p-8 rounded-lg shadow-md">
-        <h1 className="text-4xl font-bold">SECURIA</h1>
-        <p className="text-xl mt-2">Welcome to the Total Financial Solution Portal</p>
-        <p className="mt-1">Streamline consultant and client management in one integrated system</p>
-        {isLoading && (
-          <p className="text-sm text-gray-300 mt-2">Loading dashboard data...</p>
-        )}
-      </div>
+      {/* Header with Date & Time */}
+<div className="bg-gray-800 text-white p-8 rounded-lg shadow-md">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+    {/* Left - Title & Subtitle */}
+    <div>
+      <h1 className="text-4xl font-bold tracking-wide">SECURIA Dashboard</h1>
+      <p className="text-lg mt-1 text-gray-300">Welcome to the Total Financial Solution Portal</p>
+      <p className="text-sm text-gray-400">Streamline consultant and client management in one integrated system</p>
+      {isLoading && (
+        <p className="text-sm text-gray-300 mt-2">Loading dashboard data...</p>
+      )}
+    </div>
+
+    {/* Right - Date & Time */}
+    <div className="bg-gray-700 rounded-md p-4 text-right shadow-inner">
+      <p className="text-sm text-gray-200 font-medium flex items-center justify-end gap-2">
+        <svg className="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" strokeWidth="2"
+          viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round"
+            d="M8 7V3M16 7V3M3 11h18M5 19h14a2 2 0 002-2V7H3v10a2 2 0 002 2z" />
+        </svg>
+        {new Date().toLocaleDateString('en-IN', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}
+      </p>
+      <p className="text-sm text-gray-200 font-medium flex items-center justify-end gap-2 mt-1">
+        <svg className="w-4 h-4 text-green-300" fill="none" stroke="currentColor" strokeWidth="2"
+          viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round"
+            d="M12 6v6l4 2M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
+        </svg>
+        {new Date().toLocaleTimeString('en-IN')}
+      </p>
+    </div>
+  </div>
+</div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -166,40 +198,72 @@ export default function Securia() {
       </div>
 
       {/* Recent Activity */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-800">Recent Activity</h2>
-        <Card>
-          <CardContent className="pt-6">
-            {isLoading ? (
-              <div className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
-              </div>
-            ) : stats.recentActivity && stats.recentActivity.length > 0 ? (
-              <ul className="space-y-2 text-sm">
-                {stats.recentActivity.map((activity) => (
-                  <li key={activity.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
-                    <span className="text-lg">
-                      {activity.type === 'consultant_added' && '👤'}
-                      {activity.type === 'client_added' && '✅'}
-                      {activity.type === 'status_changed' && '📥'}
-                    </span>
-                    <div className="flex-1">
-                      <span>{activity.description}</span>
-                      <span className="text-gray-400 ml-2">
-                        ({new Date(activity.timestamp).toLocaleString()})
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 text-center py-4">No recent activity to display</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+<div className="space-y-4">
+  <h2 className="text-xl font-bold text-gray-800">Recent Activity</h2>
+  <Card>
+    <CardContent className="pt-6">
+      {isLoading ? (
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+        </div>
+      ) : stats.recentActivity && stats.recentActivity.length > 0 ? (
+        <>
+          <ul className="divide-y divide-gray-200">
+            {(showAll ? stats.recentActivity : stats.recentActivity.slice(0, 5)).map((activity) => {
+              const [mainAction, module] = activity.description.split(" - ");
+              const formattedTime = new Date(activity.timestamp).toLocaleString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              });
+
+              const icon = {
+                consultant_added: "👤",
+                client_added: "✅",
+                status_changed: "📥",
+                dashboard_viewed: "📊",
+                reauth_success: "🔐",
+              }[activity.type] || "ℹ️";
+
+              return (
+                <li key={activity.id} className="flex items-start gap-4 py-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-lg">
+                    {icon}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-800">
+                      {mainAction}
+                      {module && (
+                        <span className="text-blue-600 font-normal"> - {module}</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{formattedTime}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {stats.recentActivity.length > 5 && (
+            <div className="pt-4 text-center">
+              <button
+                onClick={() => setShowAll((prev) => !prev)}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                {showAll ? "View Less" : "View More"}
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="text-gray-500 text-center py-4">No recent activity to display</p>
+      )}
+    </CardContent>
+  </Card>
+</div>
 
       {/* Resources Section */}
       <div className="space-y-4">
