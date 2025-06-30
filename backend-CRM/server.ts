@@ -9,11 +9,11 @@ import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 
 // Import routes
-import securiaRoutes from './src/routes/securiaRoutes';
 import authRoutes from './src/routes/authRoutes';
 import userRoutes from './src/routes/userRoutes';
 import adminRoutes from './src/routes/adminRoutes';
 import attachmentRoutes from './src/routes/attachmentRoutes';
+import securiaRoutes from './src/routes/securiaRoutes';
 
 // Import middleware
 import { errorHandler } from './src/middleware/errorHandler';
@@ -27,7 +27,11 @@ const app: Application = express();
 
 // ✅ Middleware first
 app.use(helmet());
-app.use(cors({ origin: 'http://localhost:8080', credentials: true })); // Allow your frontend
+// Fix CORS to allow frontend on port 8081
+app.use(cors({ 
+  origin: ['http://localhost:8080', 'http://localhost:8081', 'http://localhost:3000'], 
+  credentials: true 
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined'));
@@ -43,11 +47,11 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // ✅ All routes after middleware
-app.use('/api/securia', securiaRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/attachments', attachmentRoutes);
+app.use('/api/securia', securiaRoutes);
 
 // ✅ Swagger setup
 setupSwagger(app);

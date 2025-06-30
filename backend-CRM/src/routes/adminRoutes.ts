@@ -8,10 +8,19 @@ import {
   updateUserRole,
   deleteMultipleUsers,
   getUserActivity,
-  resetUserPassword
+  resetUserPassword,
+  getPermissions
 } from '../controllers/adminController';
+import {
+  getPagePermissions,
+  createPagePermission,
+  toggleRolePermission,
+  initializeDefaultPages,
+  deletePagePermission
+} from '../controllers/pagePermissionController';
 import { authenticate, authorizeAdmin } from '../middleware/auth';
 import { validateRegistration, validateBulkUpdate } from '../middleware/validation';
+import { validateObjectId, validateRequiredFields, validateQueryParams } from '../middleware/paramValidation';
 
 const router = Router();
 
@@ -333,5 +342,103 @@ router.patch('/users/:id/role', updateUserRole);
  *               $ref: '#/components/schemas/ApiResponse'
  */
 router.patch('/users/:id/reset-password', resetUserPassword);
+
+// ===== PAGE PERMISSIONS ROUTES =====
+
+/**
+ * @swagger
+ * /api/admin/page-permissions:
+ *   get:
+ *     summary: Get all page permissions (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Page permissions retrieved successfully
+ */
+router.get('/page-permissions', getPagePermissions);
+
+/**
+ * @swagger
+ * /api/admin/page-permissions:
+ *   post:
+ *     summary: Create or update page permission (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Page permission created/updated successfully
+ */
+router.post('/page-permissions', createPagePermission);
+
+/**
+ * @swagger
+ * /api/admin/page-permissions/initialize:
+ *   post:
+ *     summary: Initialize default page permissions (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Default permissions initialized successfully
+ */
+router.post('/page-permissions/initialize', initializeDefaultPages);
+
+/**
+ * @swagger
+ * /api/admin/page-permissions/{pageName}/toggle:
+ *   patch:
+ *     summary: Toggle role permission for a page (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: pageName
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Permission toggled successfully
+ */
+router.patch('/page-permissions/:pageName/toggle', toggleRolePermission);
+
+/**
+ * @swagger
+ * /api/admin/page-permissions/{pageName}:
+ *   delete:
+ *     summary: Delete page permission (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: pageName
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Page permission deleted successfully
+ */
+router.delete('/page-permissions/:pageName', deletePagePermission);
+
+/**
+ * @swagger
+ * /api/admin/permissions:
+ *   get:
+ *     summary: Get user permissions (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Permissions retrieved successfully
+ */
+router.get('/permissions', getPermissions);
 
 export default router;
