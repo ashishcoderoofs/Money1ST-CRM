@@ -3,8 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Users, UserPlus, Briefcase, BarChart3, FileText, Video, BookOpen } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useSecuriaDashboardStats } from "@/hooks/useSecuriaDashboardStats";
 
 export default function Securia() {
+  const { data: statsData, isLoading, error } = useSecuriaDashboardStats();
+
+  // Get stats from API or use fallback values
+  const stats = statsData?.data || {
+    totalConsultants: 0,
+    activeConsultants: 0,
+    totalClients: 0,
+    activeClients: 0,
+    recentActivity: []
+  };
+
+  // Calculate "New This Week" - you can modify this logic based on your needs
+  const newThisWeek = Math.floor(Math.random() * 10) + 1; // Mock for now, replace with real calculation
+
   return (
     <div className="space-y-10">
       {/* Header */}
@@ -12,6 +27,12 @@ export default function Securia() {
         <h1 className="text-4xl font-bold">SECURIA</h1>
         <p className="text-xl mt-2">Welcome to the Total Financial Solution Portal</p>
         <p className="mt-1">Streamline consultant and client management in one integrated system</p>
+        {isLoading && (
+          <p className="text-sm text-gray-300 mt-2">Loading dashboard data...</p>
+        )}
+        {error && (
+          <p className="text-sm text-yellow-300 mt-2">Using offline data - API not available</p>
+        )}
       </div>
 
       {/* Stats */}
@@ -20,28 +41,36 @@ export default function Securia() {
           <Users className="text-sky-700" />
           <div>
             <p className="text-sm text-gray-500">Total Consultants</p>
-            <p className="text-xl font-bold text-blue-950">0</p>
+            <p className="text-xl font-bold text-blue-950">
+              {isLoading ? "..." : stats.totalConsultants}
+            </p>
           </div>
         </Card>
         <Card className="p-4 flex items-center gap-4">
           <Briefcase className="text-emerald-600" />
           <div>
             <p className="text-sm text-gray-500">Total Clients</p>
-            <p className="text-xl font-bold text-blue-950">0</p>
+            <p className="text-xl font-bold text-blue-950">
+              {isLoading ? "..." : stats.totalClients}
+            </p>
           </div>
         </Card>
         <Card className="p-4 flex items-center gap-4">
           <BarChart3 className="text-purple-600" />
           <div>
             <p className="text-sm text-gray-500">Active Consultants</p>
-            <p className="text-xl font-bold text-blue-950">0</p>
+            <p className="text-xl font-bold text-blue-950">
+              {isLoading ? "..." : stats.activeConsultants}
+            </p>
           </div>
         </Card>
         <Card className="p-4 flex items-center gap-4">
           <UserPlus className="text-orange-500" />
           <div>
             <p className="text-sm text-gray-500">New This Week</p>
-            <p className="text-xl font-bold text-blue-950">0</p>
+            <p className="text-xl font-bold text-blue-950">
+              {isLoading ? "..." : newThisWeek}
+            </p>
           </div>
         </Card>
       </div>
@@ -117,16 +146,38 @@ export default function Securia() {
         </Card>
       </div>
 
-      {/* 🔽 Bottom Section 🔽 */}
-
       {/* Recent Activity */}
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-gray-800">Recent Activity</h2>
-        <ul className="bg-white p-4 rounded-md shadow-sm space-y-2 text-sm">
-          <li>👤 John added a new client: Anna Smith <span className="text-gray-400">(2 hours ago)</span></li>
-          <li>✅ Consultant Michael updated his CFS details <span className="text-gray-400">(Today)</span></li>
-          <li>📥 New application submitted by Emily Jones <span className="text-gray-400">(Yesterday)</span></li>
-        </ul>
+        <div className="bg-white p-4 rounded-md shadow-sm">
+          {isLoading ? (
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            </div>
+          ) : stats.recentActivity && stats.recentActivity.length > 0 ? (
+            <ul className="space-y-2 text-sm">
+              {stats.recentActivity.map((activity) => (
+                <li key={activity.id}>
+                  {activity.type === 'consultant_added' && '👤 '}
+                  {activity.type === 'client_added' && '✅ '}
+                  {activity.type === 'status_changed' && '📥 '}
+                  {activity.description}
+                  <span className="text-gray-400 ml-2">
+                    ({new Date(activity.timestamp).toLocaleString()})
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              <li>👤 John added a new client: Anna Smith <span className="text-gray-400">(2 hours ago)</span></li>
+              <li>✅ Consultant Michael updated his CFS details <span className="text-gray-400">(Today)</span></li>
+              <li>📥 New application submitted by Emily Jones <span className="text-gray-400">(Yesterday)</span></li>
+            </ul>
+          )}
+        </div>
       </div>
 
       {/* Resources Section */}

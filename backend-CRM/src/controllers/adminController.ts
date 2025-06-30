@@ -66,9 +66,18 @@ export const bulkUpdateUsers = async (req: AuthRequest, res: Response): Promise<
       const currentUserLevel = hierarchy[req.user!.role];
       const targetRoleLevel = hierarchy[updates.role];
       
-      if (targetRoleLevel >= currentUserLevel) {
+      // Special case: Only Admins can assign Admin role
+      if (updates.role === 'Admin' && req.user!.role !== 'Admin') {
         res.status(403).json({ 
-          error: 'Cannot assign role equal or higher than your own' 
+          error: 'Only Admin users can assign Admin role' 
+        });
+        return;
+      }
+      
+      // For non-Admin roles, check hierarchy (cannot assign roles higher than your own)
+      if (updates.role !== 'Admin' && targetRoleLevel > currentUserLevel) {
+        res.status(403).json({ 
+          error: 'Cannot assign role higher than your own' 
         });
         return;
       }
@@ -121,9 +130,18 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
       const currentUserLevel = hierarchy[req.user!.role];
       const targetRoleLevel = hierarchy[role];
       
-      if (targetRoleLevel >= currentUserLevel) {
+      // Special case: Only Admins can create other Admins
+      if (role === 'Admin' && req.user!.role !== 'Admin') {
         res.status(403).json({ 
-          error: 'Cannot create user with role equal or higher than your own' 
+          error: 'Only Admin users can create other Admin users' 
+        });
+        return;
+      }
+      
+      // For non-Admin roles, check hierarchy (cannot create roles higher than your own)
+      if (role !== 'Admin' && targetRoleLevel > currentUserLevel) {
+        res.status(403).json({ 
+          error: 'Cannot create user with role higher than your own' 
         });
         return;
       }
@@ -311,9 +329,18 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
     // Explicitly type role as keyof typeof hierarchy
     const targetRoleLevel = hierarchy[role as keyof typeof hierarchy];
     
-    if (targetRoleLevel >= currentUserLevel) {
+    // Special case: Only Admins can assign Admin role
+    if (role === 'Admin' && req.user!.role !== 'Admin') {
       res.status(403).json({ 
-        error: 'Cannot assign role equal or higher than your own' 
+        error: 'Only Admin users can assign Admin role' 
+      });
+      return;
+    }
+    
+    // For non-Admin roles, check hierarchy (cannot assign roles higher than your own)
+    if (role !== 'Admin' && targetRoleLevel > currentUserLevel) {
+      res.status(403).json({ 
+        error: 'Cannot assign role higher than your own' 
       });
       return;
     }

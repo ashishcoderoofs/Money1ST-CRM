@@ -191,3 +191,67 @@ export interface ToggleRolePermissionRequest {
 }
 
 export type RoleHierarchy = Record<UserRole, number>;
+
+// Securia Types
+export interface SecuriaConsultantRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  specialization: string;
+  experience: string;
+  certifications: string[];
+  status?: 'active' | 'inactive';
+}
+
+export interface SecuriaClientRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  dateOfBirth: Date;
+  ssn: string;
+  consultantId: string;
+  financialInfo: {
+    annualIncome: number;
+    netWorth: number;
+    investmentGoals: string;
+    riskTolerance: 'low' | 'medium' | 'high';
+  };
+  status?: 'active' | 'inactive';
+}
+
+export interface SecuriaReAuthRequest {
+  email: string;
+  password: string;
+}
+
+export interface SecuriaAuditLogQuery {
+  page?: string;
+  limit?: string;
+  action?: string;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface SecuriaChartQuery {
+  timeframe?: 'week' | 'month' | 'quarter' | 'year';
+}
+
+export interface SecuriaListQuery {
+  page?: string;
+  limit?: string;
+  search?: string;
+  status?: 'active' | 'inactive' | 'all';
+  sort?: string;
+  order?: 'asc' | 'desc';
+  consultantId?: string;
+}

@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSecuriaReauth } from "@/hooks/useSecuriaReauth";
 import { Navigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
@@ -8,13 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "@/hooks/use-toast";
 
 export default function SecuriaProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading, token } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole(user?.id ?? null);
   const [canAccess, setCanAccess] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const securiaReauth = useSecuriaReauth();
 
   // Check Securia access - Only Admin users are allowed
   useEffect(() => {
@@ -46,68 +48,23 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
   const handleSecuriaLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
-    
-    setIsVerifying(true);
-    
+
     try {
-      // Re-authenticate using existing JWT token + password verification
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const endpoint = `${apiUrl}/api/securia/reauth`;
-      
-      console.log("Making Securia reauth request to:", endpoint);
-      
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`, // Include JWT token for user verification
-        },
-        body: JSON.stringify({ 
-          email: email.trim(), 
-          password: password.trim() 
-        }),
+      const result = await securiaReauth.mutateAsync({
+        email: email.trim(),
+        password: password.trim(),
       });
 
-      let data;
-      try {
-        // Check if response has content before trying to parse JSON
-        const text = await response.text();
-        if (text.trim()) {
-          data = JSON.parse(text);
-        } else {
-          data = { success: false, message: "Server returned empty response" };
-        }
-      } catch (jsonError) {
-        console.error("Failed to parse JSON response:", jsonError);
-        data = { success: false, message: "Invalid server response" };
-      }
-
-      if (response.ok && data.success) {
-        // Authentication successful
+      if (result.success) {
         toast({
           title: "Success",
           description: "Securia access granted",
         });
         setIsAuthenticated(true);
       } else {
-        // Handle different error status codes
-        let errorMessage = data.message || "Authentication failed";
-        
-        if (response.status === 400) {
-          errorMessage = "Invalid credentials provided";
-        } else if (response.status === 401) {
-          errorMessage = "Invalid credentials or session expired";
-        } else if (response.status === 403) {
-          errorMessage = "Access forbidden - Admin role required";
-        } else if (response.status === 404) {
-          errorMessage = "Authentication service not available";
-        } else if (response.status >= 500) {
-          errorMessage = "Server error - please try again later";
-        }
-        
         toast({
           title: "Error",
-          description: errorMessage,
+          description: result.message || "Authentication failed",
           variant: "destructive",
         });
         setPassword("");
@@ -115,13 +72,11 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
     } catch (error) {
       console.error("Securia authentication error:", error);
       toast({
-        title: "Error", 
-        description: "Network error. Please check your connection and try again.",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Authentication failed",
         variant: "destructive",
       });
       setPassword("");
-    } finally {
-      setIsVerifying(false);
     }
   };
 
@@ -198,9 +153,9 @@ export default function SecuriaProtectedRoute({ children }: { children: React.Re
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isVerifying || !password.trim()}
+              disabled={securiaReauth.isPending || !password.trim()}
             >
-              {isVerifying ? "Verifying..." : "Access Securia"}
+              {securiaReauth.isPending ? "Verifying..." : "Access Securia"}
             </Button>
           </form>
           <div className="mt-4 text-center">

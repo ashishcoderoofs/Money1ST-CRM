@@ -249,6 +249,332 @@ const options: swaggerJsdoc.Options = {
               example: 'Error message'
             }
           }
+        },
+        // Securia Schemas
+        SecuriaConsultant: {
+          type: 'object',
+          required: ['firstName', 'lastName', 'email', 'phone', 'specialization', 'experience'],
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Auto-generated consultant ID'
+            },
+            firstName: {
+              type: 'string',
+              maxLength: 50,
+              example: 'John'
+            },
+            lastName: {
+              type: 'string',
+              maxLength: 50,
+              example: 'Doe'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'Unique email address',
+              example: 'john.doe@example.com'
+            },
+            phone: {
+              type: 'string',
+              pattern: '^\\+?[\\d\\s\\-\\(\\)]+',
+              example: '+1-555-0123'
+            },
+            specialization: {
+              type: 'string',
+              maxLength: 100,
+              example: 'Financial Planning'
+            },
+            experience: {
+              type: 'string',
+              maxLength: 500,
+              example: '5 years in wealth management'
+            },
+            certifications: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 100
+              },
+              example: ['CFP', 'CFA']
+            },
+            status: {
+              type: 'string',
+              enum: ['active', 'inactive'],
+              default: 'active'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time'
+            }
+          }
+        },
+        SecuriaClient: {
+          type: 'object',
+          required: ['firstName', 'lastName', 'email', 'phone', 'address', 'dateOfBirth', 'ssn', 'consultantId', 'financialInfo'],
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Auto-generated client ID'
+            },
+            firstName: {
+              type: 'string',
+              maxLength: 50,
+              example: 'Jane'
+            },
+            lastName: {
+              type: 'string',
+              maxLength: 50,
+              example: 'Smith'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'Unique email address',
+              example: 'jane.smith@example.com'
+            },
+            phone: {
+              type: 'string',
+              pattern: '^\\+?[\\d\\s\\-\\(\\)]+',
+              example: '+1-555-0456'
+            },
+            address: {
+              type: 'object',
+              required: ['street', 'city', 'state', 'zipCode', 'country'],
+              properties: {
+                street: {
+                  type: 'string',
+                  maxLength: 200,
+                  example: '123 Main St'
+                },
+                city: {
+                  type: 'string',
+                  maxLength: 100,
+                  example: 'Anytown'
+                },
+                state: {
+                  type: 'string',
+                  maxLength: 50,
+                  example: 'CA'
+                },
+                zipCode: {
+                  type: 'string',
+                  pattern: '^\\d{5}(-\\d{4})?$',
+                  example: '12345'
+                },
+                country: {
+                  type: 'string',
+                  maxLength: 50,
+                  default: 'USA',
+                  example: 'USA'
+                }
+              }
+            },
+            dateOfBirth: {
+              type: 'string',
+              format: 'date',
+              example: '1985-06-15'
+            },
+            ssn: {
+              type: 'string',
+              description: 'Encrypted SSN (stored securely)',
+              example: '123-45-6789'
+            },
+            status: {
+              type: 'string',
+              enum: ['active', 'inactive'],
+              default: 'active'
+            },
+            consultantId: {
+              type: 'string',
+              description: 'Reference to assigned consultant',
+              example: '60f1b2b5c8e4f123456789ab'
+            },
+            financialInfo: {
+              type: 'object',
+              required: ['annualIncome', 'netWorth', 'investmentGoals', 'riskTolerance'],
+              properties: {
+                annualIncome: {
+                  type: 'number',
+                  minimum: 0,
+                  example: 100000
+                },
+                netWorth: {
+                  type: 'number',
+                  example: 500000
+                },
+                investmentGoals: {
+                  type: 'string',
+                  maxLength: 1000,
+                  example: 'Retirement planning and wealth preservation'
+                },
+                riskTolerance: {
+                  type: 'string',
+                  enum: ['low', 'medium', 'high'],
+                  example: 'medium'
+                }
+              }
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time'
+            }
+          }
+        },
+        SecuriaAuditLog: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Audit log ID'
+            },
+            userId: {
+              type: 'string',
+              description: 'User who performed the action'
+            },
+            userEmail: {
+              type: 'string',
+              description: 'Email of the user who performed the action'
+            },
+            action: {
+              type: 'string',
+              description: 'Action performed',
+              example: 'CREATE_CLIENT'
+            },
+            resource: {
+              type: 'string',
+              description: 'Resource type',
+              example: 'client'
+            },
+            resourceId: {
+              type: 'string',
+              description: 'ID of the affected resource'
+            },
+            ipAddress: {
+              type: 'string',
+              description: 'IP address of the user',
+              example: '192.168.1.1'
+            },
+            userAgent: {
+              type: 'string',
+              description: 'User agent string'
+            },
+            timestamp: {
+              type: 'string',
+              format: 'date-time',
+              description: 'When the action occurred'
+            },
+            details: {
+              type: 'object',
+              description: 'Additional details about the action'
+            }
+          }
+        },
+        SecuriaDashboardStats: {
+          type: 'object',
+          properties: {
+            totalConsultants: {
+              type: 'number',
+              example: 25
+            },
+            activeConsultants: {
+              type: 'number',
+              example: 23
+            },
+            totalClients: {
+              type: 'number',
+              example: 150
+            },
+            activeClients: {
+              type: 'number',
+              example: 142
+            },
+            totalRevenue: {
+              type: 'number',
+              example: 2500000
+            },
+            monthlyGrowth: {
+              type: 'number',
+              example: 15.5
+            },
+            recentActivity: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: {
+                    type: 'string'
+                  },
+                  type: {
+                    type: 'string',
+                    example: 'client_created'
+                  },
+                  description: {
+                    type: 'string',
+                    example: 'New client Jane Smith created'
+                  },
+                  timestamp: {
+                    type: 'string',
+                    format: 'date-time'
+                  }
+                }
+              }
+            }
+          }
+        },
+        SecuriaApiResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true
+            },
+            message: {
+              type: 'string',
+              example: 'Operation completed successfully'
+            },
+            data: {
+              type: 'object',
+              description: 'Response data'
+            },
+            error: {
+              type: 'string',
+              example: 'Error message'
+            }
+          }
+        },
+        SecuriaPagination: {
+          type: 'object',
+          properties: {
+            page: {
+              type: 'number',
+              example: 1
+            },
+            pages: {
+              type: 'number',
+              example: 5
+            },
+            total: {
+              type: 'number',
+              example: 50
+            },
+            hasNext: {
+              type: 'boolean',
+              example: true
+            },
+            hasPrev: {
+              type: 'boolean',
+              example: false
+            }
+          }
         }
       }
     },
