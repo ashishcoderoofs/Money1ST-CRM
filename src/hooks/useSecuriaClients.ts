@@ -1,18 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
-export interface SecuriaConsultant {
+export interface SecuriaClient {
   _id: string;
-  consultantId: string;
+  clientId: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
-  status: "active" | "inactive";
-  position: string;
-  specialization: string;
-  experience: string;
-  certifications: string[];
+  status: "active" | "inactive" | "pending";
+  consultantId: string;
   address: {
     street: string;
     city: string;
@@ -20,23 +17,24 @@ export interface SecuriaConsultant {
     zipCode: string;
     country: string;
   };
+  financialInfo: {
+    annualIncome: number;
+    netWorth: number;
+    investmentGoals: string;
+    riskTolerance: "low" | "medium" | "high";
+  };
   emergencyContact: {
     name: string;
     relationship: string;
     phone: string;
   };
-  bankingInfo: {
-    accountNumber: string;
-    routingNumber: string;
-    bankName: string;
-  };
   createdAt: string;
   updatedAt: string;
 }
 
-interface ConsultantsResponse {
+interface ClientsResponse {
   success: boolean;
-  data: SecuriaConsultant[];
+  data: SecuriaClient[];
   pagination: {
     page: number;
     pages: number;
@@ -46,32 +44,32 @@ interface ConsultantsResponse {
   };
 }
 
-interface ConsultantsParams {
+interface ClientsParams {
   page?: number;
   limit?: number;
   search?: string;
-  status?: "active" | "inactive" | "all";
+  status?: "active" | "inactive" | "pending" | "all";
+  consultantId?: string;
   sort?: "firstName" | "lastName" | "email" | "createdAt";
   order?: "asc" | "desc";
 }
 
-export const useSecuriaConsultants = (params: ConsultantsParams = {}) => {
+export const useSecuriaClients = (params: ClientsParams = {}) => {
   const { token } = useAuth();
 
-  return useQuery<ConsultantsResponse>({
-    queryKey: ["securia-consultants", params],
+  return useQuery<ClientsResponse>({
+    queryKey: ["securia-clients", params],
     queryFn: async () => {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
       const searchParams = new URLSearchParams();
       
-      // Add parameters to search params
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           searchParams.append(key, value.toString());
         }
       });
 
-      const response = await fetch(`${apiUrl}/api/securia/consultants?${searchParams}`, {
+      const response = await fetch(`${apiUrl}/api/securia/clients?${searchParams}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -79,7 +77,7 @@ export const useSecuriaConsultants = (params: ConsultantsParams = {}) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch consultants: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to fetch clients: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
@@ -90,15 +88,15 @@ export const useSecuriaConsultants = (params: ConsultantsParams = {}) => {
   });
 };
 
-// Hook to get a single consultant by ID
-export const useSecuriaConsultant = (id: string) => {
+// Hook to get a single client by ID
+export const useSecuriaClient = (id: string) => {
   const { token } = useAuth();
 
-  return useQuery<{ success: boolean; data: SecuriaConsultant }>({
-    queryKey: ["securia-consultant", id],
+  return useQuery<{ success: boolean; data: SecuriaClient }>({
+    queryKey: ["securia-client", id],
     queryFn: async () => {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/securia/consultants/${id}`, {
+      const response = await fetch(`${apiUrl}/api/securia/clients/${id}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -106,7 +104,7 @@ export const useSecuriaConsultant = (id: string) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch consultant: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to fetch client: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
@@ -117,46 +115,45 @@ export const useSecuriaConsultant = (id: string) => {
   });
 };
 
-// Hook to create a new consultant
-export const useCreateSecuriaConsultant = () => {
+// Hook to create a new client
+export const useCreateSecuriaClient = () => {
   const { token } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (consultantData: Omit<SecuriaConsultant, '_id' | 'createdAt' | 'updatedAt'>) => {
+    mutationFn: async (clientData: Omit<SecuriaClient, '_id' | 'createdAt' | 'updatedAt'>) => {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/securia/consultants`, {
+      const response = await fetch(`${apiUrl}/api/securia/clients`, {
         method: 'POST',
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(consultantData),
+        body: JSON.stringify(clientData),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create consultant: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to create client: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     },
     onSuccess: () => {
-      // Invalidate and refetch consultants list
-      queryClient.invalidateQueries({ queryKey: ["securia-consultants"] });
+      queryClient.invalidateQueries({ queryKey: ["securia-clients"] });
       queryClient.invalidateQueries({ queryKey: ["securia-dashboard-stats"] });
     },
   });
 };
 
-// Hook to update consultant status
-export const useUpdateConsultantStatus = () => {
+// Hook to update client status
+export const useUpdateClientStatus = () => {
   const { token } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "active" | "inactive" }) => {
+    mutationFn: async ({ id, status }: { id: string; status: "active" | "inactive" | "pending" }) => {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/securia/consultants/${id}/status`, {
+      const response = await fetch(`${apiUrl}/api/securia/clients/${id}/status`, {
         method: 'PATCH',
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -166,27 +163,27 @@ export const useUpdateConsultantStatus = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to update consultant status: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to update client status: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["securia-consultants"] });
+      queryClient.invalidateQueries({ queryKey: ["securia-clients"] });
       queryClient.invalidateQueries({ queryKey: ["securia-dashboard-stats"] });
     },
   });
 };
 
-// Hook to delete a consultant
-export const useDeleteConsultant = () => {
+// Hook to delete a client
+export const useDeleteClient = () => {
   const { token } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/securia/consultants/${id}`, {
+      const response = await fetch(`${apiUrl}/api/securia/clients/${id}`, {
         method: 'DELETE',
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -195,13 +192,13 @@ export const useDeleteConsultant = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to delete consultant: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to delete client: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["securia-consultants"] });
+      queryClient.invalidateQueries({ queryKey: ["securia-clients"] });
       queryClient.invalidateQueries({ queryKey: ["securia-dashboard-stats"] });
     },
   });

@@ -16,36 +16,6 @@ interface DashboardStats {
   }>;
 }
 
-// Mock data as fallback
-const mockStats: DashboardStats = {
-  totalConsultants: 25,
-  activeConsultants: 23,
-  totalClients: 150,
-  activeClients: 142,
-  totalRevenue: 2500000,
-  monthlyGrowth: 15.5,
-  recentActivity: [
-    {
-      id: "1",
-      type: "consultant_added",
-      description: "New consultant John Doe added",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString() // 30 minutes ago
-    },
-    {
-      id: "2",
-      type: "client_added",
-      description: "New client Jane Smith registered",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() // 2 hours ago
-    },
-    {
-      id: "3",
-      type: "status_changed",
-      description: "Client Michael Johnson status updated to active",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString() // 4 hours ago
-    }
-  ]
-};
-
 export const useSecuriaDashboardStats = () => {
   const { token } = useAuth();
 
@@ -53,28 +23,22 @@ export const useSecuriaDashboardStats = () => {
     queryKey: ["securia-dashboard-stats"],
     queryFn: async () => {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      
-      try {
-        const response = await fetch(`${apiUrl}/api/securia/dashboard/stats`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-          },
-        });
+      const response = await fetch(`${apiUrl}/api/securia/dashboard/stats`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-        if (!response.ok) {
-          // If endpoint doesn't exist or returns error, use mock data
-          console.warn("Dashboard stats endpoint not available, using mock data");
-          return { success: true, data: mockStats };
-        }
-
-        return response.json();
-      } catch (error) {
-        // Network error or endpoint not available, use mock data
-        console.warn("Error fetching dashboard stats, using mock data:", error);
-        return { success: true, data: mockStats };
+      if (!response.ok) {
+        throw new Error(`Failed to fetch dashboard stats: ${response.status} ${response.statusText}`);
       }
+
+      return response.json();
     },
     enabled: !!token,
     refetchInterval: 60000, // Refresh every minute
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };

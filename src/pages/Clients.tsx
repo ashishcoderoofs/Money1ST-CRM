@@ -1,27 +1,238 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ClientsTable from "@/components/ClientsTable";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Eye, Pencil, Trash2 } from "lucide-react";
+import { useSecuriaClients, useDeleteClient } from "@/hooks/useSecuriaClients";
+import { toast } from "sonner";
 
 function ClientModal({ open, onClose, client, mode }: any) {
-  // For simplicity, just display the client info. In a real app you'd use a form.
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {mode === "view" ? "View Client" : "Edit Client"}
           </DialogTitle>
         </DialogHeader>
-        <pre className="text-xs bg-muted p-2 rounded max-h-80 overflow-auto">
-          {JSON.stringify(client, null, 2)}
-        </pre>
+        {client && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Name</label>
+                <p className="text-sm">{client.firstName} {client.lastName}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Client ID</label>
+                <p className="text-sm font-mono">{client.clientId || `CLI${client._id.slice(-6).toUpperCase()}`}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <p className="text-sm">{client.email}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <p className="text-sm">{client.phone}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <Badge variant={client.status === 'active' ? 'default' : 'secondary'}>
+                  {client.status}
+                </Badge>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Risk Tolerance</label>
+                <p className="text-sm capitalize">{client.financialInfo?.riskTolerance || 'N/A'}</p>
+              </div>
+            </div>
+            {client.address && (
+              <div>
+                <label className="text-sm font-medium">Address</label>
+                <p className="text-sm">
+                  {client.address.street}, {client.address.city}, {client.address.state} {client.address.zipCode}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
         <Button onClick={onClose}>Close</Button>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ClientsTable({ onEdit, onView, onAdd }: any) {
+  const { data, isLoading, error } = useSecuriaClients();
+  const deleteClientMutation = useDeleteClient();
+
+  const handleDelete = async (id: string, name: string) => {
+    try {
+      await deleteClientMutation.mutateAsync(id);
+      toast.success("Client deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete client");
+    }
+  };
+
+  const getFullName = (firstName: string, lastName: string) => {
+    return [firstName, lastName].filter(Boolean).join(" ");
+  };
+
+  const getBadgeVariant = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'default';
+      case 'inactive':
+        return 'destructive';
+      case 'pending':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-full space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Client Profiles</h2>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="border rounded-lg bg-card p-4 space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div>Error loading clients: {error.message}</div>;
+  }
+
+  const clients = data?.data || [];
+
+  return (
+    <div className="w-full space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Client Profiles</h2>
+        <Button onClick={onAdd}>Add New Client</Button>
+      </div>
+      <div className="border rounded-lg bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ClientID</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Risk Tolerance</TableHead>
+              <TableHead>Entry Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {clients.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8">
+                  <div className="text-gray-500">
+                    <p className="mb-4">No clients found</p>
+                    <Button onClick={onAdd}>Add Your First Client</Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              clients.map((client) => (
+                <TableRow key={client._id}>
+                  <TableCell className="font-mono text-xs uppercase">
+                    {client.clientId || `CLI${client._id.substring(client._id.length - 6)}`}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {getFullName(client.firstName, client.lastName)}
+                  </TableCell>
+                  <TableCell>{client.email}</TableCell>
+                  <TableCell>{client.phone}</TableCell>
+                  <TableCell>
+                    <Badge variant={getBadgeVariant(client.status)}>
+                      {client.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="capitalize">
+                    {client.financialInfo?.riskTolerance || 'N/A'}
+                  </TableCell>
+                  <TableCell>{new Date(client.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button
+                      size="sm"
+                      className="bg-cyan-500 text-primary-foreground hover:bg-cyan-600"
+                      onClick={() => onView(client)}
+                    >
+                      <Eye /> View
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-yellow-400 text-secondary-foreground hover:bg-yellow-500"
+                      onClick={() => onEdit(client)}
+                    >
+                      <Pencil /> Edit
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="destructive" disabled={deleteClientMutation.isPending}>
+                          <Trash2 /> Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action will permanently delete the client "{getFullName(client.firstName, client.lastName)}" and all their associated data. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(client._id, getFullName(client.firstName, client.lastName))}
+                            className="bg-destructive hover:bg-destructive/90"
+                            disabled={deleteClientMutation.isPending}
+                          >
+                            {deleteClientMutation.isPending ? "Deleting..." : "Delete Permanently"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }
 

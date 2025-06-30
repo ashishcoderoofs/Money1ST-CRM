@@ -1,14 +1,39 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Users, UserPlus, Briefcase, BarChart3, FileText, Video, BookOpen } from "lucide-react";
+import { Users, UserPlus, Briefcase, BarChart3, FileText, Video, BookOpen, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useSecuriaDashboardStats } from "@/hooks/useSecuriaDashboardStats";
 
 export default function Securia() {
   const { data: statsData, isLoading, error } = useSecuriaDashboardStats();
 
-  // Get stats from API or use fallback values
+  // Show error state if API fails
+  if (error && !isLoading) {
+    return (
+      <div className="p-8">
+        <Card className="border-red-200">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Unable to Load Dashboard</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Could not connect to the Securia API. Please check your connection and try again.
+              </p>
+              <p className="text-xs text-red-600 mb-4">
+                Error: {error.message}
+              </p>
+              <Button onClick={() => window.location.reload()}>
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Get stats from API
   const stats = statsData?.data || {
     totalConsultants: 0,
     activeConsultants: 0,
@@ -16,9 +41,6 @@ export default function Securia() {
     activeClients: 0,
     recentActivity: []
   };
-
-  // Calculate "New This Week" - you can modify this logic based on your needs
-  const newThisWeek = Math.floor(Math.random() * 10) + 1; // Mock for now, replace with real calculation
 
   return (
     <div className="space-y-10">
@@ -29,9 +51,6 @@ export default function Securia() {
         <p className="mt-1">Streamline consultant and client management in one integrated system</p>
         {isLoading && (
           <p className="text-sm text-gray-300 mt-2">Loading dashboard data...</p>
-        )}
-        {error && (
-          <p className="text-sm text-yellow-300 mt-2">Using offline data - API not available</p>
         )}
       </div>
 
@@ -67,9 +86,9 @@ export default function Securia() {
         <Card className="p-4 flex items-center gap-4">
           <UserPlus className="text-orange-500" />
           <div>
-            <p className="text-sm text-gray-500">New This Week</p>
+            <p className="text-sm text-gray-500">Active Clients</p>
             <p className="text-xl font-bold text-blue-950">
-              {isLoading ? "..." : newThisWeek}
+              {isLoading ? "..." : stats.activeClients}
             </p>
           </div>
         </Card>
@@ -149,35 +168,37 @@ export default function Securia() {
       {/* Recent Activity */}
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-gray-800">Recent Activity</h2>
-        <div className="bg-white p-4 rounded-md shadow-sm">
-          {isLoading ? (
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
-            </div>
-          ) : stats.recentActivity && stats.recentActivity.length > 0 ? (
-            <ul className="space-y-2 text-sm">
-              {stats.recentActivity.map((activity) => (
-                <li key={activity.id}>
-                  {activity.type === 'consultant_added' && '👤 '}
-                  {activity.type === 'client_added' && '✅ '}
-                  {activity.type === 'status_changed' && '📥 '}
-                  {activity.description}
-                  <span className="text-gray-400 ml-2">
-                    ({new Date(activity.timestamp).toLocaleString()})
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <ul className="space-y-2 text-sm">
-              <li>👤 John added a new client: Anna Smith <span className="text-gray-400">(2 hours ago)</span></li>
-              <li>✅ Consultant Michael updated his CFS details <span className="text-gray-400">(Today)</span></li>
-              <li>📥 New application submitted by Emily Jones <span className="text-gray-400">(Yesterday)</span></li>
-            </ul>
-          )}
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            {isLoading ? (
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+              </div>
+            ) : stats.recentActivity && stats.recentActivity.length > 0 ? (
+              <ul className="space-y-2 text-sm">
+                {stats.recentActivity.map((activity) => (
+                  <li key={activity.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                    <span className="text-lg">
+                      {activity.type === 'consultant_added' && '👤'}
+                      {activity.type === 'client_added' && '✅'}
+                      {activity.type === 'status_changed' && '📥'}
+                    </span>
+                    <div className="flex-1">
+                      <span>{activity.description}</span>
+                      <span className="text-gray-400 ml-2">
+                        ({new Date(activity.timestamp).toLocaleString()})
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 text-center py-4">No recent activity to display</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Resources Section */}

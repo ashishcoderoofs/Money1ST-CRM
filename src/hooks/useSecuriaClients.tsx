@@ -3,10 +3,13 @@ import { useAuth } from "./useAuth";
 
 export interface SecuriaClient {
   _id: string;
+  clientId: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  status: "active" | "inactive" | "pending";
+  consultantId: string;
   address: {
     street: string;
     city: string;
@@ -14,15 +17,16 @@ export interface SecuriaClient {
     zipCode: string;
     country: string;
   };
-  dateOfBirth: string;
-  ssn: string;
-  status: "active" | "inactive";
-  consultantId: string;
   financialInfo: {
     annualIncome: number;
     netWorth: number;
     investmentGoals: string;
     riskTolerance: "low" | "medium" | "high";
+  };
+  emergencyContact: {
+    name: string;
+    relationship: string;
+    phone: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -44,9 +48,9 @@ interface ClientsParams {
   page?: number;
   limit?: number;
   search?: string;
-  status?: "active" | "inactive" | "all";
+  status?: "active" | "inactive" | "pending" | "all";
   consultantId?: string;
-  sort?: "name" | "email" | "createdAt";
+  sort?: "firstName" | "lastName" | "email" | "createdAt";
   order?: "asc" | "desc";
 }
 
@@ -68,19 +72,23 @@ export const useSecuriaClients = (params: ClientsParams = {}) => {
       const response = await fetch(`${apiUrl}/api/securia/clients?${searchParams}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(`Failed to fetch clients: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     },
     enabled: !!token,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 
+// Hook to get a single client by ID
 export const useSecuriaClient = (id: string) => {
   const { token } = useAuth();
 
@@ -91,129 +99,20 @@ export const useSecuriaClient = (id: string) => {
       const response = await fetch(`${apiUrl}/api/securia/clients/${id}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(`Failed to fetch client: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     },
     enabled: !!token && !!id,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 
-export const useCreateSecuriaClient = () => {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: Omit<SecuriaClient, "_id" | "createdAt" | "updatedAt">) => {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/securia/clients`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
-        throw new Error(error.message);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["securia-clients"] });
-    },
-  });
-};
-
-export const useUpdateSecuriaClient = () => {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Omit<SecuriaClient, "_id" | "createdAt" | "updatedAt"> }) => {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/securia/clients/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
-        throw new Error(error.message);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["securia-clients"] });
-      queryClient.invalidateQueries({ queryKey: ["securia-client"] });
-    },
-  });
-};
-
-export const useDeleteSecuriaClient = () => {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/securia/clients/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
-        throw new Error(error.message);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["securia-clients"] });
-    },
-  });
-};
-
-export const useToggleClientStatus = () => {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/securia/clients/${id}/status`, {
-        method: "PATCH",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
-        throw new Error(error.message);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["securia-clients"] });
-      queryClient.invalidateQueries({ queryKey: ["securia-client"] });
-    },
-  });
-};
+// Hook to create
