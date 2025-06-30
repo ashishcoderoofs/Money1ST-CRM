@@ -1,4 +1,6 @@
 import express from 'express';
+import {  validateMinimumClientFields, validateClientUpdate } from '../middleware/clientValidation';
+import { validateMultiStageClient, validateSectionUpdate, validateBulkUpdate } from '../middleware/multiStageClientValidation';
 import { authenticate } from '../middleware/auth';
 import { AuthRequest } from '../types';
 import {
@@ -17,7 +19,12 @@ import {
   toggleClientStatus,
   getDashboardStats,
   getChartData,
-  getAuditLogs
+  getAuditLogs,
+  createMultiStageClient,
+  updateClientSection,
+  getClientSection,
+  getClientProgress,
+  bulkUpdateClientSections
 } from '../controllers/securiaController';
 
 const router = express.Router();
@@ -857,8 +864,76 @@ router.patch('/consultants/:id/status', toggleConsultantStatus);
  *       500:
  *         description: Failed to create client
  */
+
+/**
+ * @swagger
+ * /api/securia/clients/partial:
+ *   post:
+ *     summary: Create partial client (for multi-stage forms)
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - basicInfo
+ *               - contactInfo
+ *             properties:
+ *               basicInfo:
+ *                 type: object
+ *                 properties:
+ *                   firstName:
+ *                     type: string
+ *                     example: Jane
+ *                   lastName:
+ *                     type: string
+ *                     example: Smith
+ *               contactInfo:
+ *                 type: object
+ *                 properties:
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     example: jane.smith@example.com
+ *                   homePhone:
+ *                     type: string
+ *                     example: +1-555-0456
+ *     responses:
+ *       201:
+ *         description: Partial client created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     clientId:
+ *                       type: string
+ *                     completionPercentage:
+ *                       type: number
+ *                     status:
+ *                       type: string
+ *       400:
+ *         description: Validation failed
+ *       500:
+ *         description: Failed to create partial client
+ */
+router.post('/clients/partial', validateMinimumClientFields, createClient);
+
 router.get('/clients', getClients);
-router.post('/clients', createClient);
+router.post('/clients', validateMinimumClientFields, createClient);
 
 /**
  * @swagger
@@ -952,7 +1027,7 @@ router.post('/clients', createClient);
  *         description: Failed to delete client
  */
 router.get('/clients/:id', getClientById);
-router.put('/clients/:id', updateClient);
+router.put('/clients/:id', validateClientUpdate, updateClient);
 router.delete('/clients/:id', deleteClient);
 
 /**
@@ -996,7 +1071,307 @@ router.delete('/clients/:id', deleteClient);
  */
 router.patch('/clients/:id/status', toggleClientStatus);
 
-// Dashboard & Analytics Endpoints
+/**
+ * @swagger
+ * /api/securia/clients/partial:
+ *   post:
+ *     summary: Create partial client (for multi-stage forms)
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - basicInfo
+ *               - contactInfo
+ *             properties:
+ *               basicInfo:
+ *                 type: object
+ *                 properties:
+ *                   firstName:
+ *                     type: string
+ *                     example: Jane
+ *                   lastName:
+ *                     type: string
+ *                     example: Smith
+ *               contactInfo:
+ *                 type: object
+ *                 properties:
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     example: jane.smith@example.com
+ *                   homePhone:
+ *                     type: string
+ *                     example: +1-555-0456
+ *     responses:
+ *       201:
+ *         description: Partial client created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     clientId:
+ *                       type: string
+ *                     completionPercentage:
+ *                       type: number
+ *                     status:
+ *                       type: string
+ *       400:
+ *         description: Validation failed
+ *       500:
+ *         description: Failed to create partial client
+ */
+router.post('/clients/partial', validateMinimumClientFields, createClient);
+
+// Multi-Stage Client Form API Routes
+
+/**
+ * @swagger
+ * /api/securia/clients/multistage:
+ *   post:
+ *     summary: Create a new client with multi-stage form support
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               applicant:
+ *                 type: object
+ *                 description: Primary applicant information
+ *               coApplicant:
+ *                 type: object
+ *                 description: Co-applicant information
+ *               liabilities:
+ *                 type: array
+ *                 description: Client liabilities
+ *               mortgages:
+ *                 type: array
+ *                 description: Mortgage information
+ *               underwriting:
+ *                 type: object
+ *                 description: Underwriting details
+ *               loanStatus:
+ *                 type: object
+ *                 description: Loan status information
+ *               drivers:
+ *                 type: array
+ *                 description: Driver information
+ *               vehicleCoverage:
+ *                 type: object
+ *                 description: Vehicle coverage details
+ *               homeowners:
+ *                 type: object
+ *                 description: Homeowners insurance
+ *               renters:
+ *                 type: object
+ *                 description: Renters insurance
+ *               incomeProtection:
+ *                 type: object
+ *                 description: Income protection details
+ *               retirement:
+ *                 type: object
+ *                 description: Retirement planning
+ *               lineage:
+ *                 type: object
+ *                 description: Referral and source tracking
+ *     responses:
+ *       201:
+ *         description: Multi-stage client created successfully
+ *       400:
+ *         description: Validation failed
+ *       409:
+ *         description: Client already exists
+ *       500:
+ *         description: Failed to create client
+ */
+router.post('/clients/multistage', validateMultiStageClient, createMultiStageClient);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/section/{section}:
+ *   put:
+ *     summary: Update specific section of client form
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *       - in: path
+ *         name: section
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [applicant, coApplicant, liabilities, mortgages, underwriting, loanStatus, drivers, vehicleCoverage, homeowners, renters, incomeProtection, retirement, lineage]
+ *         description: Section name to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               section:
+ *                 type: string
+ *                 description: Section name
+ *               data:
+ *                 type: object
+ *                 description: Section data to update
+ *     responses:
+ *       200:
+ *         description: Client section updated successfully
+ *       400:
+ *         description: Invalid section or data
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to update section
+ *   get:
+ *     summary: Get specific section data for a client
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *       - in: path
+ *         name: section
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [applicant, coApplicant, liabilities, mortgages, underwriting, loanStatus, drivers, vehicleCoverage, homeowners, renters, incomeProtection, retirement, lineage]
+ *         description: Section name to retrieve
+ *     responses:
+ *       200:
+ *         description: Client section data retrieved successfully
+ *       400:
+ *         description: Invalid section
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to get section data
+ */
+router.put('/clients/:id/section/:section', validateSectionUpdate, updateClientSection);
+router.get('/clients/:id/section/:section', getClientSection);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/progress:
+ *   get:
+ *     summary: Get client completion progress and status
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *     responses:
+ *       200:
+ *         description: Client progress retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     clientId:
+ *                       type: string
+ *                     completionPercentage:
+ *                       type: number
+ *                     status:
+ *                       type: string
+ *                     completedSections:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     sectionProgress:
+ *                       type: object
+ *                     totalSections:
+ *                       type: number
+ *                     completedCount:
+ *                       type: number
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to get progress
+ */
+router.get('/clients/:id/progress', getClientProgress);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/bulk-update:
+ *   put:
+ *     summary: Bulk update multiple client sections at once
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               sections:
+ *                 type: object
+ *                 description: Multiple sections to update with their data
+ *                 example:
+ *                   applicant: { firstName: "John", lastName: "Doe" }
+ *                   underwriting: { creditScore: 750, annualIncome: 50000 }
+ *     responses:
+ *       200:
+ *         description: Client sections updated successfully
+ *       400:
+ *         description: Invalid sections data
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to update sections
+ */
+router.put('/clients/:id/bulk-update', validateBulkUpdate, bulkUpdateClientSections);
 
 /**
  * @swagger

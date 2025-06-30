@@ -6,6 +6,45 @@ import SecuriaAuditLog from '../models/SecuriaAuditLog';
 import User from '../models/User';
 import logger from '../../utils/logger';
 
+// Helper function to calculate completion percentage
+const calculateCompletionPercentage = (clientData: any): number => {
+  const sections = [
+    'basicInfo',
+    'contactInfo',
+    'contactAddress',
+    'coApplicant',
+    'liabilities',
+    'mortgages',
+    'underwriting',
+    'loanStatus',
+    'drivers',
+    'vehicles',
+    'homeowners',
+    'renters',
+    'incomeProtection',
+    'retirement',
+    'lineage'
+  ];
+
+  let completedSections = 0;
+  
+  sections.forEach(section => {
+    if (clientData[section]) {
+      if (section === 'basicInfo' && clientData.basicInfo.firstName && clientData.basicInfo.lastName) {
+        completedSections++;
+      } else if (section === 'contactInfo' && clientData.contactInfo.email && 
+                 (clientData.contactInfo.homePhone || clientData.contactInfo.mobilePhone || clientData.contactInfo.otherPhone)) {
+        completedSections++;
+      } else if (section !== 'basicInfo' && section !== 'contactInfo' && 
+                 Object.keys(clientData[section]).length > 0) {
+        completedSections++;
+      }
+    }
+  });
+
+  return Math.round((completedSections / sections.length) * 100);
+};
+
 // Helper function to log audit events
 const logAuditEvent = async (
   req: AuthRequest,
@@ -380,56 +419,78 @@ export const getClients = async (req: AuthRequest, res: Response): Promise<void>
   }
 };
 
-export const createClient = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createClient = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
-    // Encrypt SSN before saving
-    const clientData = { ...req.body };
-    if (clientData.ssn) {
-      const crypto = require('crypto');
-      const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your-32-character-encryption-key-here';
-      const algorithm = 'aes-256-cbc';
-      
-      // Create a hash of the key to ensure it's 32 bytes
-      const key = crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
-      const iv = crypto.randomBytes(16);
-      
-      const cipher = crypto.createCipheriv(algorithm, key, iv);
-      let encrypted = cipher.update(clientData.ssn, 'utf8', 'hex');
-      encrypted += cipher.final('hex');
-      
-      // Store IV with encrypted data
-      clientData.ssn = iv.toString('hex') + ':' + encrypted;
+    console.log('📝 Creating new client:', req.body);
+    
+    const clientData = req.body;
+    
+    // Note: Validation is handled by Joi middleware before reaching this controller
+
+    // Generate client ID
+    const clientCount = await SecuriaClient.countDocuments();
+    const clientId = `CLI${String(clientCount + 1).padStart(6, '0')}`;
+    
+    // Calculate completion percentage
+    const completionPercentage = calculateCompletionPercentage(clientData);
+    
+    // Determine status based on completion
+    let status = 'draft';
+    if (completionPercentage >= 80) {
+      status = 'active';
+    } else if (completionPercentage >= 30) {
+      status = 'submitted';
     }
-    
-    const client = await SecuriaClient.create(clientData);
-    
-    await logAuditEvent(req, 'CLIENT_CREATED', 'client', client._id.toString(), { 
-      clientName: `${client.firstName} ${client.lastName}`,
-      email: client.email,
-      consultantId: client.consultantId
+
+    // Prepare client document
+    const newClient = new SecuriaClient({
+      ...clientData,
+      clientId,
+      status,
+      completionPercentage,
+      createdBy: req.user?.id,
+      lastModifiedBy: req.user?.id
     });
 
-    res.status(201).json({
+    await newClient.save();
+    
+    // Log audit trail
+    await logAuditEvent(req, 'CLIENT_CREATED', 'client', newClient._id.toString(), {
+      clientId: newClient.clientId,
+      email: newClient.applicant?.email || newClient.email,
+      completionPercentage
+    });
+
+    console.log('✅ Client created successfully:', newClient.clientId);
+    
+    return res.status(201).json({
       success: true,
       message: 'Client created successfully',
-      data: client
+      data: {
+        id: newClient._id,
+        clientId: newClient.clientId,
+        ...newClient.toObject()
+      }
     });
+
   } catch (error: any) {
-    logger.error('Create client error:', error);
+    console.error('❌ Error creating client:', error);
+    
     if (error.code === 11000) {
-      res.status(409).json({ 
-        success: false, 
-        message: 'Client with this email already exists' 
-      });
-    } else {
-      res.status(500).json({ 
-        success: false, 
-        message: 'Failed to create client',
-        error: error.message
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(409).json({
+        success: false,
+        error: `Client with this ${field} already exists`
       });
     }
+    
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create client'
+    });
   }
 };
+
 
 export const getClientById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -459,37 +520,66 @@ export const getClientById = async (req: AuthRequest, res: Response): Promise<vo
   }
 };
 
-export const updateClient = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateClient = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
-    const client = await SecuriaClient.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+    const clientId = req.params.id;
+    const updateData = req.body;
+    
+    console.log('📝 Updating client:', clientId, updateData);
+    
+    // Calculate new completion percentage
+    const existingClient = await SecuriaClient.findById(clientId);
+    if (!existingClient) {
+      return res.status(404).json({
+        success: false,
+        error: 'Client not found'
+      });
+    }
+    
+    // Merge existing data with updates
+    const mergedData = { ...existingClient.toObject(), ...updateData };
+    const completionPercentage = calculateCompletionPercentage(mergedData);
+    
+    // Update status based on completion
+    let status = updateData.status || existingClient.status;
+    if (completionPercentage >= 80 && status === 'draft') {
+      status = 'active';
+    } else if (completionPercentage >= 30 && status === 'draft') {
+      status = 'submitted';
+    }
+    
+    // Set audit fields
+    updateData.lastModifiedBy = req.user?.id;
+    updateData.updatedAt = new Date();
+    updateData.completionPercentage = completionPercentage;
+    updateData.status = status;
+    
+    const updatedClient = await SecuriaClient.findByIdAndUpdate(
+      clientId,
+      { $set: updateData },
       { new: true, runValidators: true }
     );
     
-    if (!client) {
-      res.status(404).json({ 
-        success: false, 
-        message: 'Client not found' 
-      });
-      return;
-    }
-
-    await logAuditEvent(req, 'CLIENT_UPDATED', 'client', client._id.toString(), { 
-      clientName: `${client.firstName} ${client.lastName}`,
-      updatedFields: Object.keys(req.body)
+    // Log audit trail
+    await logAuditEvent(req, 'CLIENT_UPDATED', 'client', clientId, {
+      clientId: updatedClient?.clientId,
+      completionPercentage,
+      status
     });
-
-    res.json({
+    
+    console.log('✅ Client updated successfully:', updatedClient?.clientId);
+    
+    return res.json({
       success: true,
       message: 'Client updated successfully',
-      data: client
+      data: updatedClient
     });
-  } catch (error) {
-    logger.error('Update client error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to update client' 
+    
+  } catch (error: any) {
+    console.error('❌ Error updating client:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update client'
     });
   }
 };
@@ -760,4 +850,512 @@ export const getAuditLogs = async (req: AuthRequest, res: Response): Promise<voi
       message: 'Failed to get audit logs' 
     });
   }
+};
+
+// Enhanced Multi-Stage Client Form API Endpoints
+
+/**
+ * Create a new client with multi-stage form support
+ */
+export const createMultiStageClient = async (req: AuthRequest, res: Response): Promise<Response> => {
+  try {
+    console.log('📝 Creating new multi-stage client:', req.body);
+    
+    const clientData = req.body;
+    
+    // Generate client ID
+    const clientCount = await SecuriaClient.countDocuments();
+    const clientId = `CLI${String(clientCount + 1).padStart(6, '0')}`;
+    
+    // Calculate completion percentage based on comprehensive form data
+    const completionPercentage = calculateMultiStageCompletionPercentage(clientData);
+    
+    // Determine status based on completion
+    let status = 'draft';
+    if (completionPercentage >= 80) {
+      status = 'active';
+    } else if (completionPercentage >= 30) {
+      status = 'submitted';
+    }
+
+    // Prepare client document with full multi-stage structure
+    const newClient = new SecuriaClient({
+      clientId,
+      status,
+      completionPercentage,
+      createdBy: req.user?.id,
+      lastModifiedBy: req.user?.id,
+      
+      // Map the multi-stage form data
+      applicant: clientData.applicant,
+      coApplicant: clientData.coApplicant,
+      liabilities: clientData.liabilities,
+      mortgages: clientData.mortgages,
+      underwriting: clientData.underwriting,
+      loanStatus: clientData.loanStatus,
+      drivers: clientData.drivers,
+      vehicleCoverage: clientData.vehicleCoverage,
+      homeowners: clientData.homeowners,
+      renters: clientData.renters,
+      incomeProtection: clientData.incomeProtection,
+      retirement: clientData.retirement,
+      lineage: clientData.lineage,
+      
+      // Legacy fields for backward compatibility
+      firstName: clientData.applicant?.firstName || clientData.firstName,
+      lastName: clientData.applicant?.lastName || clientData.lastName,
+      email: clientData.applicant?.email || clientData.email,
+      phone: clientData.applicant?.homePhone || clientData.applicant?.mobilePhone || clientData.phone,
+      dateOfBirth: clientData.applicant?.demographics?.dateOfBirth || clientData.dateOfBirth,
+      ssn: clientData.applicant?.demographics?.ssn || clientData.ssn,
+      address: clientData.applicant?.address || clientData.address,
+      consultantId: clientData.lineage?.consultantAssigned || clientData.consultantId
+    });
+
+    await newClient.save();
+    
+    // Log audit trail
+    await logAuditEvent(req, 'MULTISTAGE_CLIENT_CREATED', 'client', newClient._id.toString(), {
+      clientId: newClient.clientId,
+      email: newClient.applicant?.email || newClient.email,
+      completionPercentage,
+      sectionsCompleted: getCompletedSections(clientData)
+    });
+
+    console.log('✅ Multi-stage client created successfully:', newClient.clientId);
+    
+    return res.status(201).json({
+      success: true,
+      message: 'Multi-stage client created successfully',
+      data: {
+        id: newClient._id,
+        clientId: newClient.clientId,
+        completionPercentage: newClient.completionPercentage,
+        status: newClient.status,
+        ...newClient.toObject()
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error creating multi-stage client:', error);
+    
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(409).json({
+        success: false,
+        error: `Client with this ${field} already exists`
+      });
+    }
+    
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create multi-stage client'
+    });
+  }
+};
+
+/**
+ * Update specific section of multi-stage client form
+ */
+export const updateClientSection = async (req: AuthRequest, res: Response): Promise<Response> => {
+  try {
+    const { id } = req.params;
+    const { section, data } = req.body;
+    
+    console.log(`📝 Updating client section '${section}' for client:`, id);
+    
+    if (!section || !data) {
+      return res.status(400).json({
+        success: false,
+        error: 'Section name and data are required'
+      });
+    }
+
+    const validSections = [
+      'applicant', 'coApplicant', 'liabilities', 'mortgages', 'underwriting', 
+      'loanStatus', 'drivers', 'vehicleCoverage', 'homeowners', 'renters', 
+      'incomeProtection', 'retirement', 'lineage'
+    ];
+
+    if (!validSections.includes(section)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid section. Valid sections are: ${validSections.join(', ')}`
+      });
+    }
+
+    const client = await SecuriaClient.findById(id);
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        error: 'Client not found'
+      });
+    }
+
+    // Update the specific section
+    (client as any)[section] = data;
+    client.lastModifiedBy = req.user?.id;
+    
+    // Recalculate completion percentage
+    const completionPercentage = calculateMultiStageCompletionPercentage(client.toObject());
+    client.completionPercentage = completionPercentage;
+    
+    // Update status based on completion
+    if (completionPercentage >= 80) {
+      client.status = 'active';
+    } else if (completionPercentage >= 30) {
+      client.status = 'submitted';
+    }
+
+    await client.save();
+    
+    // Log audit trail
+    await logAuditEvent(req, 'CLIENT_SECTION_UPDATED', 'client', client._id.toString(), {
+      clientId: client.clientId,
+      section,
+      completionPercentage,
+      previousStatus: client.status
+    });
+
+    console.log(`✅ Client section '${section}' updated successfully for:`, client.clientId);
+    
+    return res.status(200).json({
+      success: true,
+      message: `Client ${section} section updated successfully`,
+      data: {
+        id: client._id,
+        clientId: client.clientId,
+        completionPercentage: client.completionPercentage,
+        status: client.status,
+        updatedSection: section,
+        [section]: (client as any)[section]
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error updating client section:', error);
+    
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update client section'
+    });
+  }
+};
+
+/**
+ * Get specific section data for a client
+ */
+export const getClientSection = async (req: AuthRequest, res: Response): Promise<Response> => {
+  try {
+    const { id, section } = req.params;
+    
+    const validSections = [
+      'applicant', 'coApplicant', 'liabilities', 'mortgages', 'underwriting', 
+      'loanStatus', 'drivers', 'vehicleCoverage', 'homeowners', 'renters', 
+      'incomeProtection', 'retirement', 'lineage'
+    ];
+
+    if (!validSections.includes(section)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid section. Valid sections are: ${validSections.join(', ')}`
+      });
+    }
+
+    const client = await SecuriaClient.findById(id).select(`${section} clientId completionPercentage status`);
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        error: 'Client not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        clientId: client.clientId,
+        section,
+        data: (client as any)[section] || {},
+        completionPercentage: client.completionPercentage,
+        status: client.status
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error getting client section:', error);
+    
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get client section'
+    });
+  }
+};
+
+/**
+ * Get client completion status and progress
+ */
+export const getClientProgress = async (req: AuthRequest, res: Response): Promise<Response> => {
+  try {
+    const { id } = req.params;
+    
+    const client = await SecuriaClient.findById(id).select('clientId completionPercentage status applicant coApplicant liabilities mortgages underwriting loanStatus drivers vehicleCoverage homeowners renters incomeProtection retirement lineage');
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        error: 'Client not found'
+      });
+    }
+
+    const clientData = client.toObject();
+    const completedSections = getCompletedSections(clientData);
+    const sectionProgress = getSectionProgress(clientData);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        clientId: client.clientId,
+        completionPercentage: client.completionPercentage,
+        status: client.status,
+        completedSections,
+        sectionProgress,
+        totalSections: Object.keys(sectionProgress).length,
+        completedCount: completedSections.length
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error getting client progress:', error);
+    
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get client progress'
+    });
+  }
+};
+
+/**
+ * Bulk update multiple sections at once
+ */
+export const bulkUpdateClientSections = async (req: AuthRequest, res: Response): Promise<Response> => {
+  try {
+    const { id } = req.params;
+    const { sections } = req.body;
+    
+    if (!sections || typeof sections !== 'object') {
+      return res.status(400).json({
+        success: false,
+        error: 'Sections object is required'
+      });
+    }
+
+    const client = await SecuriaClient.findById(id);
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        error: 'Client not found'
+      });
+    }
+
+    const validSections = [
+      'applicant', 'coApplicant', 'liabilities', 'mortgages', 'underwriting', 
+      'loanStatus', 'drivers', 'vehicleCoverage', 'homeowners', 'renters', 
+      'incomeProtection', 'retirement', 'lineage'
+    ];
+
+    const invalidSections = Object.keys(sections).filter(section => !validSections.includes(section));
+    if (invalidSections.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid sections: ${invalidSections.join(', ')}. Valid sections are: ${validSections.join(', ')}`
+      });
+    }
+
+    // Update all provided sections
+    Object.keys(sections).forEach(section => {
+      (client as any)[section] = sections[section];
+    });
+
+    client.lastModifiedBy = req.user?.id;
+    
+    // Recalculate completion percentage
+    const completionPercentage = calculateMultiStageCompletionPercentage(client.toObject());
+    client.completionPercentage = completionPercentage;
+    
+    // Update status based on completion
+    if (completionPercentage >= 80) {
+      client.status = 'active';
+    } else if (completionPercentage >= 30) {
+      client.status = 'submitted';
+    }
+
+    await client.save();
+    
+    // Log audit trail
+    await logAuditEvent(req, 'CLIENT_BULK_UPDATE', 'client', client._id.toString(), {
+      clientId: client.clientId,
+      sectionsUpdated: Object.keys(sections),
+      completionPercentage
+    });
+
+    console.log(`✅ Client bulk update completed for:`, client.clientId);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Client sections updated successfully',
+      data: {
+        id: client._id,
+        clientId: client.clientId,
+        completionPercentage: client.completionPercentage,
+        status: client.status,
+        updatedSections: Object.keys(sections)
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error bulk updating client sections:', error);
+    
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to bulk update client sections'
+    });
+  }
+};
+
+// Helper functions for multi-stage form completion calculation
+
+const calculateMultiStageCompletionPercentage = (clientData: any): number => {
+  const sections: Record<string, any> = {
+    applicant: clientData.applicant,
+    coApplicant: clientData.coApplicant,
+    liabilities: clientData.liabilities,
+    mortgages: clientData.mortgages,
+    underwriting: clientData.underwriting,
+    loanStatus: clientData.loanStatus,
+    drivers: clientData.drivers,
+    vehicleCoverage: clientData.vehicleCoverage,
+    homeowners: clientData.homeowners,
+    renters: clientData.renters,
+    incomeProtection: clientData.incomeProtection,
+    retirement: clientData.retirement,
+    lineage: clientData.lineage
+  };
+
+  const sectionWeights = {
+    applicant: 20, // Most important - basic client info
+    coApplicant: 10,
+    liabilities: 10,
+    mortgages: 10,
+    underwriting: 15, // Important for loan processing
+    loanStatus: 15, // Important for tracking
+    drivers: 5,
+    vehicleCoverage: 5,
+    homeowners: 5,
+    renters: 3,
+    incomeProtection: 7,
+    retirement: 10,
+    lineage: 5
+  };
+
+  let totalWeight = 0;
+  let completedWeight = 0;
+
+  Object.keys(sections).forEach(sectionName => {
+    const section = sections[sectionName];
+    const weight = sectionWeights[sectionName as keyof typeof sectionWeights];
+    totalWeight += weight;
+
+    if (isSectionCompleted(sectionName, section)) {
+      completedWeight += weight;
+    }
+  });
+
+  return Math.round((completedWeight / totalWeight) * 100);
+};
+
+const isSectionCompleted = (sectionName: string, sectionData: any): boolean => {
+  if (!sectionData) return false;
+
+  switch (sectionName) {
+    case 'applicant':
+      return !!(sectionData.firstName && sectionData.lastName && sectionData.email);
+    
+    case 'coApplicant':
+      return sectionData.hasCoApplicant === false || 
+             (sectionData.hasCoApplicant && sectionData.firstName && sectionData.lastName);
+    
+    case 'underwriting':
+      return !!(sectionData.creditScore && sectionData.annualIncome);
+    
+    case 'loanStatus':
+      return !!(sectionData.status && sectionData.loanType);
+    
+    case 'vehicleCoverage':
+      return sectionData.hasVehicles === false || 
+             (sectionData.hasVehicles && sectionData.vehicles && sectionData.vehicles.length > 0);
+    
+    case 'homeowners':
+      return sectionData.hasHomeInsurance === false || 
+             (sectionData.hasHomeInsurance && sectionData.provider);
+    
+    case 'renters':
+      return sectionData.hasRentersInsurance === false || 
+             (sectionData.hasRentersInsurance && sectionData.provider);
+    
+    case 'incomeProtection':
+      return sectionData.hasIncomeProtection === false || 
+             (sectionData.hasIncomeProtection && (sectionData.shortTermDisability || sectionData.longTermDisability || sectionData.lifeInsurance));
+    
+    case 'retirement':
+      return sectionData.hasRetirementAccounts === false || 
+             (sectionData.hasRetirementAccounts && sectionData.currentAge);
+    
+    case 'lineage':
+      return !!(sectionData.referralSource);
+    
+    case 'liabilities':
+    case 'mortgages':
+    case 'drivers':
+      return Array.isArray(sectionData) ? sectionData.length > 0 : false;
+    
+    default:
+      return Object.keys(sectionData).length > 0;
+  }
+};
+
+const getCompletedSections = (clientData: any): string[] => {
+  const sections = ['applicant', 'coApplicant', 'liabilities', 'mortgages', 'underwriting', 'loanStatus', 'drivers', 'vehicleCoverage', 'homeowners', 'renters', 'incomeProtection', 'retirement', 'lineage'];
+  
+  return sections.filter(sectionName => {
+    const sectionData = clientData[sectionName];
+    return isSectionCompleted(sectionName, sectionData);
+  });
+};
+
+const getSectionProgress = (clientData: any): Record<string, { completed: boolean; completionPercentage: number }> => {
+  const sections = ['applicant', 'coApplicant', 'liabilities', 'mortgages', 'underwriting', 'loanStatus', 'drivers', 'vehicleCoverage', 'homeowners', 'renters', 'incomeProtection', 'retirement', 'lineage'];
+  
+  const progress: Record<string, { completed: boolean; completionPercentage: number }> = {};
+  
+  sections.forEach(sectionName => {
+    const sectionData = clientData[sectionName];
+    const completed = isSectionCompleted(sectionName, sectionData);
+    
+    // Calculate individual section completion percentage
+    let completionPercentage = 0;
+    if (sectionData) {
+      const fields = Object.keys(sectionData);
+      const filledFields = fields.filter(key => {
+        const value = sectionData[key];
+        return value !== null && value !== undefined && value !== '';
+      });
+      completionPercentage = fields.length > 0 ? Math.round((filledFields.length / fields.length) * 100) : 0;
+    }
+    
+    progress[sectionName] = {
+      completed,
+      completionPercentage
+    };
+  });
+  
+  return progress;
 };

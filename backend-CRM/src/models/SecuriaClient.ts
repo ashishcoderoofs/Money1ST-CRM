@@ -5,29 +5,360 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your-32-character-encrypti
 const ALGORITHM = 'aes-256-cbc';
 
 export interface ISecuriaClient extends Document {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
+  // Auto-generated fields
+  clientId?: string;
+  completionPercentage?: number;
+  status?: 'draft' | 'submitted' | 'active' | 'inactive';
+  createdBy?: string;
+  lastModifiedBy?: string;
+  
+  // 1. Applicant Information (Primary)
+  applicant?: {
+    // Basic Info
+    title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Dr.' | 'Prof.';
+    firstName?: string;
+    mi?: string; // Middle Initial
+    lastName?: string;
+    suffix?: 'Jr.' | 'Sr.' | 'II' | 'III' | 'IV' | 'V' | 'MD' | 'PhD';
+    maidenName?: string;
+    isConsultant?: boolean;
+    
+    // Contact Info
+    homePhone?: string;
+    mobilePhone?: string;
+    otherPhone?: string;
+    fax?: string;
+    email?: string;
+    
+    // Address
+    address?: {
+      street?: string;
+      city?: string;
+      county?: string;
+      state?: string;
+      zipCode?: string;
+      country?: string;
+    };
+    
+    // Employment
+    employment?: {
+      employerName?: string;
+      position?: string;
+      workPhone?: string;
+      yearsAtJob?: number;
+      monthlyIncome?: number;
+      annualIncome?: number;
+      employmentType?: 'Full-time' | 'Part-time' | 'Self-employed' | 'Retired' | 'Unemployed';
+    };
+    
+    // Demographics
+    demographics?: {
+      dateOfBirth?: Date;
+      age?: number;
+      ssn?: string;
+      sex?: 'Male' | 'Female' | 'Other';
+      maritalStatus?: 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
+      race?: string;
+      ethnicity?: string;
+    };
+    
+    // Household Members
+    householdMembers?: Array<{
+      name?: string;
+      relationship?: string;
+      dateOfBirth?: Date;
+      age?: number;
+      ssn?: string;
+      sex?: 'Male' | 'Female' | 'Other';
+    }>;
   };
-  dateOfBirth: Date;
-  ssn: string;
-  status: 'active' | 'inactive';
-  consultantId: mongoose.Types.ObjectId;
-  financialInfo: {
-    annualIncome: number;
-    netWorth: number;
-    investmentGoals: string;
-    riskTolerance: 'low' | 'medium' | 'high';
+  
+  // 2. Co-Applicant Information
+  coApplicant?: {
+    hasCoApplicant?: boolean;
+    // Same structure as applicant
+    title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Dr.' | 'Prof.';
+    firstName?: string;
+    mi?: string;
+    lastName?: string;
+    suffix?: 'Jr.' | 'Sr.' | 'II' | 'III' | 'IV' | 'V' | 'MD' | 'PhD';
+    maidenName?: string;
+    isConsultant?: boolean;
+    
+    homePhone?: string;
+    mobilePhone?: string;
+    otherPhone?: string;
+    fax?: string;
+    email?: string;
+    
+    address?: {
+      street?: string;
+      city?: string;
+      county?: string;
+      state?: string;
+      zipCode?: string;
+      country?: string;
+    };
+    
+    employment?: {
+      employerName?: string;
+      position?: string;
+      workPhone?: string;
+      yearsAtJob?: number;
+      monthlyIncome?: number;
+      annualIncome?: number;
+      employmentType?: 'Full-time' | 'Part-time' | 'Self-employed' | 'Retired' | 'Unemployed';
+    };
+    
+    demographics?: {
+      dateOfBirth?: Date;
+      age?: number;
+      ssn?: string;
+      sex?: 'Male' | 'Female' | 'Other';
+      maritalStatus?: 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
+      race?: string;
+      ethnicity?: string;
+    };
+    
+    householdMembers?: Array<{
+      name?: string;
+      relationship?: string;
+      dateOfBirth?: Date;
+      age?: number;
+      ssn?: string;
+      sex?: 'Male' | 'Female' | 'Other';
+    }>;
   };
-  createdAt: Date;
-  updatedAt: Date;
+  
+  // 3. Liabilities
+  liabilities?: Array<{
+    debtorType?: 'Applicant' | 'Co-Applicant' | 'Joint';
+    liabilityType?: string;
+    creditorName?: string;
+    currentBalance?: number;
+    monthlyPayment?: number;
+    payOff?: boolean;
+    propertyAddress?: string;
+    propertyValue?: number;
+    grossRent?: number;
+    escrow?: string;
+    taxes?: number;
+    hoi?: number; // Homeowner Insurance
+    totalEscrow?: number;
+    netRent?: number;
+  }>;
+  
+  // 4. Mortgages
+  mortgages?: Array<{
+    propertyAddress?: string;
+    lender?: string;
+    originalAmount?: number;
+    currentBalance?: number;
+    monthlyPayment?: number;
+    interestRate?: number;
+    loanType?: string;
+    propertyValue?: number;
+    rentalIncome?: number;
+  }>;
+  
+  // 5. Underwriting
+  underwriting?: {
+    address?: string;
+    city?: string;
+    clientId?: string;
+    creditScore?: number;
+    annualIncome?: number;
+    monthlyIncome?: number;
+    debtToIncomeRatio?: number;
+    assets?: number;
+    liabilities?: number;
+    netWorth?: number;
+    loanAmount?: number;
+    loanToValueRatio?: number;
+    propertyValue?: number;
+    downPayment?: number;
+    cashReserves?: number;
+    employmentHistory?: string;
+    notes?: string;
+  };
+  
+  // 6. Loan Status
+  loanStatus?: {
+    applicationDate?: Date;
+    status?: 'Pre-Approval' | 'Application Submitted' | 'Under Review' | 'Approved' | 'Denied' | 'Funded';
+    loanType?: 'Conventional' | 'FHA' | 'VA' | 'USDA' | 'Jumbo';
+    loanAmount?: number;
+    interestRate?: number;
+    term?: number; // in years
+    closingDate?: Date;
+    lender?: string;
+    loanOfficer?: string;
+    notes?: string;
+  };
+  
+  // 7. Drivers
+  drivers?: Array<{
+    fullName?: string;
+    dateOfBirth?: Date;
+    age?: number;
+    relationship?: string;
+    ssn?: string;
+    sex?: 'Male' | 'Female' | 'Other';
+    maritalStatus?: 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
+    drivingStatus?: 'Licensed' | 'Permit' | 'No License' | 'Suspended';
+    licenseNumber?: string;
+    licenseState?: string;
+    accidentsViolations?: boolean;
+    explanation?: string;
+  }>;
+  
+  // 8. Vehicle Coverage
+  vehicleCoverage?: {
+    hasVehicles?: boolean;
+    currentProvider?: string;
+    policyNumber?: string;
+    coverageLimits?: {
+      liability?: string;
+      collision?: string;
+      comprehensive?: string;
+      uninsuredMotorist?: string;
+    };
+    vehicles?: Array<{
+      year?: number;
+      make?: string;
+      model?: string;
+      vin?: string;
+      usage?: 'Personal' | 'Business' | 'Farm';
+      annualMileage?: number;
+      coverage?: {
+        liability?: boolean;
+        collision?: boolean;
+        comprehensive?: boolean;
+      };
+    }>;
+  };
+  
+  // 9. Homeowners Insurance
+  homeowners?: {
+    hasHomeInsurance?: boolean;
+    provider?: string;
+    policyNumber?: string;
+    coverageAmount?: number;
+    deductible?: number;
+    annualPremium?: number;
+    propertyValue?: number;
+    mortgageCompany?: string;
+    additionalCoverage?: Array<{
+      type?: string;
+      amount?: number;
+    }>;
+  };
+  
+  // 10. Renters Insurance
+  renters?: {
+    hasRentersInsurance?: boolean;
+    provider?: string;
+    policyNumber?: string;
+    coverageAmount?: number;
+    deductible?: number;
+    annualPremium?: number;
+    personalProperty?: number;
+    liability?: number;
+    additionalLiving?: number;
+  };
+  
+  // 11. Income Protection
+  incomeProtection?: {
+    hasIncomeProtection?: boolean;
+    shortTermDisability?: {
+      provider?: string;
+      policyNumber?: string;
+      monthlyBenefit?: number;
+      eliminationPeriod?: number; // days
+      benefitPeriod?: number; // months
+    };
+    longTermDisability?: {
+      provider?: string;
+      policyNumber?: string;
+      monthlyBenefit?: number;
+      eliminationPeriod?: number; // days
+      benefitPeriod?: string; // 'Age 65', 'Lifetime', etc.
+    };
+    lifeInsurance?: Array<{
+      provider?: string;
+      policyNumber?: string;
+      faceAmount?: number;
+      premiumAmount?: number;
+      premiumFrequency?: 'Monthly' | 'Quarterly' | 'Semi-Annual' | 'Annual';
+      beneficiaries?: Array<{
+        name?: string;
+        relationship?: string;
+        percentage?: number;
+      }>;
+    }>;
+  };
+  
+  // 12. Retirement
+  retirement?: {
+    hasRetirementAccounts?: boolean;
+    currentAge?: number;
+    desiredRetirementAge?: number;
+    estimatedRetirementIncome?: number;
+    currentRetirementSavings?: number;
+    monthlyContribution?: number;
+    employerMatch?: number;
+    retirementAccounts?: Array<{
+      accountType?: '401k' | '403b' | 'IRA' | 'Roth IRA' | 'Pension' | 'Other';
+      provider?: string;
+      currentBalance?: number;
+      monthlyContribution?: number;
+      employerMatch?: number;
+      vestingSchedule?: string;
+    }>;
+    retirementGoals?: {
+      monthlyIncomeNeeded?: number;
+      inflationRate?: number;
+      rateOfReturn?: number;
+      retirementDuration?: number; // years
+    };
+  };
+  
+  // 13. Lineage (Referral/Source Tracking)
+  lineage?: {
+    referralSource?: 'Website' | 'Referral' | 'Advertisement' | 'Social Media' | 'Other';
+    referredBy?: string;
+    referrerContact?: string;
+    originalContactDate?: Date;
+    leadSource?: string;
+    marketingCampaign?: string;
+    notes?: string;
+    consultantAssigned?: mongoose.Types.ObjectId;
+    consultantNotes?: string;
+  };
+  
+  // Legacy flat structure for backward compatibility
+  firstName?: string;
+  lastName?: string;
+  email?: string;  
+  phone?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    country?: string;
+  };
+  dateOfBirth?: Date;
+  ssn?: string;
+  consultantId?: mongoose.Types.ObjectId;
+  financialInfo?: {
+    annualIncome?: number;
+    netWorth?: number;
+    investmentGoals?: string;
+    riskTolerance?: 'low' | 'medium' | 'high';
+  };
+  createdAt?: Date;
+  updatedAt?: Date;
   
   // Methods
   encryptSSN(ssn: string): string;
@@ -37,31 +368,26 @@ export interface ISecuriaClient extends Document {
 const AddressSchema = new Schema({
   street: {
     type: String,
-    required: [true, 'Street address is required'],
     trim: true,
     maxlength: [200, 'Street address cannot exceed 200 characters']
   },
   city: {
     type: String,
-    required: [true, 'City is required'],
     trim: true,
     maxlength: [100, 'City cannot exceed 100 characters']
   },
   state: {
     type: String,
-    required: [true, 'State is required'],
     trim: true,
     maxlength: [50, 'State cannot exceed 50 characters']
   },
   zipCode: {
     type: String,
-    required: [true, 'Zip code is required'],
     trim: true,
     match: [/^\d{5}(-\d{4})?$/, 'Please enter a valid zip code']
   },
   country: {
     type: String,
-    required: [true, 'Country is required'],
     trim: true,
     maxlength: [50, 'Country cannot exceed 50 characters'],
     default: 'USA'
@@ -71,85 +397,380 @@ const AddressSchema = new Schema({
 const FinancialInfoSchema = new Schema({
   annualIncome: {
     type: Number,
-    required: [true, 'Annual income is required'],
     min: [0, 'Annual income cannot be negative']
   },
   netWorth: {
-    type: Number,
-    required: [true, 'Net worth is required']
+    type: Number
   },
   investmentGoals: {
     type: String,
-    required: [true, 'Investment goals are required'],
     trim: true,
     maxlength: [1000, 'Investment goals cannot exceed 1000 characters']
   },
   riskTolerance: {
     type: String,
-    enum: ['low', 'medium', 'high'],
-    required: [true, 'Risk tolerance is required']
+    enum: ['low', 'medium', 'high']
   }
 }, { _id: false });
 
 const SecuriaClientSchema = new Schema<ISecuriaClient>({
-  firstName: {
+  // Auto-generated fields
+  clientId: {
     type: String,
-    required: [true, 'First name is required'],
-    trim: true,
-    maxlength: [50, 'First name cannot exceed 50 characters']
-  },
-  lastName: {
-    type: String,
-    required: [true, 'Last name is required'],
-    trim: true,
-    maxlength: [50, 'Last name cannot exceed 50 characters']
-  },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
     unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+    sparse: true
   },
-  phone: {
-    type: String,
-    required: [true, 'Phone is required'],
-    trim: true,
-    match: [/^\+?[\d\s\-\(\)]+$/, 'Please enter a valid phone number']
-  },
-  address: {
-    type: AddressSchema,
-    required: [true, 'Address is required']
-  },
-  dateOfBirth: {
-    type: Date,
-    required: [true, 'Date of birth is required'],
-    validate: {
-      validator: function(value: Date) {
-        return value < new Date();
-      },
-      message: 'Date of birth must be in the past'
-    }
-  },
-  ssn: {
-    type: String,
-    required: [true, 'SSN is required']
+  completionPercentage: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
   },
   status: {
     type: String,
-    enum: ['active', 'inactive'],
-    default: 'active'
+    enum: ['draft', 'submitted', 'active', 'inactive'],
+    default: 'draft'
   },
-  consultantId: {
-    type: Schema.Types.ObjectId,
-    ref: 'SecuriaConsultant',
-    required: [true, 'Consultant assignment is required']
+  createdBy: {
+    type: String
   },
-  financialInfo: {
-    type: FinancialInfoSchema,
-    required: [true, 'Financial information is required']
-  }
+  lastModifiedBy: {
+    type: String
+  },
+  
+  // 1. Applicant Information
+  applicant: {
+    // Basic Info
+    title: { type: String, enum: ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'] },
+    firstName: { type: String, trim: true, maxlength: 50 },
+    mi: { type: String, trim: true, maxlength: 1 },
+    lastName: { type: String, trim: true, maxlength: 50 },
+    suffix: { type: String, enum: ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD'] },
+    maidenName: { type: String, trim: true, maxlength: 50 },
+    isConsultant: { type: Boolean, default: false },
+    
+    // Contact Info
+    homePhone: { type: String, trim: true },
+    mobilePhone: { type: String, trim: true },
+    otherPhone: { type: String, trim: true },
+    fax: { type: String, trim: true },
+    email: { type: String, trim: true, lowercase: true },
+    
+    // Address
+    address: {
+      street: { type: String, trim: true },
+      city: { type: String, trim: true },
+      county: { type: String, trim: true },
+      state: { type: String, trim: true },
+      zipCode: { type: String, trim: true },
+      country: { type: String, trim: true, default: 'USA' }
+    },
+    
+    // Employment
+    employment: {
+      employerName: { type: String, trim: true },
+      position: { type: String, trim: true },
+      workPhone: { type: String, trim: true },
+      yearsAtJob: { type: Number, min: 0 },
+      monthlyIncome: { type: Number, min: 0 },
+      annualIncome: { type: Number, min: 0 },
+      employmentType: { type: String, enum: ['Full-time', 'Part-time', 'Self-employed', 'Retired', 'Unemployed'] }
+    },
+    
+    // Demographics
+    demographics: {
+      dateOfBirth: { type: Date },
+      age: { type: Number, min: 0, max: 150 },
+      ssn: { type: String, trim: true },
+      sex: { type: String, enum: ['Male', 'Female', 'Other'] },
+      maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] },
+      race: { type: String, trim: true },
+      ethnicity: { type: String, trim: true }
+    },
+    
+    // Household Members
+    householdMembers: [{
+      name: { type: String, trim: true },
+      relationship: { type: String, trim: true },
+      dateOfBirth: { type: Date },
+      age: { type: Number, min: 0, max: 150 },
+      ssn: { type: String, trim: true },
+      sex: { type: String, enum: ['Male', 'Female', 'Other'] }
+    }]
+  },
+  
+  // 2. Co-Applicant Information
+  coApplicant: {
+    hasCoApplicant: { type: Boolean, default: false },
+    title: { type: String, enum: ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'] },
+    firstName: { type: String, trim: true, maxlength: 50 },
+    mi: { type: String, trim: true, maxlength: 1 },
+    lastName: { type: String, trim: true, maxlength: 50 },
+    suffix: { type: String, enum: ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD'] },
+    maidenName: { type: String, trim: true, maxlength: 50 },
+    isConsultant: { type: Boolean, default: false },
+    
+    homePhone: { type: String, trim: true },
+    mobilePhone: { type: String, trim: true },
+    otherPhone: { type: String, trim: true },
+    fax: { type: String, trim: true },
+    email: { type: String, trim: true, lowercase: true },
+    
+    address: {
+      street: { type: String, trim: true },
+      city: { type: String, trim: true },
+      county: { type: String, trim: true },
+      state: { type: String, trim: true },
+      zipCode: { type: String, trim: true },
+      country: { type: String, trim: true, default: 'USA' }
+    },
+    
+    employment: {
+      employerName: { type: String, trim: true },
+      position: { type: String, trim: true },
+      workPhone: { type: String, trim: true },
+      yearsAtJob: { type: Number, min: 0 },
+      monthlyIncome: { type: Number, min: 0 },
+      annualIncome: { type: Number, min: 0 },
+      employmentType: { type: String, enum: ['Full-time', 'Part-time', 'Self-employed', 'Retired', 'Unemployed'] }
+    },
+    
+    demographics: {
+      dateOfBirth: { type: Date },
+      age: { type: Number, min: 0, max: 150 },
+      ssn: { type: String, trim: true },
+      sex: { type: String, enum: ['Male', 'Female', 'Other'] },
+      maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] },
+      race: { type: String, trim: true },
+      ethnicity: { type: String, trim: true }
+    },
+    
+    householdMembers: [{
+      name: { type: String, trim: true },
+      relationship: { type: String, trim: true },
+      dateOfBirth: { type: Date },
+      age: { type: Number, min: 0, max: 150 },
+      ssn: { type: String, trim: true },
+      sex: { type: String, enum: ['Male', 'Female', 'Other'] }
+    }]
+  },
+  
+  // 3. Liabilities
+  liabilities: [{
+    debtorType: { type: String, enum: ['Applicant', 'Co-Applicant', 'Joint'] },
+    liabilityType: { type: String, trim: true },
+    creditorName: { type: String, trim: true },
+    currentBalance: { type: Number, min: 0 },
+    monthlyPayment: { type: Number, min: 0 },
+    payOff: { type: Boolean, default: false },
+    propertyAddress: { type: String, trim: true },
+    propertyValue: { type: Number, min: 0 },
+    grossRent: { type: Number, min: 0 },
+    escrow: { type: String, trim: true },
+    taxes: { type: Number, min: 0 },
+    hoi: { type: Number, min: 0 },
+    totalEscrow: { type: Number, min: 0 },
+    netRent: { type: Number }
+  }],
+  
+  // 4. Mortgages
+  mortgages: [{
+    propertyAddress: { type: String, trim: true },
+    lender: { type: String, trim: true },
+    originalAmount: { type: Number, min: 0 },
+    currentBalance: { type: Number, min: 0 },
+    monthlyPayment: { type: Number, min: 0 },
+    interestRate: { type: Number, min: 0, max: 100 },
+    loanType: { type: String, trim: true },
+    propertyValue: { type: Number, min: 0 },
+    rentalIncome: { type: Number, min: 0 }
+  }],
+  
+  // 5. Underwriting
+  underwriting: {
+    address: { type: String, trim: true },
+    city: { type: String, trim: true },
+    clientId: { type: String, trim: true },
+    creditScore: { type: Number, min: 300, max: 850 },
+    annualIncome: { type: Number, min: 0 },
+    monthlyIncome: { type: Number, min: 0 },
+    debtToIncomeRatio: { type: Number, min: 0, max: 100 },
+    assets: { type: Number, min: 0 },
+    liabilities: { type: Number, min: 0 },
+    netWorth: { type: Number },
+    loanAmount: { type: Number, min: 0 },
+    loanToValueRatio: { type: Number, min: 0, max: 100 },
+    propertyValue: { type: Number, min: 0 },
+    downPayment: { type: Number, min: 0 },
+    cashReserves: { type: Number, min: 0 },
+    employmentHistory: { type: String, trim: true },
+    notes: { type: String, trim: true }
+  },
+  
+  // 6. Loan Status
+  loanStatus: {
+    applicationDate: { type: Date },
+    status: { type: String, enum: ['Pre-Approval', 'Application Submitted', 'Under Review', 'Approved', 'Denied', 'Funded'] },
+    loanType: { type: String, enum: ['Conventional', 'FHA', 'VA', 'USDA', 'Jumbo'] },
+    loanAmount: { type: Number, min: 0 },
+    interestRate: { type: Number, min: 0, max: 100 },
+    term: { type: Number, min: 1, max: 50 },
+    closingDate: { type: Date },
+    lender: { type: String, trim: true },
+    loanOfficer: { type: String, trim: true },
+    notes: { type: String, trim: true }
+  },
+  
+  // 7. Drivers
+  drivers: [{
+    fullName: { type: String, trim: true },
+    dateOfBirth: { type: Date },
+    age: { type: Number, min: 0, max: 150 },
+    relationship: { type: String, trim: true },
+    ssn: { type: String, trim: true },
+    sex: { type: String, enum: ['Male', 'Female', 'Other'] },
+    maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] },
+    drivingStatus: { type: String, enum: ['Licensed', 'Permit', 'No License', 'Suspended'] },
+    licenseNumber: { type: String, trim: true },
+    licenseState: { type: String, trim: true },
+    accidentsViolations: { type: Boolean, default: false },
+    explanation: { type: String, trim: true }
+  }],
+  
+  // 8. Vehicle Coverage
+  vehicleCoverage: {
+    hasVehicles: { type: Boolean, default: false },
+    currentProvider: { type: String, trim: true },
+    policyNumber: { type: String, trim: true },
+    coverageLimits: {
+      liability: { type: String, trim: true },
+      collision: { type: String, trim: true },
+      comprehensive: { type: String, trim: true },
+      uninsuredMotorist: { type: String, trim: true }
+    },
+    vehicles: [{
+      year: { type: Number, min: 1900, max: new Date().getFullYear() + 1 },
+      make: { type: String, trim: true },
+      model: { type: String, trim: true },
+      vin: { type: String, trim: true },
+      usage: { type: String, enum: ['Personal', 'Business', 'Farm'] },
+      annualMileage: { type: Number, min: 0 },
+      coverage: {
+        liability: { type: Boolean, default: false },
+        collision: { type: Boolean, default: false },
+        comprehensive: { type: Boolean, default: false }
+      }
+    }]
+  },
+  
+  // 9. Homeowners Insurance
+  homeowners: {
+    hasHomeInsurance: { type: Boolean, default: false },
+    provider: { type: String, trim: true },
+    policyNumber: { type: String, trim: true },
+    coverageAmount: { type: Number, min: 0 },
+    deductible: { type: Number, min: 0 },
+    annualPremium: { type: Number, min: 0 },
+    propertyValue: { type: Number, min: 0 },
+    mortgageCompany: { type: String, trim: true },
+    additionalCoverage: [{
+      type: { type: String, trim: true },
+      amount: { type: Number, min: 0 }
+    }]
+  },
+  
+  // 10. Renters Insurance
+  renters: {
+    hasRentersInsurance: { type: Boolean, default: false },
+    provider: { type: String, trim: true },
+    policyNumber: { type: String, trim: true },
+    coverageAmount: { type: Number, min: 0 },
+    deductible: { type: Number, min: 0 },
+    annualPremium: { type: Number, min: 0 },
+    personalProperty: { type: Number, min: 0 },
+    liability: { type: Number, min: 0 },
+    additionalLiving: { type: Number, min: 0 }
+  },
+  
+  // 11. Income Protection
+  incomeProtection: {
+    hasIncomeProtection: { type: Boolean, default: false },
+    shortTermDisability: {
+      provider: { type: String, trim: true },
+      policyNumber: { type: String, trim: true },
+      monthlyBenefit: { type: Number, min: 0 },
+      eliminationPeriod: { type: Number, min: 0 },
+      benefitPeriod: { type: Number, min: 0 }
+    },
+    longTermDisability: {
+      provider: { type: String, trim: true },
+      policyNumber: { type: String, trim: true },
+      monthlyBenefit: { type: Number, min: 0 },
+      eliminationPeriod: { type: Number, min: 0 },
+      benefitPeriod: { type: String, trim: true }
+    },
+    lifeInsurance: [{
+      provider: { type: String, trim: true },
+      policyNumber: { type: String, trim: true },
+      faceAmount: { type: Number, min: 0 },
+      premiumAmount: { type: Number, min: 0 },
+      premiumFrequency: { type: String, enum: ['Monthly', 'Quarterly', 'Semi-Annual', 'Annual'] },
+      beneficiaries: [{
+        name: { type: String, trim: true },
+        relationship: { type: String, trim: true },
+        percentage: { type: Number, min: 0, max: 100 }
+      }]
+    }]
+  },
+  
+  // 12. Retirement
+  retirement: {
+    hasRetirementAccounts: { type: Boolean, default: false },
+    currentAge: { type: Number, min: 0, max: 150 },
+    desiredRetirementAge: { type: Number, min: 50, max: 100 },
+    estimatedRetirementIncome: { type: Number, min: 0 },
+    currentRetirementSavings: { type: Number, min: 0 },
+    monthlyContribution: { type: Number, min: 0 },
+    employerMatch: { type: Number, min: 0 },
+    retirementAccounts: [{
+      accountType: { type: String, enum: ['401k', '403b', 'IRA', 'Roth IRA', 'Pension', 'Other'] },
+      provider: { type: String, trim: true },
+      currentBalance: { type: Number, min: 0 },
+      monthlyContribution: { type: Number, min: 0 },
+      employerMatch: { type: Number, min: 0 },
+      vestingSchedule: { type: String, trim: true }
+    }],
+    retirementGoals: {
+      monthlyIncomeNeeded: { type: Number, min: 0 },
+      inflationRate: { type: Number, min: 0, max: 20 },
+      rateOfReturn: { type: Number, min: 0, max: 50 },
+      retirementDuration: { type: Number, min: 1, max: 100 }
+    }
+  },
+  
+  // 13. Lineage (Referral/Source Tracking)
+  lineage: {
+    referralSource: { type: String, enum: ['Website', 'Referral', 'Advertisement', 'Social Media', 'Other'] },
+    referredBy: { type: String, trim: true },
+    referrerContact: { type: String, trim: true },
+    originalContactDate: { type: Date },
+    leadSource: { type: String, trim: true },
+    marketingCampaign: { type: String, trim: true },
+    notes: { type: String, trim: true },
+    consultantAssigned: { type: Schema.Types.ObjectId, ref: 'SecuriaConsultant' },
+    consultantNotes: { type: String, trim: true }
+  },
+  
+  // Legacy flat structure for backward compatibility
+  firstName: { type: String, trim: true, maxlength: 50 },
+  lastName: { type: String, trim: true, maxlength: 50 },
+  email: { type: String, lowercase: true, trim: true },
+  phone: { type: String, trim: true },
+  address: { type: AddressSchema },
+  dateOfBirth: { type: Date },
+  ssn: { type: String },
+  consultantId: { type: Schema.Types.ObjectId, ref: 'SecuriaConsultant' },
+  financialInfo: { type: FinancialInfoSchema }
 }, {
   timestamps: true,
   collection: 'securia_clients'

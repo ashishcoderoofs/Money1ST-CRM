@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import Joi from 'joi';
+import * as Joi from 'joi';
 import { RegisterRequest, LoginRequest, UpdateUserRequest } from '../types';
 
 export const validateRegistration = (req: Request, res: Response, next: NextFunction): void => {
