@@ -27,10 +27,33 @@ interface PagePermission {
 
 const ROLES = ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'];
 
+// Define the desired page order
+const PAGE_ORDER = [
+  'Dashboard',
+  'Contacts', 
+  'Deals',
+  'Tasks',
+  'Reports',
+  'User Management',
+  'Securia Access'
+];
+
 export function PagePermissionsManager() {
   // API Hooks
   const { data: pagePermissions = [], isLoading } = usePagePermissions();
   const togglePermissionMutation = useTogglePagePermission();
+
+  // Sort pages according to desired order
+  const sortedPagePermissions = pagePermissions.sort((a, b) => {
+    const indexA = PAGE_ORDER.findIndex(page => page === a.pageName);
+    const indexB = PAGE_ORDER.findIndex(page => page === b.pageName);
+    
+    // If page not found in order, put it at the end
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    
+    return indexA - indexB;
+  });
 
   // Event Handlers
   const handleTogglePermission = async (pageName: string, role: string) => {
@@ -138,7 +161,7 @@ export function PagePermissionsManager() {
           ) : (
             <div className="border rounded-lg">
               {renderHeader()}
-              {pagePermissions.map(renderPageRow)}
+              {sortedPagePermissions.map(renderPageRow)}
             </div>
           )}
         </CardContent>
