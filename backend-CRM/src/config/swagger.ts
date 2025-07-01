@@ -251,9 +251,9 @@ const options: swaggerJsdoc.Options = {
           }
         },
         // Securia Schemas
-        SecuriaConsultant: {
+        Consultant: {
           type: 'object',
-          required: ['firstName', 'lastName', 'email', 'phone', 'specialization', 'experience'],
+          required: ['firstName', 'lastName', 'email', 'phone', 'position'],
           properties: {
             _id: {
               type: 'string',
@@ -280,28 +280,225 @@ const options: swaggerJsdoc.Options = {
               pattern: '^\\+?[\\d\\s\\-\\(\\)]+',
               example: '+1-555-0123'
             },
-            specialization: {
+            position: {
               type: 'string',
-              maxLength: 100,
-              example: 'Financial Planning'
+              enum: ['Admin', 'BMA', 'Senior BMA', 'Unit Manager', 'Assistant Unit Manager', 'Agency Manager', 'Assistant Agency Manager', 'Regional Manager', 'Assistant Regional Manager'],
+              example: 'BMA'
             },
-            experience: {
+            title: {
               type: 'string',
-              maxLength: 500,
-              example: '5 years in wealth management'
+              enum: ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'],
+              example: 'Mr.'
+            },
+            middleName: {
+              type: 'string',
+              maxLength: 50,
+              example: 'Michael'
+            },
+            suffix: {
+              type: 'string',
+              enum: ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'],
+              example: 'Jr.'
+            },
+            dateOfBirth: {
+              type: 'string',
+              format: 'date',
+              example: '1985-05-15'
+            },
+            address: {
+              type: 'object',
+              properties: {
+                street: {
+                  type: 'string',
+                  example: '123 Main St'
+                },
+                city: {
+                  type: 'string',
+                  example: 'New York'
+                },
+                state: {
+                  type: 'string',
+                  example: 'NY'
+                },
+                zipCode: {
+                  type: 'string',
+                  example: '10001'
+                },
+                country: {
+                  type: 'string',
+                  example: 'USA'
+                }
+              }
+            },
+            personalEmail: {
+              type: 'string',
+              format: 'email',
+              example: 'john.personal@email.com'
+            },
+            cellPhone: {
+              type: 'string',
+              example: '+1-555-0124'
+            },
+            homePhone: {
+              type: 'string',
+              example: '+1-555-0125'
+            },
+            workPhone: {
+              type: 'string',
+              example: '+1-555-0126'
+            },
+            emergencyContact: {
+              type: 'object',
+              properties: {
+                name: {
+                  type: 'string',
+                  example: 'Jane Doe'
+                },
+                relationship: {
+                  type: 'string',
+                  example: 'Spouse'
+                },
+                phone: {
+                  type: 'string',
+                  example: '+1-555-0127'
+                }
+              }
+            },
+            hireDate: {
+              type: 'string',
+              format: 'date',
+              example: '2023-01-15'
+            },
+            employeeId: {
+              type: 'string',
+              example: 'EMP001'
+            },
+            department: {
+              type: 'string',
+              example: 'Sales'
+            },
+            supervisor: {
+              type: 'string',
+              description: 'Reference to supervisor consultant ID'
+            },
+            territoryAssigned: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              example: ['NYC', 'Brooklyn']
+            },
+            licenses: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  type: {
+                    type: 'string',
+                    example: 'Life Insurance'
+                  },
+                  number: {
+                    type: 'string',
+                    example: 'LIC123456'
+                  },
+                  state: {
+                    type: 'string',
+                    example: 'NY'
+                  },
+                  issueDate: {
+                    type: 'string',
+                    format: 'date'
+                  },
+                  expirationDate: {
+                    type: 'string',
+                    format: 'date'
+                  },
+                  status: {
+                    type: 'string',
+                    enum: ['active', 'expired', 'suspended'],
+                    default: 'active'
+                  }
+                }
+              }
             },
             certifications: {
               type: 'array',
               items: {
-                type: 'string',
-                maxLength: 100
-              },
-              example: ['CFP', 'CFA']
+                type: 'object',
+                properties: {
+                  name: {
+                    type: 'string',
+                    example: 'CFP'
+                  },
+                  issuingOrganization: {
+                    type: 'string',
+                    example: 'CFP Board'
+                  },
+                  issueDate: {
+                    type: 'string',
+                    format: 'date'
+                  },
+                  expirationDate: {
+                    type: 'string',
+                    format: 'date'
+                  },
+                  certificateNumber: {
+                    type: 'string',
+                    example: 'CFP123456'
+                  }
+                }
+              }
             },
-            status: {
+            commissionStructure: {
+              type: 'object',
+              properties: {
+                baseRate: {
+                  type: 'number',
+                  example: 0.05
+                },
+                bonusRate: {
+                  type: 'number',
+                  example: 0.02
+                },
+                overrideRate: {
+                  type: 'number',
+                  example: 0.01
+                }
+              }
+            },
+            performanceMetrics: {
+              type: 'object',
+              properties: {
+                salesTarget: {
+                  type: 'number',
+                  example: 100000
+                },
+                currentSales: {
+                  type: 'number',
+                  example: 75000
+                },
+                recruitsTarget: {
+                  type: 'number',
+                  example: 5
+                },
+                currentRecruits: {
+                  type: 'number',
+                  example: 3
+                }
+              }
+            },
+            contractStatus: {
               type: 'string',
-              enum: ['active', 'inactive'],
+              enum: ['active', 'probation', 'suspended', 'terminated'],
               default: 'active'
+            },
+            notes: {
+              type: 'string',
+              example: 'Top performer in Q3'
+            },
+            isActive: {
+              type: 'boolean',
+              default: true
             },
             createdAt: {
               type: 'string',

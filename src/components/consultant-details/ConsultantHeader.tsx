@@ -6,19 +6,19 @@ import { Pencil } from "lucide-react";
 
 interface ConsultantHeaderProps {
   consultant: {
-    first_name: string | null;
-    last_name: string | null;
-    role: string;
+    firstName: string;
+    lastName: string;
+    position?: string;
   };
   consultantId: string;
 }
 
 export function ConsultantHeader({ consultant, consultantId }: ConsultantHeaderProps) {
-  const getFullName = (firstName: string | null, lastName: string | null) => {
+  const getFullName = (firstName: string, lastName: string) => {
     return [firstName, lastName].filter(Boolean).join(" ");
   };
 
-  const getInitials = (firstName: string | null, lastName: string | null) => {
+  const getInitials = (firstName: string, lastName: string) => {
     const firstInitial = firstName ? firstName[0] : "";
     const lastInitial = lastName ? lastName[0] : "";
     return `${firstInitial}${lastInitial}`.toUpperCase();
@@ -30,14 +30,14 @@ export function ConsultantHeader({ consultant, consultantId }: ConsultantHeaderP
         <Avatar className="h-16 w-16">
           <AvatarImage src={undefined} />
           <AvatarFallback className="text-xl">
-            {getInitials(consultant.first_name, consultant.last_name)}
+            {getInitials(consultant.firstName, consultant.lastName)}
           </AvatarFallback>
         </Avatar>
         <div>
           <h1 className="text-3xl font-bold">
-            {getFullName(consultant.first_name, consultant.last_name)}
+            {getFullName(consultant.firstName, consultant.lastName)}
           </h1>
-          <p className="text-muted-foreground">{consultant.role}</p>
+          <p className="text-muted-foreground">{consultant.position || 'N/A'}</p>
         </div>
       </div>
       <Button asChild variant="outline">

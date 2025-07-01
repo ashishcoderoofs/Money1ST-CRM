@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Calendar } from "lucide-react";
 import { useCreateConsultant, useUpdateConsultant, type ConsultantData } from "@/hooks/useConsultantAPI";
-import { useState } from "react";
 
 // Enhanced schema based on the backend model
 export const consultantFormSchema = z.object({
@@ -104,36 +104,115 @@ export function ConsultantFormApi({
   const form = useForm<ConsultantFormValues>({
     resolver: zodResolver(consultantFormSchema),
     defaultValues: {
+      // Basic Information
+      consultantId: "",
       entryDate: new Date().toISOString().split('T')[0],
+      position: "",
       status: 'Active' as const,
+      title: "",
       firstName: "",
+      middleInitial: "",
       lastName: "",
+      suffix: "",
+      comment: "",
+      remarks: "",
+      
+      // Contact Information
       email: "",
+      maidenName: "",
+      address: "",
+      city: "",
+      county: "",
+      state: "",
+      zipCode: "",
+      homePhone: "",
+      mobile: "",
+      workPhone: "",
+      otherPhone: "",
+      fax: "",
+      membershipType: "",
+      amount: undefined,
+      jointMemberName: "",
+
+      // Personal Information
+      dateOfBirth: "",
+      maritalStatus: undefined,
+      sex: undefined,
+      race: "",
+      spouseName: "",
+      anniversary: "",
+      spouseOccupation: "",
+      educationLevel: undefined,
+      driversLicenseNumber: "",
+      driversLicenseState: "",
+      employmentStatus: undefined,
+      employer: "",
+      occupation: "",
+      industry: "",
+
+      // CFS Information
+      ssn: "",
+      ein: "",
+      hireDate: "",
+      yearsWithFrq: undefined,
+      companyName: "",
+      cfsCertificationDate: "",
+      effectiveDate: "",
+      memberType: "",
+      mbrAmt: undefined,
+      payType: "",
+      mpFee: undefined,
+      cfsStatus: "",
+      statusDate: "",
+
+      // Emergency Contact
+      emergencyContactName: "",
+      emergencyContactRelationship: "",
+      emergencyContactPhone: "",
     },
   });
 
+  // Helper function to convert Date objects to string format for form inputs
+  const convertDateToString = (date: any): string => {
+    if (!date) return "";
+    if (typeof date === 'string') return date.split('T')[0]; // Handle ISO strings
+    if (date instanceof Date) return date.toISOString().split('T')[0];
+    return "";
+  };
+
   // Use useEffect to set form values when defaultValues change
-  React.useEffect(() => {
+  useEffect(() => {
     if (defaultValues && isEditMode) {
-      // Create a safe defaults object
+      // Create a safe defaults object with proper type conversion
       const safeDefaults: Partial<ConsultantFormValues> = {};
       
-      // Copy simple string/number fields
+      // Handle all fields with proper type conversion
       Object.keys(defaultValues).forEach(key => {
         const value = defaultValues[key as keyof typeof defaultValues];
         if (value !== undefined && value !== null) {
-          (safeDefaults as any)[key] = value;
+          // Convert Date fields to string format
+          if (key === 'entryDate' || key === 'dateOfBirth' || key === 'anniversary' || 
+              key === 'hireDate' || key === 'cfsCertificationDate' || key === 'effectiveDate' || 
+              key === 'statusDate') {
+            (safeDefaults as any)[key] = convertDateToString(value);
+          } else {
+            (safeDefaults as any)[key] = value;
+          }
         }
       });
 
-      form.reset({
-        entryDate: new Date().toISOString().split('T')[0],
-        status: 'Active' as const,
-        firstName: "",
-        lastName: "",
-        email: "",
+      const finalFormData = {
+        // Set default values for required fields
+        entryDate: safeDefaults.entryDate || new Date().toISOString().split('T')[0],
+        status: (safeDefaults.status as 'Active' | 'Inactive') || 'Active',
+        firstName: safeDefaults.firstName || "",
+        lastName: safeDefaults.lastName || "",
+        email: safeDefaults.email || "",
+        // Apply all other fields
         ...safeDefaults,
-      });
+      };
+
+      form.reset(finalFormData);
     }
   }, [defaultValues, isEditMode, form]);
 
@@ -186,7 +265,10 @@ export function ConsultantFormApi({
                   <FormControl>
                     <Input 
                       placeholder="Auto-generated if empty" 
-                      {...field} 
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      name={field.name}
+                      onBlur={field.onBlur}
                     />
                   </FormControl>
                   <FormMessage />
@@ -201,7 +283,13 @@ export function ConsultantFormApi({
                 <FormItem>
                   <FormLabel>Entry Date *</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input 
+                      type="date" 
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -214,7 +302,7 @@ export function ConsultantFormApi({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Position</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a position" />
@@ -240,7 +328,7 @@ export function ConsultantFormApi({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue />
@@ -262,7 +350,7 @@ export function ConsultantFormApi({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Title</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select title" />
@@ -292,7 +380,12 @@ export function ConsultantFormApi({
                 <FormItem>
                   <FormLabel>First Name *</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input 
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -320,7 +413,12 @@ export function ConsultantFormApi({
                 <FormItem>
                   <FormLabel>Last Name *</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input 
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -420,7 +518,13 @@ export function ConsultantFormApi({
                     <FormItem>
                       <FormLabel>E-mail *</FormLabel>
                       <FormControl>
-                        <Input type="email" {...field} />
+                        <Input 
+                          type="email" 
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          name={field.name}
+                          onBlur={field.onBlur}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -643,7 +747,7 @@ export function ConsultantFormApi({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Marital Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select status" />
@@ -668,7 +772,7 @@ export function ConsultantFormApi({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Sex</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select sex" />
@@ -755,7 +859,7 @@ export function ConsultantFormApi({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Education Level</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select education level" />
@@ -811,7 +915,7 @@ export function ConsultantFormApi({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Employment Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select status" />

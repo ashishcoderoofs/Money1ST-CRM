@@ -1,6 +1,6 @@
 
 import { useParams } from "react-router-dom";
-import { useConsultant } from "@/hooks/consultant";
+import { useConsultant } from "@/hooks/useConsultantAPI";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConsultantHeader } from "@/components/consultant-details/ConsultantHeader";
@@ -15,8 +15,9 @@ import { DependentsTab } from "@/components/consultant-details/DependentsTab";
 
 export default function ConsultantDetails() {
   const { id } = useParams<{ id: string }>();
-  const { data: consultant, isLoading, error } = useConsultant(id ?? null);
-  const { data: manager, isLoading: isLoadingManager } = useConsultant(consultant?.manager_id ?? null);
+  const { data: response, isLoading, error } = useConsultant(id ?? null);
+  
+  const consultant = response?.data;
   
   if (isLoading) {
     return (
@@ -74,9 +75,7 @@ export default function ConsultantDetails() {
 
         <TabsContent value="lineage">
           <LineageTab 
-            consultant={consultant} 
-            manager={manager} 
-            isLoadingManager={isLoadingManager} 
+            consultant={consultant}
           />
         </TabsContent>
 

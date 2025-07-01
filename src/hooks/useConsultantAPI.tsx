@@ -93,7 +93,7 @@ export interface PaginatedResponse<T> {
 
 // Helper function to make authenticated requests
 const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('auth_token');
   
   const response = await fetch(`${API_BASE}${url}`, {
     ...options,

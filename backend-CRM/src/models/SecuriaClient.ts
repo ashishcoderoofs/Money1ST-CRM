@@ -757,7 +757,7 @@ const SecuriaClientSchema = new Schema<ISecuriaClient>({
     leadSource: { type: String, trim: true },
     marketingCampaign: { type: String, trim: true },
     notes: { type: String, trim: true },
-    consultantAssigned: { type: Schema.Types.ObjectId, ref: 'SecuriaConsultant' },
+    consultantAssigned: { type: Schema.Types.ObjectId, ref: 'Consultant' },
     consultantNotes: { type: String, trim: true }
   },
   
@@ -769,7 +769,7 @@ const SecuriaClientSchema = new Schema<ISecuriaClient>({
   address: { type: AddressSchema },
   dateOfBirth: { type: Date },
   ssn: { type: String },
-  consultantId: { type: Schema.Types.ObjectId, ref: 'SecuriaConsultant' },
+  consultantId: { type: Schema.Types.ObjectId, ref: 'Consultant' },
   financialInfo: { type: FinancialInfoSchema }
 }, {
   timestamps: true,

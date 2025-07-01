@@ -3,17 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface MainInformationSectionProps {
   consultant: {
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-    title: string | null;
-    mi: string | null;
-    suffix: string | null;
-    role: string;
+    _id: string;
+    firstName: string;
+    lastName: string;
+    title?: string;
+    middleInitial?: string;
+    suffix?: string;
+    position?: string;
     status: string;
-    created_at: string;
-    comment: string | null;
-    remarks: string | null;
+    entryDate?: string;
+    createdAt: string;
+    comment?: string;
+    remarks?: string;
+    consultantId?: string;
   };
 }
 
@@ -21,9 +23,9 @@ export function MainInformationSection({ consultant }: MainInformationSectionPro
   const getFullName = () => {
     const parts = [
       consultant.title && consultant.title !== 'placeholder' ? consultant.title : null,
-      consultant.first_name,
-      consultant.mi,
-      consultant.last_name,
+      consultant.firstName,
+      consultant.middleInitial,
+      consultant.lastName,
       consultant.suffix
     ].filter(Boolean);
     return parts.join(' ');
@@ -37,13 +39,13 @@ export function MainInformationSection({ consultant }: MainInformationSectionPro
       <CardContent className="pt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
           <div>
-            <span className="font-semibold">ConsultID:</span> CON{consultant.id.slice(0, 3).toUpperCase()}
+            <span className="font-semibold">ConsultID:</span> {consultant.consultantId || `CON${consultant._id?.slice(-6)?.toUpperCase()}`}
           </div>
           <div>
-            <span className="font-semibold">Entry Date:</span> {new Date(consultant.created_at).toLocaleDateString()}
+            <span className="font-semibold">Entry Date:</span> {consultant.entryDate ? new Date(consultant.entryDate).toLocaleDateString() : new Date(consultant.createdAt).toLocaleDateString()}
           </div>
           <div>
-            <span className="font-semibold">Position:</span> {consultant.role}
+            <span className="font-semibold">Position:</span> {consultant.position || 'N/A'}
           </div>
           <div>
             <span className="font-semibold">Status:</span> {consultant.status}

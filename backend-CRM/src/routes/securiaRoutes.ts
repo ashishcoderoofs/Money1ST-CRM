@@ -40,7 +40,7 @@ const router = express.Router();
  * @swagger
  * components:
  *   schemas:
- *     SecuriaConsultant:
+ *     Consultant:
  *       type: object
  *       required:
  *         - firstName
@@ -457,7 +457,7 @@ router.get('/status', async (req: AuthRequest, res) => {
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/SecuriaConsultant'
+ *                     $ref: '#/components/schemas/Consultant'
  *                 pagination:
  *                   $ref: '#/components/schemas/SecuriaPagination'
  *       500:
@@ -524,7 +524,7 @@ router.get('/status', async (req: AuthRequest, res) => {
  *                 message:
  *                   type: string
  *                 data:
- *                   $ref: '#/components/schemas/SecuriaConsultant'
+ *                   $ref: '#/components/schemas/Consultant'
  *       409:
  *         description: Consultant with this email already exists
  *       500:
@@ -559,7 +559,7 @@ router.post('/consultants', createConsultant);
  *                 success:
  *                   type: boolean
  *                 data:
- *                   $ref: '#/components/schemas/SecuriaConsultant'
+ *                   $ref: '#/components/schemas/Consultant'
  *       404:
  *         description: Consultant not found
  *       500:
@@ -616,7 +616,7 @@ router.post('/consultants', createConsultant);
  *                 message:
  *                   type: string
  *                 data:
- *                   $ref: '#/components/schemas/SecuriaConsultant'
+ *                   $ref: '#/components/schemas/Consultant'
  *       404:
  *         description: Consultant not found
  *       500:

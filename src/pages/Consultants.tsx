@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { useSecuriaConsultants, useDeleteConsultant } from "@/hooks/useSecuriaConsultants";
+import { useConsultants, useDeleteConsultant } from "@/hooks/useConsultantAPI";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 export default function Consultants() {
-  const { data, isLoading, error } = useSecuriaConsultants();
+  const { data, isLoading, error } = useConsultants();
   const deleteConsultantMutation = useDeleteConsultant();
 
   const handleDelete = async (id: string, name: string) => {

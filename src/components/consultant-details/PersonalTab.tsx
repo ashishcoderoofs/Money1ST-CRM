@@ -3,20 +3,20 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface PersonalTabProps {
   consultant: {
-    dob: string | null;
-    marital_status: string | null;
-    sex: string | null;
-    race: string | null;
-    spouse_name: string | null;
-    anniversary: string | null;
-    spouse_occupation: string | null;
-    education_level: string | null;
-    drivers_license_number: string | null;
-    drivers_license_state: string | null;
-    employment_status: string | null;
-    employer: string | null;
-    occupation: string | null;
-    industry: string | null;
+    dateOfBirth?: string;
+    maritalStatus?: string;
+    sex?: string;
+    race?: string;
+    spouseName?: string;
+    anniversary?: string;
+    spouseOccupation?: string;
+    educationLevel?: string;
+    driversLicenseNumber?: string;
+    driversLicenseState?: string;
+    employmentStatus?: string;
+    employer?: string;
+    occupation?: string;
+    industry?: string;
   };
 }
 
@@ -27,10 +27,10 @@ export function PersonalTab({ consultant }: PersonalTabProps) {
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             <div>
-              <span className="font-semibold">Date of Birth:</span> {consultant.dob ? new Date(consultant.dob).toLocaleDateString() : "N/A"}
+              <span className="font-semibold">Date of Birth:</span> {consultant.dateOfBirth ? new Date(consultant.dateOfBirth).toLocaleDateString() : "N/A"}
             </div>
             <div>
-              <span className="font-semibold">Marital Status:</span> {consultant.marital_status || "N/A"}
+              <span className="font-semibold">Marital Status:</span> {consultant.maritalStatus || "N/A"}
             </div>
             <div>
               <span className="font-semibold">Gender:</span> {consultant.sex || "N/A"}
@@ -39,25 +39,25 @@ export function PersonalTab({ consultant }: PersonalTabProps) {
               <span className="font-semibold">Race:</span> {consultant.race || "N/A"}
             </div>
             <div>
-              <span className="font-semibold">Spouse Name:</span> {consultant.spouse_name || "N/A"}
+              <span className="font-semibold">Spouse Name:</span> {consultant.spouseName || "N/A"}
             </div>
             <div>
               <span className="font-semibold">Anniversary:</span> {consultant.anniversary ? new Date(consultant.anniversary).toLocaleDateString() : "N/A"}
             </div>
             <div>
-              <span className="font-semibold">Spouse Occupation:</span> {consultant.spouse_occupation || "N/A"}
+              <span className="font-semibold">Spouse Occupation:</span> {consultant.spouseOccupation || "N/A"}
             </div>
             <div>
-              <span className="font-semibold">Education Level:</span> {consultant.education_level || "N/A"}
+              <span className="font-semibold">Education Level:</span> {consultant.educationLevel || "N/A"}
             </div>
             <div>
-              <span className="font-semibold">Driver's License Number:</span> {consultant.drivers_license_number || "N/A"}
+              <span className="font-semibold">Driver's License Number:</span> {consultant.driversLicenseNumber || "N/A"}
             </div>
             <div>
-              <span className="font-semibold">Driver's License State:</span> {consultant.drivers_license_state || "N/A"}
+              <span className="font-semibold">Driver's License State:</span> {consultant.driversLicenseState || "N/A"}
             </div>
             <div>
-              <span className="font-semibold">Employment Status:</span> {consultant.employment_status || "N/A"}
+              <span className="font-semibold">Employment Status:</span> {consultant.employmentStatus || "N/A"}
             </div>
             <div>
               <span className="font-semibold">Employer:</span> {consultant.employer || "N/A"}
