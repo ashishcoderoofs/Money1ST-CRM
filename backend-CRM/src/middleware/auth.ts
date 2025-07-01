@@ -2,6 +2,8 @@ import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { AuthRequest, UserRole } from '../types';
+import { validateUserStatus } from '../utils/userStatusValidator';
+import logger from '../../utils/logger';
 
 interface JwtPayload {
   id: string;
@@ -29,8 +31,16 @@ export const authenticate = async (
     const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
     const user = await User.findById(decoded.id).select('-password');
     
-    if (!user || !user.isActive) {
-      res.status(401).json({ error: 'Invalid token or user inactive.' });
+    if (!user) {
+      res.status(401).json({ error: 'Invalid token. User not found.' });
+      return;
+    }
+
+    // Comprehensive user status validation
+    const statusCheck = validateUserStatus(user);
+    if (!statusCheck.isValid) {
+      logger.warn(`Access denied for user ${user.email}: ${statusCheck.reason}`);
+      res.status(401).json({ error: `Access denied. ${statusCheck.reason}` });
       return;
     }
 

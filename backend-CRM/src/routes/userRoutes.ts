@@ -7,6 +7,7 @@ import {
 } from '../controllers/userController';
 import { getUserPagePermissions } from '../controllers/pagePermissionController';
 import { authenticate, authorize } from '../middleware/auth';
+import { validateAdminStatus, authenticateWithRealtimeStatusCheck } from '../middleware/enhancedAuth';
 import { validateUserUpdate } from '../middleware/validation';
 
 const router = Router();
@@ -232,7 +233,7 @@ router.get('/', authorize('BMA', 'IBA', 'Admin'), getUsers);
 router.get('/page-permissions', getUserPagePermissions);
 
 router.get('/:id', authorize('BMA', 'IBA', 'Admin'), getUserById);
-router.put('/:id', authorize('IBA', 'Admin'), validateUserUpdate, updateUser);
-router.delete('/:id', authorize('Admin'), deleteUser);
+router.put('/:id', authorize('IBA', 'Admin'), authenticateWithRealtimeStatusCheck, validateUserUpdate, updateUser);
+router.delete('/:id', validateAdminStatus, deleteUser);
 
 export default router;

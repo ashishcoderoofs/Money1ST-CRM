@@ -10,6 +10,7 @@ import {
   searchConsultants
 } from '../controllers/consultantController';
 import { authenticate, authorize } from '../middleware/auth';
+import { authenticateWithRealtimeStatusCheck, logUserStatusAccess } from '../middleware/enhancedAuth';
 
 const router = Router();
 
@@ -20,8 +21,9 @@ const router = Router();
  *   description: Consultant management operations
  */
 
-// All routes require authentication
+// All routes require authentication with status logging
 router.use(authenticate);
+router.use(logUserStatusAccess);
 
 /**
  * @swagger
@@ -156,7 +158,7 @@ router.get('/:id', authorize('Admin', 'Field Builder', 'Field Trainer', 'Senior 
  *       400:
  *         description: Validation error
  */
-router.post('/', authorize('Admin', 'Field Builder', 'Field Trainer', 'Senior BMA'), createConsultant);
+router.post('/', authorize('Admin', 'Field Builder', 'Field Trainer', 'Senior BMA'), authenticateWithRealtimeStatusCheck, createConsultant);
 
 /**
  * @swagger
@@ -178,7 +180,7 @@ router.post('/', authorize('Admin', 'Field Builder', 'Field Trainer', 'Senior BM
  *       404:
  *         description: Consultant not found
  */
-router.put('/:id', authorize('Admin', 'Field Builder', 'Field Trainer', 'Senior BMA'), updateConsultant);
+router.put('/:id', authorize('Admin', 'Field Builder', 'Field Trainer', 'Senior BMA'), authenticateWithRealtimeStatusCheck, updateConsultant);
 
 /**
  * @swagger
@@ -198,7 +200,7 @@ router.put('/:id', authorize('Admin', 'Field Builder', 'Field Trainer', 'Senior 
  *       200:
  *         description: Status toggled successfully
  */
-router.patch('/:id/toggle-status', authorize('Admin', 'Field Builder', 'Field Trainer', 'Senior BMA'), toggleConsultantStatus);
+router.patch('/:id/toggle-status', authorize('Admin', 'Field Builder', 'Field Trainer', 'Senior BMA'), authenticateWithRealtimeStatusCheck, toggleConsultantStatus);
 
 /**
  * @swagger
@@ -220,6 +222,6 @@ router.patch('/:id/toggle-status', authorize('Admin', 'Field Builder', 'Field Tr
  *       404:
  *         description: Consultant not found
  */
-router.delete('/:id', authorize('Admin', 'Field Builder'), deleteConsultant);
+router.delete('/:id', authorize('Admin', 'Field Builder'), authenticateWithRealtimeStatusCheck, deleteConsultant);
 
 export default router;

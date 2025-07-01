@@ -91,7 +91,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// Helper function to make authenticated requests
+// Helper function to make authenticated requests with token expiration handling
 const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('auth_token');
   
@@ -106,6 +106,24 @@ const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) 
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+    
+    // Handle token expiration (401 Unauthorized)
+    if (response.status === 401) {
+      // Check if it's a token-related error
+      if (errorData.error?.includes('token') || errorData.error?.includes('expired') || 
+          errorData.error?.includes('invalid') || errorData.error?.includes('denied')) {
+        console.warn('Token expired or invalid in consultant API');
+        
+        // Clear authentication state
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        
+        // Redirect to login
+        window.location.href = '/login';
+        return;
+      }
+    }
+    
     throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
   }
 

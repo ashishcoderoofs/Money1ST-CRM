@@ -2,11 +2,12 @@ import { Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { AuthRequest, RegisterRequest, LoginRequest, ApiResponse } from '../types';
+import { validateUserStatus } from '../utils/userStatusValidator';
 import logger from '../../utils/logger';
 
 const generateToken = (id: string): string => {
   const jwtSecret = process.env.JWT_SECRET;
-  const jwtExpire = process.env.JWT_EXPIRE || '7d';
+  const jwtExpire = process.env.JWT_EXPIRE || '10m'; // Set to 10 minutes for security
   
   if (!jwtSecret) {
     throw new Error('JWT_SECRET is not defined');
@@ -108,8 +109,11 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
       return;
     }
 
-    if (!user.isActive) {
-      res.status(401).json({ error: 'Account is deactivated' });
+    // Comprehensive user status validation
+    const statusCheck = validateUserStatus(user);
+    if (!statusCheck.isValid) {
+      logger.warn(`Login denied for user ${email}: ${statusCheck.reason}`);
+      res.status(401).json({ error: statusCheck.reason });
       return;
     }
 

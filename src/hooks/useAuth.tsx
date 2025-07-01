@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Helper function for authenticated API calls
+  // Helper function for authenticated API calls with token expiration handling
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
     
@@ -115,13 +115,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       defaultHeaders.Authorization = `Bearer ${token}`;
     }
 
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          ...defaultHeaders,
+          ...options.headers,
+        },
+      });
+
+      // Handle token expiration (401 Unauthorized)
+      if (response.status === 401) {
+        const errorData = await response.json().catch(() => ({}));
+        
+        // Check if it's a token expiration or invalid token error
+        if (errorData.error?.includes('token') || errorData.error?.includes('expired') || 
+            errorData.error?.includes('invalid') || errorData.error?.includes('denied')) {
+          console.warn('Token expired or invalid, signing out user');
+          
+          // Clear authentication state
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('auth_user');
+          setToken(null);
+          setUser(null);
+          
+          // Optionally show a notification or redirect to login
+          // This could be enhanced with a toast notification
+          window.location.href = '/login';
+        }
+      }
+
+      return response;
+    } catch (error) {
+      console.error('API call error:', error);
+      throw error;
+    }
   };
 
   const value = {
