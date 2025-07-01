@@ -86,9 +86,9 @@ const options: swaggerJsdoc.Options = {
             },
             role: {
               type: 'string',
-              enum: ['Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA'],
+              enum: ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'],
               default: 'Field Builder',
-              description: 'User role with hierarchy: Admin > Field Builder > Field Trainer > Sr. BMA > BMA > IBA'
+              description: 'User role with hierarchy: Admin > Field Builder > Field Trainer > Senior BMA > BMA > IBA'
             },
             isActive: {
               type: 'boolean',
@@ -157,7 +157,7 @@ const options: swaggerJsdoc.Options = {
             },
             role: {
               type: 'string',
-              enum: ['Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA'],
+              enum: ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'],
               default: 'Field Builder'
             }
           }
@@ -178,7 +178,7 @@ const options: swaggerJsdoc.Options = {
               properties: {
                 role: {
                   type: 'string',
-                  enum: ['Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA']
+                  enum: ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA']
                 },
                 isActive: {
                   type: 'boolean'

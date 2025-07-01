@@ -83,7 +83,7 @@ const TeamPerformanceChart = () => (
             { role: "Admin", current: 0, target: 0 },
             { role: "Field Builder", current: 15, target: 20 },
             { role: "Field Trainer", current: 12, target: 15 },
-            { role: "Sr. BMA", current: 8, target: 10 },
+            { role: "Senior BMA", current: 8, target: 10 },
             { role: "BMA", current: 5, target: 8 },
             { role: "IBA", current: 3, target: 5 }
           ].map((item, index) => (

@@ -6,13 +6,13 @@ import { toast } from "@/hooks/use-toast";
 export interface PagePermission {
   id: string;
   page_name: string;
-  role_name: "Admin" | "Field Builder" | "Field Trainer" | "Sr. BMA" | "BMA" | "IBA";
+  role_name: "Admin" | "Field Builder" | "Field Trainer" | "Senior BMA" | "BMA" | "IBA";
   can_access: boolean;
   created_at: string;
   updated_at: string;
 }
 
-type UserRole = "Admin" | "Field Builder" | "Field Trainer" | "Sr. BMA" | "BMA" | "IBA";
+type UserRole = "Admin" | "Field Builder" | "Field Trainer" | "Senior BMA" | "BMA" | "IBA";
 
 export function usePagePermissions() {
   const { apiCall } = useAuth();
@@ -180,7 +180,7 @@ function getDefaultPermission(userRole: UserRole, pageName: string): boolean {
       "Admin": false,
       "Analytics": true
     },
-    "Sr. BMA": {
+    "Senior BMA": {
       "Dashboard": true,
       "Securia": true,
       "Reports": true,

@@ -9,7 +9,7 @@ export function useManagers() {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, first_name, last_name, role")
-        .in("role", ["Admin", "Field Builder", "Field Trainer", "Sr. BMA", "BMA"])
+        .in("role", ["Admin", "Field Builder", "Field Trainer", "Senior BMA", "BMA"])
         .order("first_name");
 
       if (error) {

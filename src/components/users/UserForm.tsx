@@ -18,7 +18,7 @@ const userFormSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
-  role: z.enum(["Admin", "Field Builder", "Field Trainer", "Sr. BMA", "BMA", "IBA"]),
+  role: z.enum(["Admin", "Field Builder", "Field Trainer", "Senior BMA", "BMA", "IBA"]),
   manager_id: z.string().optional(),
   phone: z.string().optional(),
   can_access_securia: z.boolean().default(false),
@@ -241,7 +241,7 @@ export function UserForm({
                       <SelectContent>
                         <SelectItem value="IBA">IBA</SelectItem>
                         <SelectItem value="BMA">BMA</SelectItem>
-                        <SelectItem value="Sr. BMA">Sr. BMA</SelectItem>
+                        <SelectItem value="Senior BMA">Senior BMA</SelectItem>
                         <SelectItem value="Field Trainer">Field Trainer</SelectItem>
                         <SelectItem value="Field Builder">Field Builder</SelectItem>
                         <SelectItem value="Admin">Admin</SelectItem>

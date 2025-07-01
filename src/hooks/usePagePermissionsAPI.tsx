@@ -7,7 +7,7 @@ interface RolePermissions {
   Admin: boolean;
   'Field Builder': boolean;
   'Field Trainer': boolean;
-  'Sr. BMA': boolean;
+  'Senior BMA': boolean;
   BMA: boolean;
   IBA: boolean;
 }

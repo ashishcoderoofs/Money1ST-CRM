@@ -6,7 +6,7 @@ const performanceData = [
   { name: "Admin", sales: 0, target: 0 },
   { name: "Field Builder", sales: 15, target: 20 },
   { name: "Field Trainer", sales: 12, target: 15 },
-  { name: "Sr. BMA", sales: 8, target: 10 },
+  { name: "Senior BMA", sales: 8, target: 10 },
   { name: "BMA", sales: 5, target: 8 },
   { name: "IBA", sales: 3, target: 5 },
 ];

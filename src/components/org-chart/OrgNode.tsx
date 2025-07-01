@@ -34,7 +34,7 @@ const getRoleColor = (role: string) => {
       return 'bg-blue-100 text-blue-800 border-blue-200';
     case 'Field Trainer':
       return 'bg-green-100 text-green-800 border-green-200';
-    case 'Sr. BMA':
+    case 'Senior BMA':
       return 'bg-purple-100 text-purple-800 border-purple-200';
     case 'BMA':
       return 'bg-orange-100 text-orange-800 border-orange-200';

@@ -29,7 +29,7 @@ const hierarchyData = [
     level: 2
   },
   {
-    role: "Sr. BMA",
+    role: "Senior BMA",
     count: 8,
     icon: TrendingUp,
     color: "bg-green-500",

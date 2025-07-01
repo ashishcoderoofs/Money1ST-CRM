@@ -4,7 +4,7 @@ export interface User {
   first_name: string;
   last_name: string;
   email: string;
-  role: "Admin" | "Field Builder" | "Field Trainer" | "Sr. BMA" | "BMA" | "IBA";
+  role: "Admin" | "Field Builder" | "Field Trainer" | "Senior BMA" | "BMA" | "IBA";
   status: string;
   can_access_securia: boolean;
   has_access: boolean;
@@ -14,7 +14,7 @@ export interface User {
   updated_at: string;
 }
 
-export type UserRole = "Admin" | "Field Builder" | "Field Trainer" | "Sr. BMA" | "BMA" | "IBA";
+export type UserRole = "Admin" | "Field Builder" | "Field Trainer" | "Senior BMA" | "BMA" | "IBA";
 
 export interface CreateUserData {
   first_name: string;

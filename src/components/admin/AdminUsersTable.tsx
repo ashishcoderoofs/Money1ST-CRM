@@ -38,7 +38,7 @@ interface Filters {
 }
 
 // Constants
-const ROLES = ['Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA'];
+const ROLES = ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'];
 
 export function AdminUsersTable() {
   // State

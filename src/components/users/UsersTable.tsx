@@ -70,7 +70,7 @@ export function UsersTable({
         return "default";
       case "Field Trainer":
         return "secondary";
-      case "Sr. BMA":
+      case "Senior BMA":
         return "outline";
       default:
         return "secondary";

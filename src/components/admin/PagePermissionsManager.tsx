@@ -17,7 +17,7 @@ interface PagePermission {
     Admin: boolean;
     'Field Builder': boolean;
     'Field Trainer': boolean;
-    'Sr. BMA': boolean;
+    'Senior BMA': boolean;
     BMA: boolean;
     IBA: boolean;
   };
@@ -25,7 +25,7 @@ interface PagePermission {
   updatedAt: string;
 }
 
-const ROLES = ['Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA'];
+const ROLES = ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'];
 
 export function PagePermissionsManager() {
   // API Hooks
@@ -46,7 +46,7 @@ export function PagePermissionsManager() {
       'Admin': 'bg-red-500',
       'Field Builder': 'bg-blue-500',
       'Field Trainer': 'bg-yellow-500',
-      'Sr. BMA': 'bg-green-500',
+      'Senior BMA': 'bg-green-500',
       'BMA': 'bg-orange-500',
       'IBA': 'bg-purple-500',
     };

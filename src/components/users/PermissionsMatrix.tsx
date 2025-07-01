@@ -11,7 +11,7 @@ interface Permission {
   Admin: boolean;
   "Field Builder": boolean;
   "Field Trainer": boolean;
-  "Sr. BMA": boolean;
+  "Senior BMA": boolean;
   BMA: boolean;
   IBA: boolean;
 }
@@ -23,7 +23,7 @@ const permissions: Permission[] = [
     Admin: true,
     "Field Builder": true,
     "Field Trainer": true,
-    "Sr. BMA": true,
+    "Senior BMA": true,
     BMA: true,
     IBA: true,
   },
@@ -33,7 +33,7 @@ const permissions: Permission[] = [
     Admin: true,
     "Field Builder": true,
     "Field Trainer": true,
-    "Sr. BMA": true,
+    "Senior BMA": true,
     BMA: true,
     IBA: true,
   },
@@ -43,7 +43,7 @@ const permissions: Permission[] = [
     Admin: true,
     "Field Builder": true,
     "Field Trainer": true,
-    "Sr. BMA": true,
+    "Senior BMA": true,
     BMA: true,
     IBA: true,
   },
@@ -53,7 +53,7 @@ const permissions: Permission[] = [
     Admin: true,
     "Field Builder": true,
     "Field Trainer": true,
-    "Sr. BMA": true,
+    "Senior BMA": true,
     BMA: true,
     IBA: true,
   },
@@ -63,7 +63,7 @@ const permissions: Permission[] = [
     Admin: true,
     "Field Builder": true,
     "Field Trainer": true,
-    "Sr. BMA": true,
+    "Senior BMA": true,
     BMA: false,
     IBA: false,
   },
@@ -73,7 +73,7 @@ const permissions: Permission[] = [
     Admin: true,
     "Field Builder": true,
     "Field Trainer": false,
-    "Sr. BMA": false,
+    "Senior BMA": false,
     BMA: false,
     IBA: false,
   },
@@ -83,13 +83,13 @@ const permissions: Permission[] = [
     Admin: true,
     "Field Builder": false,
     "Field Trainer": false,
-    "Sr. BMA": false,
+    "Senior BMA": false,
     BMA: false,
     IBA: false,
   },
 ];
 
-const roles = ["Admin", "Field Builder", "Field Trainer", "Sr. BMA", "BMA", "IBA"] as const;
+const roles = ["Admin", "Field Builder", "Field Trainer", "Senior BMA", "BMA", "IBA"] as const;
 
 export function PermissionsMatrix() {
   const getRoleBadgeVariant = (role: string) => {
@@ -100,7 +100,7 @@ export function PermissionsMatrix() {
         return "default";
       case "Field Trainer":
         return "secondary";
-      case "Sr. BMA":
+      case "Senior BMA":
         return "outline";
       default:
         return "secondary";

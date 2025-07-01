@@ -21,7 +21,7 @@ export function AdminUserCreation() {
 
   const createUserMutation = useCreateUser();
 
-  const roles = ['Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA'];
+  const roles = ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'];
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -207,7 +207,7 @@ export function AdminUserCreation() {
             <p><strong>Admin:</strong> Full system access and user management</p>
             <p><strong>Field Builder:</strong> Senior field management role</p>
             <p><strong>Field Trainer:</strong> Training and development role</p>
-            <p><strong>Sr. BMA:</strong> Senior Business Manager Associate</p>
+            <p><strong>Senior BMA:</strong> Senior Business Manager Associate</p>
             <p><strong>BMA:</strong> Business Manager Associate</p>
             <p><strong>IBA:</strong> Independent Business Associate</p>
           </div>

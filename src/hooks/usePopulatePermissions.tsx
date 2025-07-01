@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
-type UserRole = "Admin" | "Field Builder" | "Field Trainer" | "Sr. BMA" | "BMA" | "IBA";
+type UserRole = "Admin" | "Field Builder" | "Field Trainer" | "Senior BMA" | "BMA" | "IBA";
 
 const pages = [
   "Dashboard",
@@ -15,7 +15,7 @@ const pages = [
   "Securia Access"
 ];
 
-const roles: UserRole[] = ["Admin", "Field Builder", "Field Trainer", "Sr. BMA", "BMA", "IBA"];
+const roles: UserRole[] = ["Admin", "Field Builder", "Field Trainer", "Senior BMA", "BMA", "IBA"];
 
 // Define updated default permissions for each role to match requirements
 const defaultPermissions: Record<UserRole, Record<string, boolean>> = {
@@ -46,7 +46,7 @@ const defaultPermissions: Record<UserRole, Record<string, boolean>> = {
     "User Management": false,
     "Securia Access": false
   },
-  "Sr. BMA": {
+  "Senior BMA": {
     "Dashboard": true,
     "Contacts": true,
     "Deals": true,

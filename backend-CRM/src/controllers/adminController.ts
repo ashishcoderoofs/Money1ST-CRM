@@ -485,7 +485,7 @@ export const getPermissions = async (req: AuthRequest, res: Response): Promise<v
       'Admin': 6,
       'Field Builder': 5,
       'Field Trainer': 4,
-      'Sr. BMA': 3,
+      'Senior BMA': 3,
       'BMA': 2,
       'IBA': 1
     };
@@ -522,7 +522,7 @@ export const getPermissions = async (req: AuthRequest, res: Response): Promise<v
         'attachment.delete_own',
         'attachment.update_own'
       ],
-      'Sr. BMA': [
+      'Senior BMA': [
         'user.read',
         'user.update_self',
         'attachment.upload',
