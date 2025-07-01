@@ -152,7 +152,7 @@ const userSchema = new Schema<IUser>({
   },
   role: {
     type: String,
-    enum: ['Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA'],
+    enum: ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'],
     default: 'Field Builder'
   },
   isActive: {
@@ -176,7 +176,7 @@ userSchema.statics.getRoleHierarchy = function(): RoleHierarchy {
     'Admin': 6,
     'Field Builder': 5,
     'Field Trainer': 4,
-    'Sr. BMA': 3,
+    'Senior BMA': 3,
     'BMA': 2,
     'IBA': 1
   };

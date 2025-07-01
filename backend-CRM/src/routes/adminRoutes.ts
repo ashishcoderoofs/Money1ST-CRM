@@ -13,10 +13,11 @@ import {
 } from '../controllers/adminController';
 import {
   getPagePermissions,
-  createPagePermission,
+  createOrUpdatePagePermission,
   toggleRolePermission,
   initializeDefaultPages,
-  deletePagePermission
+  deletePagePermission,
+  getUserPagePermissions
 } from '../controllers/pagePermissionController';
 import { authenticate, authorizeAdmin } from '../middleware/auth';
 import { validateRegistration, validateBulkUpdate } from '../middleware/validation';
@@ -125,7 +126,7 @@ router.get('/users/activity', getUserActivity);
  *         name: role
  *         schema:
  *           type: string
- *           enum: [Admin, Field Builder, Field Trainer, Sr. BMA, BMA, IBA]
+ *           enum: [Admin, Field Builder, Field Trainer, Senior BMA, BMA, IBA]
  *       - in: query
  *         name: isActive
  *         schema:
@@ -295,7 +296,7 @@ router.patch('/users/:id/toggle-status', toggleUserStatus);
  *             properties:
  *               role:
  *                 type: string
- *                 enum: [Admin, Field Builder, Field Trainer, Sr. BMA, BMA, IBA]
+ *                 enum: [Admin, Field Builder, Field Trainer, Senior BMA, BMA, IBA]
  *     responses:
  *       200:
  *         description: User role updated successfully
@@ -371,7 +372,7 @@ router.get('/page-permissions', getPagePermissions);
  *       200:
  *         description: Page permission created/updated successfully
  */
-router.post('/page-permissions', createPagePermission);
+router.post('/page-permissions', createOrUpdatePagePermission);
 
 /**
  * @swagger

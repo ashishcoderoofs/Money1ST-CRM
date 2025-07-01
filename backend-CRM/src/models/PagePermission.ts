@@ -32,7 +32,7 @@ const pagePermissionSchema = new Schema<IPagePermission>({
       type: Boolean,
       default: false
     },
-    'Sr. BMA': {
+    'Senior BMA': {
       type: Boolean,
       default: false
     },

@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import mongoose, { Document } from 'mongoose';
 
-export type UserRole = 'Admin' | 'Field Builder' | 'Field Trainer' | 'Sr. BMA' | 'BMA' | 'IBA';
+export type UserRole = 'Admin' | 'Field Builder' | 'Field Trainer' | 'Senior BMA' | 'BMA' | 'IBA';
 
 export interface IUser extends Document {
   // Main Information

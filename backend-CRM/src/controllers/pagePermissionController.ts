@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import PagePermission from '../models/PagePermission';
-import { AuthRequest } from '../types';
+import { AuthRequest, UserRole } from '../types';
 import logger from '../../utils/logger';
 
 // Get all page permissions
@@ -20,7 +20,7 @@ export const getPagePermissions = async (req: AuthRequest, res: Response): Promi
 };
 
 // Create or update page permission
-export const createPagePermission = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createOrUpdatePagePermission = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { pageName, rolePermissions, description } = req.body;
 
@@ -29,12 +29,22 @@ export const createPagePermission = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
+    // Check if the page permission already exists
     const existingPermission = await PagePermission.findOne({ pageName });
     
     if (existingPermission) {
       // Update existing
-      existingPermission.rolePermissions = { ...existingPermission.rolePermissions, ...rolePermissions };
-      if (description !== undefined) existingPermission.description = description;
+      if (rolePermissions) {
+        // Update role permissions
+        for (const [role, permission] of Object.entries(rolePermissions)) {
+          (existingPermission.rolePermissions as any)[role] = permission as boolean;
+        }
+        existingPermission.markModified('rolePermissions');
+      }
+      
+      if (description !== undefined) {
+        existingPermission.description = description;
+      }
       
       await existingPermission.save();
       
@@ -79,7 +89,7 @@ export const toggleRolePermission = async (req: AuthRequest, res: Response): Pro
     }
 
     // Validate role
-    const validRoles = ['Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA'];
+    const validRoles = ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'];
     if (!validRoles.includes(role)) {
       res.status(400).json({ error: 'Invalid role' });
       return;
@@ -90,12 +100,12 @@ export const toggleRolePermission = async (req: AuthRequest, res: Response): Pro
     if (!pagePermission) {
       // Create new page permission if it doesn't exist
       const defaultPermissions = {
-        Admin: true,
+        'Admin': true,
         'Field Builder': false,
         'Field Trainer': false,
-        'Sr. BMA': false,
-        BMA: false,
-        IBA: false
+        'Senior BMA': false,
+        'BMA': false,
+        'IBA': false
       };
       
       pagePermission = await PagePermission.create({
@@ -104,13 +114,27 @@ export const toggleRolePermission = async (req: AuthRequest, res: Response): Pro
       });
     }
 
+    // Ensure rolePermissions is initialized
+    if (!pagePermission.rolePermissions || typeof pagePermission.rolePermissions !== 'object') {
+      pagePermission.rolePermissions = {
+        'Admin': true,
+        'Field Builder': false,
+        'Field Trainer': false,
+        'Senior BMA': false,
+        'BMA': false,
+        'IBA': false
+      };
+    }
+
     // Toggle the permission
-    const currentPermission = pagePermission.rolePermissions[role as keyof typeof pagePermission.rolePermissions];
-    pagePermission.rolePermissions[role as keyof typeof pagePermission.rolePermissions] = !currentPermission;
+    const currentPermission = (pagePermission.rolePermissions as any)[role];
+    (pagePermission.rolePermissions as any)[role] = !currentPermission;
     
+    // Mark as modified for Mongoose
+    pagePermission.markModified('rolePermissions');
     await pagePermission.save();
 
-    const newPermission = pagePermission.rolePermissions[role as keyof typeof pagePermission.rolePermissions];
+    const newPermission = (pagePermission.rolePermissions as any)[role];
     
     logger.info(`Page permission toggled: ${pageName} - ${role} to ${newPermission} by ${req.user!.email}`);
 
@@ -138,84 +162,84 @@ export const initializeDefaultPages = async (req: AuthRequest, res: Response): P
         pageName: 'Dashboard', 
         description: 'Main dashboard with system overview',
         rolePermissions: {
-          Admin: true,
+          'Admin': true,
           'Field Builder': true,
           'Field Trainer': true,
-          'Sr. BMA': true,
-          BMA: true,
-          IBA: true
+          'Senior BMA': true,
+          'BMA': true,
+          'IBA': true
         }
       },
       { 
         pageName: 'Contacts', 
         description: 'Contact management and client information',
         rolePermissions: {
-          Admin: true,
+          'Admin': true,
           'Field Builder': true,
           'Field Trainer': true,
-          'Sr. BMA': true,
-          BMA: true,
-          IBA: true
+          'Senior BMA': true,
+          'BMA': true,
+          'IBA': true
         }
       },
       { 
         pageName: 'Deals', 
         description: 'Deal management and sales tracking',
         rolePermissions: {
-          Admin: true,
+          'Admin': true,
           'Field Builder': true,
           'Field Trainer': true,
-          'Sr. BMA': true,
-          BMA: true,
-          IBA: true
+          'Senior BMA': true,
+          'BMA': true,
+          'IBA': true
         }
       },
       { 
         pageName: 'Tasks', 
         description: 'Task management and assignments',
         rolePermissions: {
-          Admin: true,
+          'Admin': true,
           'Field Builder': true,
           'Field Trainer': true,
-          'Sr. BMA': true,
-          BMA: true,
-          IBA: true
+          'Senior BMA': true,
+          'BMA': true,
+          'IBA': true
         }
       },
       { 
         pageName: 'Reports', 
         description: 'System reports and analytics',
         rolePermissions: {
-          Admin: true,
+          'Admin': true,
           'Field Builder': true,
           'Field Trainer': true,
-          'Sr. BMA': false,
-          BMA: false,
-          IBA: false
+          'Senior BMA': true,
+          'BMA': false,
+          'IBA': false
         }
       },
       { 
         pageName: 'User Management', 
         description: 'User administration and management',
         rolePermissions: {
-          Admin: true,
+          'Admin': true,
           'Field Builder': false,
           'Field Trainer': false,
-          'Sr. BMA': false,
-          BMA: false,
-          IBA: false
+          'Senior BMA': false,
+          'BMA': false,
+          'IBA': false
         }
       },
       { 
         pageName: 'Securia Access', 
         description: 'Securia system access and operations',
         rolePermissions: {
-          Admin: true,
-          'Field Builder': true,
+          'Admin': true,
+          'Field Builder': false,
           'Field Trainer': false,
-          'Sr. BMA': false,
-          BMA: false,
-          IBA: false
+          'Senior BMA': false,
+          'BMA': false,
+          'IBA': false
         }
       }
     ];
@@ -232,15 +256,15 @@ export const initializeDefaultPages = async (req: AuthRequest, res: Response): P
       } else {
         // Update existing page with any missing role permissions
         let updated = false;
-        for (const role of Object.keys(pageData.rolePermissions)) {
-          if (existingPage.rolePermissions[role as keyof typeof existingPage.rolePermissions] === undefined) {
-            existingPage.rolePermissions[role as keyof typeof existingPage.rolePermissions] = 
-              pageData.rolePermissions[role as keyof typeof pageData.rolePermissions];
+        for (const [role, permission] of Object.entries(pageData.rolePermissions)) {
+          if ((existingPage.rolePermissions as any)[role] === undefined) {
+            (existingPage.rolePermissions as any)[role] = permission;
             updated = true;
           }
         }
         
         if (updated) {
+          existingPage.markModified('rolePermissions');
           await existingPage.save();
           updatedCount++;
         }
@@ -271,7 +295,13 @@ export const getUserPagePermissions = async (req: AuthRequest, res: Response): P
     const pagePermissions = await PagePermission.find({ isActive: true });
 
     const userPermissions = pagePermissions.reduce((acc, page) => {
-      acc[page.pageName] = page.rolePermissions[userRole as keyof typeof page.rolePermissions] || false;
+      let hasPermission = false;
+      
+      if (page.rolePermissions && typeof page.rolePermissions === 'object' && page.rolePermissions !== null) {
+        hasPermission = (page.rolePermissions as any)[userRole] || false;
+      }
+      
+      acc[page.pageName] = hasPermission;
       return acc;
     }, {} as Record<string, boolean>);
 
