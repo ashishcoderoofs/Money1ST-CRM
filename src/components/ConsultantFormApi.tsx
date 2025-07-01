@@ -105,22 +105,54 @@ export function ConsultantFormApi({
     resolver: zodResolver(consultantFormSchema),
     defaultValues: {
       entryDate: new Date().toISOString().split('T')[0],
-      status: 'Active',
+      status: 'Active' as const,
       firstName: "",
       lastName: "",
       email: "",
-      ...defaultValues,
     },
   });
+
+  // Use useEffect to set form values when defaultValues change
+  React.useEffect(() => {
+    if (defaultValues && isEditMode) {
+      // Create a safe defaults object
+      const safeDefaults: Partial<ConsultantFormValues> = {};
+      
+      // Copy simple string/number fields
+      Object.keys(defaultValues).forEach(key => {
+        const value = defaultValues[key as keyof typeof defaultValues];
+        if (value !== undefined && value !== null) {
+          (safeDefaults as any)[key] = value;
+        }
+      });
+
+      form.reset({
+        entryDate: new Date().toISOString().split('T')[0],
+        status: 'Active' as const,
+        firstName: "",
+        lastName: "",
+        email: "",
+        ...safeDefaults,
+      });
+    }
+  }, [defaultValues, isEditMode, form]);
 
   const isLoading = createConsultant.isPending || updateConsultant.isPending;
 
   const handleFormSubmit = async (values: ConsultantFormValues) => {
     try {
+      // Prepare data for API - ensure required fields are present
+      const apiData = {
+        ...values,
+        firstName: values.firstName || "",
+        lastName: values.lastName || "",
+        email: values.email || "",
+      };
+
       if (isEditMode && consultantId) {
-        await updateConsultant.mutateAsync({ id: consultantId, data: values });
+        await updateConsultant.mutateAsync({ id: consultantId, data: apiData });
       } else {
-        await createConsultant.mutateAsync(values);
+        await createConsultant.mutateAsync(apiData);
       }
       onSuccess?.();
       if (!isEditMode) {
@@ -182,9 +214,21 @@ export function ConsultantFormApi({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Position</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Select a position" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a position" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Field Builder">Field Builder</SelectItem>
+                      <SelectItem value="Field Trainer">Field Trainer</SelectItem>
+                      <SelectItem value="Senior BMA">Senior BMA</SelectItem>
+                      <SelectItem value="BMA">BMA</SelectItem>
+                      <SelectItem value="IBA">IBA</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -218,9 +262,22 @@ export function ConsultantFormApi({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Select title" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select title" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Mr.">Mr.</SelectItem>
+                      <SelectItem value="Mrs.">Mrs.</SelectItem>
+                      <SelectItem value="Ms.">Ms.</SelectItem>
+                      <SelectItem value="Miss">Miss</SelectItem>
+                      <SelectItem value="Dr.">Dr.</SelectItem>
+                      <SelectItem value="Prof.">Prof.</SelectItem>
+                      <SelectItem value="Rev.">Rev.</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
