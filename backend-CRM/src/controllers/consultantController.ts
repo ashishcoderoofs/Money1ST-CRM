@@ -1,0 +1,301 @@
+import { Response } from 'express';
+import Consultant from '../models/Consultant';
+import { AuthRequest } from '../types';
+import logger from '../../utils/logger';
+
+// Get all consultants
+export const getConsultants = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      status, 
+      search 
+    } = req.query;
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build filter
+    const filter: any = {};
+    
+    if (status) {
+      filter.status = status;
+    }
+
+    if (search) {
+      const searchRegex = new RegExp(search as string, 'i');
+      filter.$or = [
+        { firstName: searchRegex },
+        { lastName: searchRegex },
+        { email: searchRegex },
+        { consultantId: searchRegex }
+      ];
+    }
+
+    // Get consultants with pagination
+    const consultants = await Consultant
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .populate('createdBy', 'firstName lastName email')
+      .populate('updatedBy', 'firstName lastName email');
+
+    const total = await Consultant.countDocuments(filter);
+
+    res.json({
+      success: true,
+      data: consultants,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    });
+  } catch (error) {
+    logger.error('Get consultants error:', error);
+    res.status(500).json({ error: 'Failed to get consultants' });
+  }
+};
+
+// Get consultant by ID
+export const getConsultantById = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const consultant = await Consultant
+      .findById(id)
+      .populate('createdBy', 'firstName lastName email')
+      .populate('updatedBy', 'firstName lastName email');
+
+    if (!consultant) {
+      res.status(404).json({ error: 'Consultant not found' });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: consultant
+    });
+  } catch (error) {
+    logger.error('Get consultant error:', error);
+    res.status(500).json({ error: 'Failed to get consultant' });
+  }
+};
+
+// Create new consultant
+export const createConsultant = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const consultantData = {
+      ...req.body,
+      createdBy: req.user!._id
+    };
+
+    // Generate consultant ID if not provided
+    if (!consultantData.consultantId) {
+      const count = await Consultant.countDocuments();
+      consultantData.consultantId = `CON${String(count + 1).padStart(4, '0')}`;
+    }
+
+    const consultant = await Consultant.create(consultantData);
+
+    logger.info(`Consultant created: ${consultant.consultantId} by ${req.user!.email}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Consultant created successfully',
+      data: consultant
+    });
+  } catch (error: any) {
+    logger.error('Create consultant error:', error);
+    
+    if (error.code === 11000) {
+      // Handle duplicate key error
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+      res.status(400).json({ 
+        error: `A consultant with this ${field} (${value}) already exists` 
+      });
+    } else if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map((err: any) => err.message);
+      res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validationErrors 
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to create consultant' });
+    }
+  }
+};
+
+// Update consultant
+export const updateConsultant = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const updateData = {
+      ...req.body,
+      updatedBy: req.user!._id
+    };
+
+    const consultant = await Consultant.findByIdAndUpdate(
+      id,
+      updateData,
+      { 
+        new: true, 
+        runValidators: true 
+      }
+    );
+
+    if (!consultant) {
+      res.status(404).json({ error: 'Consultant not found' });
+      return;
+    }
+
+    logger.info(`Consultant updated: ${consultant.consultantId} by ${req.user!.email}`);
+
+    res.json({
+      success: true,
+      message: 'Consultant updated successfully',
+      data: consultant
+    });
+  } catch (error: any) {
+    logger.error('Update consultant error:', error);
+    
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+      res.status(400).json({ 
+        error: `A consultant with this ${field} (${value}) already exists` 
+      });
+    } else if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map((err: any) => err.message);
+      res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validationErrors 
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to update consultant' });
+    }
+  }
+};
+
+// Delete consultant
+export const deleteConsultant = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const consultant = await Consultant.findByIdAndDelete(id);
+
+    if (!consultant) {
+      res.status(404).json({ error: 'Consultant not found' });
+      return;
+    }
+
+    logger.info(`Consultant deleted: ${consultant.consultantId} by ${req.user!.email}`);
+
+    res.json({
+      success: true,
+      message: 'Consultant deleted successfully'
+    });
+  } catch (error) {
+    logger.error('Delete consultant error:', error);
+    res.status(500).json({ error: 'Failed to delete consultant' });
+  }
+};
+
+// Toggle consultant status
+export const toggleConsultantStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const consultant = await Consultant.findById(id);
+
+    if (!consultant) {
+      res.status(404).json({ error: 'Consultant not found' });
+      return;
+    }
+
+    consultant.status = consultant.status === 'Active' ? 'Inactive' : 'Active';
+    consultant.updatedBy = req.user!._id;
+    await consultant.save();
+
+    logger.info(`Consultant status toggled: ${consultant.consultantId} to ${consultant.status} by ${req.user!.email}`);
+
+    res.json({
+      success: true,
+      message: `Consultant ${consultant.status === 'Active' ? 'activated' : 'deactivated'} successfully`,
+      data: consultant
+    });
+  } catch (error) {
+    logger.error('Toggle consultant status error:', error);
+    res.status(500).json({ error: 'Failed to toggle consultant status' });
+  }
+};
+
+// Get consultant statistics
+export const getConsultantStats = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const [totalCount, activeCount, inactiveCount] = await Promise.all([
+      Consultant.countDocuments(),
+      Consultant.countDocuments({ status: 'Active' }),
+      Consultant.countDocuments({ status: 'Inactive' })
+    ]);
+
+    // Get recent consultants (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentCount = await Consultant.countDocuments({
+      createdAt: { $gte: thirtyDaysAgo }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        total: totalCount,
+        active: activeCount,
+        inactive: inactiveCount,
+        recent: recentCount
+      }
+    });
+  } catch (error) {
+    logger.error('Get consultant stats error:', error);
+    res.status(500).json({ error: 'Failed to get consultant statistics' });
+  }
+};
+
+// Search consultants
+export const searchConsultants = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { query, limit = 10 } = req.query;
+
+    if (!query) {
+      res.status(400).json({ error: 'Search query is required' });
+      return;
+    }
+
+    const searchRegex = new RegExp(query as string, 'i');
+    const consultants = await Consultant
+      .find({
+        $or: [
+          { firstName: searchRegex },
+          { lastName: searchRegex },
+          { email: searchRegex },
+          { consultantId: searchRegex }
+        ]
+      })
+      .limit(parseInt(limit as string))
+      .select('consultantId firstName lastName email status')
+      .sort({ firstName: 1, lastName: 1 });
+
+    res.json({
+      success: true,
+      data: consultants
+    });
+  } catch (error) {
+    logger.error('Search consultants error:', error);
+    res.status(500).json({ error: 'Failed to search consultants' });
+  }
+};

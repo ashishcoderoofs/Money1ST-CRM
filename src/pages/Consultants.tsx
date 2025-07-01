@@ -119,13 +119,18 @@ export default function Consultants() {
                   <TableCell className="font-medium">
                     {getFullName(consultant.firstName, consultant.lastName)}
                   </TableCell>
-                  <TableCell>{consultant.position || consultant.specialization}</TableCell>
+                  <TableCell>{consultant.position || consultant.title || '-'}</TableCell>
                   <TableCell>
                     <Badge variant={getBadgeVariant(consultant.status)}>
                       {consultant.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{new Date(consultant.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    {consultant.entryDate 
+                      ? new Date(consultant.entryDate).toLocaleDateString()
+                      : new Date(consultant.createdAt).toLocaleDateString()
+                    }
+                  </TableCell>
                   <TableCell>{consultant.email}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button asChild size="sm" className="bg-cyan-500 text-primary-foreground hover:bg-cyan-600">

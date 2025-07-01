@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types';
-import SecuriaConsultant from '../models/SecuriaConsultant';
+import Consultant from '../models/Consultant';
 import SecuriaClient from '../models/SecuriaClient';
 import SecuriaAuditLog from '../models/SecuriaAuditLog';
 import User from '../models/User';
@@ -154,7 +154,9 @@ export const getConsultants = async (req: AuthRequest, res: Response): Promise<v
     let filter: any = {};
     
     if (status !== 'all') {
-      filter.status = status;
+      // Convert lowercase status to our model's capitalized format
+      const statusValue = status === 'active' ? 'Active' : status === 'inactive' ? 'Inactive' : status;
+      filter.status = statusValue;
     }
     
     if (search) {
@@ -162,16 +164,17 @@ export const getConsultants = async (req: AuthRequest, res: Response): Promise<v
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
-        { specialization: { $regex: search, $options: 'i' } }
+        { position: { $regex: search, $options: 'i' } },
+        { consultantId: { $regex: search, $options: 'i' } }
       ];
     }
 
-    const consultants = await SecuriaConsultant.find(filter)
+    const consultants = await Consultant.find(filter)
       .sort({ [sort as string]: sortOrder })
       .limit(limitNum)
       .skip((pageNum - 1) * limitNum);
 
-    const total = await SecuriaConsultant.countDocuments(filter);
+    const total = await Consultant.countDocuments(filter);
 
     await logAuditEvent(req, 'CONSULTANTS_VIEWED', 'consultant', undefined, { page: pageNum, limit: limitNum, search, status });
 
@@ -197,7 +200,7 @@ export const getConsultants = async (req: AuthRequest, res: Response): Promise<v
 
 export const createConsultant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const consultant = await SecuriaConsultant.create(req.body);
+    const consultant = await Consultant.create(req.body);
     
     await logAuditEvent(req, 'CONSULTANT_CREATED', 'consultant', consultant._id.toString(), { 
       consultantName: `${consultant.firstName} ${consultant.lastName}`,
@@ -227,7 +230,7 @@ export const createConsultant = async (req: AuthRequest, res: Response): Promise
 
 export const getConsultantById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const consultant = await SecuriaConsultant.findById(req.params.id);
+    const consultant = await Consultant.findById(req.params.id);
     
     if (!consultant) {
       res.status(404).json({ 
@@ -254,7 +257,7 @@ export const getConsultantById = async (req: AuthRequest, res: Response): Promis
 
 export const updateConsultant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const consultant = await SecuriaConsultant.findByIdAndUpdate(
+    const consultant = await Consultant.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
@@ -289,7 +292,7 @@ export const updateConsultant = async (req: AuthRequest, res: Response): Promise
 
 export const deleteConsultant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const consultant = await SecuriaConsultant.findByIdAndDelete(req.params.id);
+    const consultant = await Consultant.findByIdAndDelete(req.params.id);
     
     if (!consultant) {
       res.status(404).json({ 
@@ -319,7 +322,7 @@ export const deleteConsultant = async (req: AuthRequest, res: Response): Promise
 
 export const toggleConsultantStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const consultant = await SecuriaConsultant.findById(req.params.id);
+    const consultant = await Consultant.findById(req.params.id);
     
     if (!consultant) {
       res.status(404).json({ 
@@ -329,7 +332,7 @@ export const toggleConsultantStatus = async (req: AuthRequest, res: Response): P
       return;
     }
 
-    consultant.status = consultant.status === 'active' ? 'inactive' : 'active';
+    consultant.status = consultant.status === 'Active' ? 'Inactive' : 'Active';
     await consultant.save();
 
     await logAuditEvent(req, 'CONSULTANT_STATUS_CHANGED', 'consultant', consultant._id.toString(), { 
@@ -654,8 +657,8 @@ export const toggleClientStatus = async (req: AuthRequest, res: Response): Promi
 // Dashboard & Analytics Endpoints
 export const getDashboardStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const totalConsultants = await SecuriaConsultant.countDocuments();
-    const activeConsultants = await SecuriaConsultant.countDocuments({ status: 'active' });
+    const totalConsultants = await Consultant.countDocuments();
+    const activeConsultants = await Consultant.countDocuments({ status: 'Active' });
     const totalClients = await SecuriaClient.countDocuments();
     const activeClients = await SecuriaClient.countDocuments({ status: 'active' });
 
@@ -717,7 +720,7 @@ export const getChartData = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     // Consultant growth
-    const consultantGrowth = await SecuriaConsultant.aggregate([
+    const consultantGrowth = await Consultant.aggregate([
       { $match: { createdAt: { $gte: dateRange } } },
       { 
         $group: {
@@ -747,7 +750,7 @@ export const getChartData = async (req: AuthRequest, res: Response): Promise<voi
     ]);
 
     // Revenue by consultant (mock data)
-    const consultants = await SecuriaConsultant.find({ status: 'active' }).limit(10);
+    const consultants = await Consultant.find({ status: 'Active' }).limit(10);
     const revenueByConsultant = consultants.map(consultant => ({
       consultantName: `${consultant.firstName} ${consultant.lastName}`,
       revenue: Math.round(Math.random() * 200000 + 50000)

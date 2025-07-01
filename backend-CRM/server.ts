@@ -14,6 +14,7 @@ import userRoutes from './src/routes/userRoutes';
 import adminRoutes from './src/routes/adminRoutes';
 import attachmentRoutes from './src/routes/attachmentRoutes';
 import securiaRoutes from './src/routes/securiaRoutes';
+import consultantRoutes from './src/routes/consultantRoutes';
 
 // Import middleware
 import { errorHandler } from './src/middleware/errorHandler';
@@ -52,6 +53,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/securia', securiaRoutes);
+app.use('/api/consultants', consultantRoutes);
 
 // ✅ Swagger setup
 setupSwagger(app);

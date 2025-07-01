@@ -3,33 +3,25 @@ import { useAuth } from "./useAuth";
 
 export interface SecuriaConsultant {
   _id: string;
-  consultantId: string;
+  consultantId?: string;
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
-  status: "active" | "inactive";
-  position: string;
-  specialization: string;
-  experience: string;
-  certifications: string[];
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  emergencyContact: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
-  bankingInfo: {
-    accountNumber: string;
-    routingNumber: string;
-    bankName: string;
-  };
+  phone?: string;
+  mobile?: string;
+  status: "Active" | "Inactive";
+  position?: string;
+  title?: string;
+  entryDate: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  dateOfBirth?: string;
+  maritalStatus?: string;
+  sex?: string;
+  comment?: string;
+  remarks?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -50,7 +42,7 @@ interface ConsultantsParams {
   page?: number;
   limit?: number;
   search?: string;
-  status?: "active" | "inactive" | "all";
+  status?: "Active" | "Inactive" | "all";
   sort?: "firstName" | "lastName" | "email" | "createdAt";
   order?: "asc" | "desc";
 }
@@ -154,7 +146,7 @@ export const useUpdateConsultantStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "active" | "inactive" }) => {
+    mutationFn: async ({ id, status }: { id: string; status: "Active" | "Inactive" }) => {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
       const response = await fetch(`${apiUrl}/api/securia/consultants/${id}/status`, {
         method: 'PATCH',
