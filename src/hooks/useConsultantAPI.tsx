@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE = process.env.NODE_ENV === 'production' 
   ? 'https://your-production-api.com/api' 
@@ -91,9 +92,35 @@ export interface PaginatedResponse<T> {
   };
 }
 
+// Helper function to check if token is expired
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const decodedToken = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+    
+    // Check if token has expiration and if it's expired
+    if (decodedToken.exp && decodedToken.exp < currentTime) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return true; // Treat invalid tokens as expired
+  }
+};
+
 // Helper function to make authenticated requests with token expiration handling
 const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('auth_token');
+  
+  // Check if token exists and is not expired before making request
+  if (token && isTokenExpired(token)) {
+    console.warn('Token expired before making API request');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+    window.location.href = '/login';
+    return;
+  }
   
   const response = await fetch(`${API_BASE}${url}`, {
     ...options,
