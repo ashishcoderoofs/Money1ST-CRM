@@ -25,7 +25,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { useSecuriaClients, useDeleteClient } from "@/hooks/useSecuriaClients";
+import { useSecuriaClients } from "@/hooks/useSecuriaClients";
+import { useDeleteClient } from "@/hooks/clients/useClientMutations";
 import { toast } from "sonner";
 
 function ClientModal({ open, onClose, client, mode }: any) {

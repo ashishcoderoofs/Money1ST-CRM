@@ -5,6 +5,19 @@ import SecuriaClient from '../models/SecuriaClient';
 import SecuriaAuditLog from '../models/SecuriaAuditLog';
 import User from '../models/User';
 import logger from '../../utils/logger';
+import { SecuriaSessionService } from '../services/SecuriaSessionService';
+import { SecuriaConsultantService } from '../services/SecuriaConsultantService';
+import { SecuriaClientService } from '../services/SecuriaClientService';
+import { SecuriaDashboardService } from '../services/SecuriaDashboardService';
+
+// Re-export session functions for backward compatibility
+export const hasValidSecuriaSession = (userId: string): boolean => {
+  return SecuriaSessionService.hasValidSession(userId);
+};
+
+export const invalidateUserSecuriaSessions = (userId: string): void => {
+  return SecuriaSessionService.invalidateUserSessions(userId);
+};
 
 // Helper function to calculate completion percentage
 const calculateCompletionPercentage = (clientData: any): number => {
@@ -117,6 +130,9 @@ export const reauthSecuria = async (req: AuthRequest, res: Response): Promise<vo
 
     await logAuditEvent(req, 'SECURIA_REAUTH_SUCCESS', 'authentication', user._id.toString(), { email });
     
+    // Create Securia session using service
+    const sessionId = SecuriaSessionService.createSession(user._id.toString());
+    
     res.json({
       success: true,
       message: 'Authentication successful',
@@ -147,47 +163,19 @@ export const getConsultants = async (req: AuthRequest, res: Response): Promise<v
       order = 'desc' 
     } = req.query;
 
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
-    const sortOrder = order === 'asc' ? 1 : -1;
+    const result = await SecuriaConsultantService.getConsultants(req);
 
-    let filter: any = {};
-    
-    if (status !== 'all') {
-      // Convert lowercase status to our model's capitalized format
-      const statusValue = status === 'active' ? 'Active' : status === 'inactive' ? 'Inactive' : status;
-      filter.status = statusValue;
-    }
-    
-    if (search) {
-      filter.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { position: { $regex: search, $options: 'i' } },
-        { consultantId: { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    const consultants = await Consultant.find(filter)
-      .sort({ [sort as string]: sortOrder })
-      .limit(limitNum)
-      .skip((pageNum - 1) * limitNum);
-
-    const total = await Consultant.countDocuments(filter);
-
-    await logAuditEvent(req, 'CONSULTANTS_VIEWED', 'consultant', undefined, { page: pageNum, limit: limitNum, search, status });
+    await logAuditEvent(req, 'CONSULTANTS_VIEWED', 'consultant', undefined, { 
+      page: parseInt(page as string), 
+      limit: parseInt(limit as string), 
+      search, 
+      status 
+    });
 
     res.json({
       success: true,
-      data: consultants,
-      pagination: {
-        page: pageNum,
-        pages: Math.ceil(total / limitNum),
-        total,
-        hasNext: pageNum < Math.ceil(total / limitNum),
-        hasPrev: pageNum > 1
-      }
+      data: result.data,
+      pagination: result.pagination
     });
   } catch (error) {
     logger.error('Get consultants error:', error);
@@ -200,7 +188,8 @@ export const getConsultants = async (req: AuthRequest, res: Response): Promise<v
 
 export const createConsultant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const consultant = await Consultant.create(req.body);
+    const result = await SecuriaConsultantService.createConsultant(req.body, req.user!._id.toString());
+    const consultant = result.data;
     
     await logAuditEvent(req, 'CONSULTANT_CREATED', 'consultant', consultant._id.toString(), { 
       consultantName: `${consultant.firstName} ${consultant.lastName}`,
@@ -230,7 +219,8 @@ export const createConsultant = async (req: AuthRequest, res: Response): Promise
 
 export const getConsultantById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const consultant = await Consultant.findById(req.params.id);
+    const result = await SecuriaConsultantService.getConsultantById(req.params.id);
+    const consultant = result.data;
     
     if (!consultant) {
       res.status(404).json({ 
@@ -257,51 +247,46 @@ export const getConsultantById = async (req: AuthRequest, res: Response): Promis
 
 export const updateConsultant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const consultant = await Consultant.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const result = await SecuriaConsultantService.updateConsultant(req.params.id, req.body, req.user!._id.toString());
+    const consultant = result.data;
     
-    if (!consultant) {
-      res.status(404).json({ 
-        success: false, 
-        message: 'Consultant not found' 
+    if (consultant) {
+      await logAuditEvent(req, 'CONSULTANT_UPDATED', 'consultant', consultant._id.toString(), { 
+        consultantName: `${consultant.firstName} ${consultant.lastName}`,
+        updatedFields: Object.keys(req.body)
       });
-      return;
     }
-
-    await logAuditEvent(req, 'CONSULTANT_UPDATED', 'consultant', consultant._id.toString(), { 
-      consultantName: `${consultant.firstName} ${consultant.lastName}`,
-      updatedFields: Object.keys(req.body)
-    });
 
     res.json({
       success: true,
       message: 'Consultant updated successfully',
       data: consultant
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Update consultant error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to update consultant' 
-    });
+    if (error.message === 'Consultant not found') {
+      res.status(404).json({ 
+        success: false, 
+        message: error.message 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to update consultant' 
+      });
+    }
   }
 };
 
 export const deleteConsultant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const consultant = await Consultant.findByIdAndDelete(req.params.id);
+    // Get consultant before deletion for audit log
+    const consultantResult = await SecuriaConsultantService.getConsultantById(req.params.id);
+    const consultant = consultantResult.data;
     
-    if (!consultant) {
-      res.status(404).json({ 
-        success: false, 
-        message: 'Consultant not found' 
-      });
-      return;
-    }
-
+    // Delete consultant
+    await SecuriaConsultantService.deleteConsultant(req.params.id, req.user!._id.toString());
+    
     await logAuditEvent(req, 'CONSULTANT_DELETED', 'consultant', consultant._id.toString(), { 
       consultantName: `${consultant.firstName} ${consultant.lastName}`,
       email: consultant.email
@@ -311,49 +296,55 @@ export const deleteConsultant = async (req: AuthRequest, res: Response): Promise
       success: true,
       message: 'Consultant deleted successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Delete consultant error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to delete consultant' 
-    });
+    if (error.message === 'Consultant not found') {
+      res.status(404).json({ 
+        success: false, 
+        message: error.message 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to delete consultant' 
+      });
+    }
   }
 };
 
 export const toggleConsultantStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const consultant = await Consultant.findById(req.params.id);
-    
-    if (!consultant) {
-      res.status(404).json({ 
-        success: false, 
-        message: 'Consultant not found' 
+    const result = await SecuriaConsultantService.toggleConsultantStatus(req.params.id, req.user!._id.toString());
+    const consultant = result.data;
+
+    if (consultant) {
+      await logAuditEvent(req, 'CONSULTANT_STATUS_CHANGED', 'consultant', consultant._id.toString(), { 
+        consultantName: `${consultant.firstName} ${consultant.lastName}`,
+        newStatus: consultant.status
       });
-      return;
     }
-
-    consultant.status = consultant.status === 'Active' ? 'Inactive' : 'Active';
-    await consultant.save();
-
-    await logAuditEvent(req, 'CONSULTANT_STATUS_CHANGED', 'consultant', consultant._id.toString(), { 
-      consultantName: `${consultant.firstName} ${consultant.lastName}`,
-      newStatus: consultant.status
-    });
 
     res.json({
       success: true,
       message: 'Consultant status updated successfully',
-      data: {
+      data: consultant ? {
         _id: consultant._id,
         status: consultant.status
-      }
+      } : null
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Toggle consultant status error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to update consultant status' 
-    });
+    if (error.message === 'Consultant not found') {
+      res.status(404).json({ 
+        success: false, 
+        message: error.message 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to update consultant status' 
+      });
+    }
   }
 };
 
@@ -370,48 +361,20 @@ export const getClients = async (req: AuthRequest, res: Response): Promise<void>
       order = 'desc' 
     } = req.query;
 
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
-    const sortOrder = order === 'asc' ? 1 : -1;
+    const result = await SecuriaClientService.getClients(req);
 
-    let filter: any = {};
-    
-    if (status !== 'all') {
-      filter.status = status;
-    }
-    
-    if (consultantId) {
-      filter.consultantId = consultantId;
-    }
-    
-    if (search) {
-      filter.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    const clients = await SecuriaClient.find(filter)
-      .populate('consultantId', 'firstName lastName email')
-      .sort({ [sort as string]: sortOrder })
-      .limit(limitNum)
-      .skip((pageNum - 1) * limitNum);
-
-    const total = await SecuriaClient.countDocuments(filter);
-
-    await logAuditEvent(req, 'CLIENTS_VIEWED', 'client', undefined, { page: pageNum, limit: limitNum, search, status, consultantId });
+    await logAuditEvent(req, 'CLIENTS_VIEWED', 'client', undefined, { 
+      page: parseInt(page as string), 
+      limit: parseInt(limit as string), 
+      search, 
+      status, 
+      consultantId 
+    });
 
     res.json({
       success: true,
-      data: clients,
-      pagination: {
-        page: pageNum,
-        pages: Math.ceil(total / limitNum),
-        total,
-        hasNext: pageNum < Math.ceil(total / limitNum),
-        hasPrev: pageNum > 1
-      }
+      data: result.data,
+      pagination: result.pagination
     });
   } catch (error) {
     logger.error('Get clients error:', error);
@@ -426,42 +389,14 @@ export const createClient = async (req: AuthRequest, res: Response): Promise<Res
   try {
     console.log('📝 Creating new client:', req.body);
     
-    const clientData = req.body;
-    
-    // Note: Validation is handled by Joi middleware before reaching this controller
-
-    // Generate client ID
-    const clientCount = await SecuriaClient.countDocuments();
-    const clientId = `CLI${String(clientCount + 1).padStart(6, '0')}`;
-    
-    // Calculate completion percentage
-    const completionPercentage = calculateCompletionPercentage(clientData);
-    
-    // Determine status based on completion
-    let status = 'draft';
-    if (completionPercentage >= 80) {
-      status = 'active';
-    } else if (completionPercentage >= 30) {
-      status = 'submitted';
-    }
-
-    // Prepare client document
-    const newClient = new SecuriaClient({
-      ...clientData,
-      clientId,
-      status,
-      completionPercentage,
-      createdBy: req.user?.id,
-      lastModifiedBy: req.user?.id
-    });
-
-    await newClient.save();
+    const result = await SecuriaClientService.createClient(req.body, req.user!._id.toString());
+    const newClient = result.data;
     
     // Log audit trail
     await logAuditEvent(req, 'CLIENT_CREATED', 'client', newClient._id.toString(), {
       clientId: newClient.clientId,
       email: newClient.applicant?.email || newClient.email,
-      completionPercentage
+      completionPercentage: newClient.completionPercentage
     });
 
     console.log('✅ Client created successfully:', newClient.clientId);
@@ -497,29 +432,28 @@ export const createClient = async (req: AuthRequest, res: Response): Promise<Res
 
 export const getClientById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const client = await SecuriaClient.findById(req.params.id)
-      .populate('consultantId', 'firstName lastName email');
+    const result = await SecuriaClientService.getClientById(req.params.id);
+    const client = result.data;
     
-    if (!client) {
-      res.status(404).json({ 
-        success: false, 
-        message: 'Client not found' 
-      });
-      return;
-    }
-
     await logAuditEvent(req, 'CLIENT_VIEWED', 'client', client._id.toString());
 
     res.json({
       success: true,
       data: client
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Get client error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to get client' 
-    });
+    if (error.message === 'Client not found') {
+      res.status(404).json({ 
+        success: false, 
+        message: error.message 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to get client' 
+      });
+    }
   }
 };
 
@@ -530,44 +464,14 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<Res
     
     console.log('📝 Updating client:', clientId, updateData);
     
-    // Calculate new completion percentage
-    const existingClient = await SecuriaClient.findById(clientId);
-    if (!existingClient) {
-      return res.status(404).json({
-        success: false,
-        error: 'Client not found'
-      });
-    }
-    
-    // Merge existing data with updates
-    const mergedData = { ...existingClient.toObject(), ...updateData };
-    const completionPercentage = calculateCompletionPercentage(mergedData);
-    
-    // Update status based on completion
-    let status = updateData.status || existingClient.status;
-    if (completionPercentage >= 80 && status === 'draft') {
-      status = 'active';
-    } else if (completionPercentage >= 30 && status === 'draft') {
-      status = 'submitted';
-    }
-    
-    // Set audit fields
-    updateData.lastModifiedBy = req.user?.id;
-    updateData.updatedAt = new Date();
-    updateData.completionPercentage = completionPercentage;
-    updateData.status = status;
-    
-    const updatedClient = await SecuriaClient.findByIdAndUpdate(
-      clientId,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
+    const result = await SecuriaClientService.updateClient(clientId, updateData, req.user!._id.toString());
+    const updatedClient = result.data;
     
     // Log audit trail
     await logAuditEvent(req, 'CLIENT_UPDATED', 'client', clientId, {
       clientId: updatedClient?.clientId,
-      completionPercentage,
-      status
+      completionPercentage: updatedClient?.completionPercentage,
+      status: updatedClient?.status
     });
     
     console.log('✅ Client updated successfully:', updatedClient?.clientId);
@@ -580,6 +484,14 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<Res
     
   } catch (error: any) {
     console.error('❌ Error updating client:', error);
+    
+    if (error.message === 'Client not found') {
+      return res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+    
     return res.status(500).json({
       success: false,
       error: error.message || 'Failed to update client'
@@ -589,15 +501,12 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<Res
 
 export const deleteClient = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const client = await SecuriaClient.findByIdAndDelete(req.params.id);
+    // Get client before deletion for audit log
+    const clientResult = await SecuriaClientService.getClientById(req.params.id);
+    const client = clientResult.data;
     
-    if (!client) {
-      res.status(404).json({ 
-        success: false, 
-        message: 'Client not found' 
-      });
-      return;
-    }
+    // Delete client
+    await SecuriaClientService.deleteClient(req.params.id, req.user!._id.toString());
 
     await logAuditEvent(req, 'CLIENT_DELETED', 'client', client._id.toString(), { 
       clientName: `${client.firstName} ${client.lastName}`,
@@ -608,88 +517,68 @@ export const deleteClient = async (req: AuthRequest, res: Response): Promise<voi
       success: true,
       message: 'Client deleted successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Delete client error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to delete client' 
-    });
+    if (error.message === 'Client not found') {
+      res.status(404).json({ 
+        success: false, 
+        message: error.message 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to delete client' 
+      });
+    }
   }
 };
 
 export const toggleClientStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const client = await SecuriaClient.findById(req.params.id);
-    
-    if (!client) {
-      res.status(404).json({ 
-        success: false, 
-        message: 'Client not found' 
+    const result = await SecuriaClientService.toggleClientStatus(req.params.id, req.user!._id.toString());
+    const client = result.data;
+
+    if (client) {
+      await logAuditEvent(req, 'CLIENT_STATUS_CHANGED', 'client', client._id.toString(), { 
+        clientName: `${client.firstName} ${client.lastName}`,
+        newStatus: client.status
       });
-      return;
     }
-
-    client.status = client.status === 'active' ? 'inactive' : 'active';
-    await client.save();
-
-    await logAuditEvent(req, 'CLIENT_STATUS_CHANGED', 'client', client._id.toString(), { 
-      clientName: `${client.firstName} ${client.lastName}`,
-      newStatus: client.status
-    });
 
     res.json({
       success: true,
       message: 'Client status updated successfully',
-      data: {
+      data: client ? {
         _id: client._id,
         status: client.status
-      }
+      } : null
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Toggle client status error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to update client status' 
-    });
+    if (error.message === 'Client not found') {
+      res.status(404).json({ 
+        success: false, 
+        message: error.message 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to update client status' 
+      });
+    }
   }
 };
 
 // Dashboard & Analytics Endpoints
 export const getDashboardStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const totalConsultants = await Consultant.countDocuments();
-    const activeConsultants = await Consultant.countDocuments({ status: 'Active' });
-    const totalClients = await SecuriaClient.countDocuments();
-    const activeClients = await SecuriaClient.countDocuments({ status: 'active' });
-
-    // Calculate mock revenue (in a real app, this would come from a transactions collection)
-    const totalRevenue = totalClients * 2500; // Mock calculation
-    const monthlyGrowth = Math.round(Math.random() * 20 + 5); // Mock growth
-
-    // Get recent activity from audit logs
-    const recentActivity = await SecuriaAuditLog.find()
-      .sort({ timestamp: -1 })
-      .limit(10)
-      .select('action resource details timestamp');
+    const stats = await SecuriaDashboardService.getDashboardStats();
 
     await logAuditEvent(req, 'DASHBOARD_VIEWED', 'dashboard');
 
     res.json({
       success: true,
-      data: {
-        totalConsultants,
-        activeConsultants,
-        totalClients,
-        activeClients,
-        totalRevenue,
-        monthlyGrowth,
-        recentActivity: recentActivity.map(log => ({
-          id: log._id,
-          type: log.action.toLowerCase(),
-          description: `${log.action.replace(/_/g, ' ')} - ${log.resource}`,
-          timestamp: log.timestamp
-        }))
-      }
+      data: stats
     });
   } catch (error) {
     logger.error('Get dashboard stats error:', error);
@@ -704,87 +593,13 @@ export const getChartData = async (req: AuthRequest, res: Response): Promise<voi
   try {
     const { timeframe = 'month' } = req.query;
     
-    let dateRange = new Date();
-    switch(timeframe) {
-      case 'week':
-        dateRange.setDate(dateRange.getDate() - 7);
-        break;
-      case 'quarter':
-        dateRange.setMonth(dateRange.getMonth() - 3);
-        break;
-      case 'year':
-        dateRange.setFullYear(dateRange.getFullYear() - 1);
-        break;
-      default:
-        dateRange.setMonth(dateRange.getMonth() - 1);
-    }
-
-    // Consultant growth
-    const consultantGrowth = await Consultant.aggregate([
-      { $match: { createdAt: { $gte: dateRange } } },
-      { 
-        $group: {
-          _id: { 
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' }
-          },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } }
-    ]);
-
-    // Client growth
-    const clientGrowth = await SecuriaClient.aggregate([
-      { $match: { createdAt: { $gte: dateRange } } },
-      { 
-        $group: {
-          _id: { 
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' }
-          },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } }
-    ]);
-
-    // Revenue by consultant (mock data)
-    const consultants = await Consultant.find({ status: 'Active' }).limit(10);
-    const revenueByConsultant = consultants.map(consultant => ({
-      consultantName: `${consultant.firstName} ${consultant.lastName}`,
-      revenue: Math.round(Math.random() * 200000 + 50000)
-    }));
-
-    // Clients by risk tolerance
-    const clientsByRiskTolerance = await SecuriaClient.aggregate([
-      {
-        $group: {
-          _id: '$financialInfo.riskTolerance',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
+    const chartData = await SecuriaDashboardService.getChartData(timeframe as string);
 
     await logAuditEvent(req, 'CHART_DATA_VIEWED', 'dashboard', undefined, { timeframe });
 
     res.json({
       success: true,
-      data: {
-        consultantGrowth: consultantGrowth.map(item => ({
-          period: `${item._id.month}/${item._id.year}`,
-          count: item.count
-        })),
-        clientGrowth: clientGrowth.map(item => ({
-          period: `${item._id.month}/${item._id.year}`,
-          count: item.count
-        })),
-        revenueByConsultant,
-        clientsByRiskTolerance: clientsByRiskTolerance.map(item => ({
-          riskLevel: item._id,
-          count: item.count
-        }))
-      }
+      data: chartData
     });
   } catch (error) {
     logger.error('Get chart data error:', error);
