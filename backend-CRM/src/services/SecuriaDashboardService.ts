@@ -29,7 +29,7 @@ export class SecuriaDashboardService {
         Consultant.countDocuments(),
         Consultant.countDocuments({ status: 'Active' }),
         Consultant.countDocuments({ status: 'Inactive' }),
-        SecuriaClient.find().sort({ createdAt: -1 }).limit(5).populate('consultant', 'firstName lastName'),
+        SecuriaClient.find().sort({ createdAt: -1 }).limit(5).populate('consultantId', 'firstName lastName'),
         SecuriaAuditLog.find().sort({ timestamp: -1 }).limit(10).populate('userId', 'firstName lastName email')
       ]);
 

@@ -58,8 +58,7 @@ export class SecuriaClientService {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum)
-      .populate('consultant', 'firstName lastName email')
-      .populate('processor', 'firstName lastName email');
+      .populate('consultantId', 'firstName lastName email');
 
     const total = await SecuriaClient.countDocuments(filter);
 
@@ -93,8 +92,7 @@ export class SecuriaClientService {
     });
 
     const savedClient = await client.save();
-    await savedClient.populate('consultant', 'firstName lastName email');
-    await savedClient.populate('processor', 'firstName lastName email');
+    await savedClient.populate('consultantId', 'firstName lastName email');
 
     logger.info(`Client created via Securia: ${savedClient._id} by user: ${userId}`);
 
@@ -111,8 +109,7 @@ export class SecuriaClientService {
   static async getClientById(clientId: string) {
     const client = await SecuriaClient
       .findById(clientId)
-      .populate('consultant', 'firstName lastName email')
-      .populate('processor', 'firstName lastName email');
+      .populate('consultantId', 'firstName lastName email');
 
     if (!client) {
       throw new Error('Client not found');
@@ -140,8 +137,7 @@ export class SecuriaClientService {
         { ...updateData, updatedBy: userId, updatedAt: new Date() },
         { new: true, runValidators: true }
       )
-      .populate('consultant', 'firstName lastName email')
-      .populate('processor', 'firstName lastName email');
+      .populate('consultantId', 'firstName lastName email');
 
     logger.info(`Client updated via Securia: ${clientId} by user: ${userId}`);
 
@@ -189,8 +185,7 @@ export class SecuriaClientService {
         { status: newStatus, updatedBy: userId, updatedAt: new Date() },
         { new: true }
       )
-      .populate('consultant', 'firstName lastName email')
-      .populate('processor', 'firstName lastName email');
+      .populate('consultantId', 'firstName lastName email');
 
     logger.info(`Client status toggled via Securia: ${clientId} to ${newStatus} by user: ${userId}`);
 
@@ -220,8 +215,7 @@ export class SecuriaClientService {
 
     const updatedClient = await SecuriaClient
       .findByIdAndUpdate(clientId, updateData, { new: true, runValidators: true })
-      .populate('consultant', 'firstName lastName email')
-      .populate('processor', 'firstName lastName email');
+      .populate('consultantId', 'firstName lastName email');
 
     logger.info(`Client section ${section} updated via Securia: ${clientId} by user: ${userId}`);
 
