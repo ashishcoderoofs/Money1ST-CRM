@@ -58,7 +58,7 @@ export default function EditClient() {
     }
     
     // Validate client ID
-    if (!client?.id) {
+    if (!client?._id) {
       console.error("=== CRITICAL ERROR - NO CLIENT ID ===");
       toast.error("Cannot update: Client ID is missing");
       return;
@@ -92,7 +92,7 @@ export default function EditClient() {
       console.log("=== FORM VALIDATION PASSED ===");
       console.log("=== PREPARING MUTATION DATA ===");
       
-      const mutationData = { ...values, id: client.id };
+      const mutationData = { ...values, id: client._id };
       console.log("Mutation data keys:", Object.keys(mutationData));
       console.log("Mutation data sample:", {
         id: mutationData.id,
@@ -109,7 +109,7 @@ export default function EditClient() {
           console.log("=== MUTATION SUCCESS CALLBACK ===");
           console.log("Success data:", data);
           toast.success("Client updated successfully!");
-          navigate(`/securia/clients/${client.id}`);
+          navigate(`/securia/clients/${client._id}`);
         },
         onError: (error: any) => {
           console.log("=== MUTATION ERROR CALLBACK ===");
@@ -170,7 +170,7 @@ export default function EditClient() {
         <div className="flex gap-3">
           <Button
             variant="outline"
-            onClick={() => navigate(`/securia/clients/${client.id}`)}
+            onClick={() => navigate(`/securia/clients/${client._id}`)}
           >
             <Eye className="w-4 h-4 mr-1" />
             View Mode
@@ -208,7 +208,7 @@ export default function EditClient() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(`/securia/clients/${client.id}`)}
+              onClick={() => navigate(`/securia/clients/${client._id}`)}
               disabled={mutation.isPending}
               className="px-8"
             >
