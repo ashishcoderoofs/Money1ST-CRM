@@ -1,11 +1,12 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext, useCallback } from "react";
 import { useAuth } from "./useAuth";
 
 interface SecuriaSessionContextType {
   isSecuriaAuthenticated: boolean;
   securiaSessionId: string | null;
   loading: boolean;
-  checkSecuriaSession: () => Promise<boolean>;
+  isAuthenticating: boolean;
+  checkSecuriaSession: (skipLoadingState?: boolean) => Promise<boolean>;
   authenticateSecuria: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logoutSecuria: () => Promise<void>;
 }
@@ -16,35 +17,24 @@ export function SecuriaSessionProvider({ children }: { children: React.ReactNode
   const { user, token, apiCall } = useAuth();
   const [isSecuriaAuthenticated, setIsSecuriaAuthenticated] = useState(false);
   const [securiaSessionId, setSecuriaSessionId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false to prevent initial flash
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Check for stored Securia session on mount
-  useEffect(() => {
-    const storedSessionId = localStorage.getItem('securia_session_id');
-    if (storedSessionId && user) {
-      setSecuriaSessionId(storedSessionId);
-      checkSecuriaSession();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  // Clear Securia session when user logs out
-  useEffect(() => {
-    if (!user) {
-      clearSecuriaSession();
-    }
-  }, [user]);
-
-  const clearSecuriaSession = () => {
+  const clearSecuriaSession = useCallback(() => {
     localStorage.removeItem('securia_session_id');
     setSecuriaSessionId(null);
     setIsSecuriaAuthenticated(false);
-  };
+  }, []);
 
-  const checkSecuriaSession = async (): Promise<boolean> => {
+  const checkSecuriaSession = useCallback(async (skipLoadingState = false): Promise<boolean> => {
+    if (!user) {
+      if (!skipLoadingState) setLoading(false);
+      return false;
+    }
+
     try {
-      setLoading(true);
+      if (!skipLoadingState) setLoading(true);
       const response = await apiCall('/api/securia/status');
       
       if (response.ok) {
@@ -66,12 +56,41 @@ export function SecuriaSessionProvider({ children }: { children: React.ReactNode
       clearSecuriaSession();
       return false;
     } finally {
-      setLoading(false);
+      if (!skipLoadingState) setLoading(false);
     }
-  };
+  }, [user, apiCall, clearSecuriaSession]);
 
-  const authenticateSecuria = async (email: string, password: string) => {
+  // Check for stored Securia session on mount
+  useEffect(() => {
+    if (hasInitialized || !user) return;
+    
+    setLoading(true); // Set loading only when we actually start checking
+    const storedSessionId = localStorage.getItem('securia_session_id');
+    if (storedSessionId) {
+      setSecuriaSessionId(storedSessionId);
+      // Check session status without showing loading spinner again
+      checkSecuriaSession(true).finally(() => {
+        setLoading(false);
+        setHasInitialized(true);
+      });
+    } else {
+      setLoading(false);
+      setHasInitialized(true);
+    }
+  }, [user, checkSecuriaSession, hasInitialized]);
+
+  // Clear Securia session when user logs out
+  useEffect(() => {
+    if (!user) {
+      clearSecuriaSession();
+      setLoading(false);
+      setHasInitialized(false); // Reset initialization when user logs out
+    }
+  }, [user, clearSecuriaSession]);
+
+  const authenticateSecuria = useCallback(async (email: string, password: string) => {
     try {
+      setIsAuthenticating(true);
       const response = await apiCall('/api/securia/reauth', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
@@ -101,10 +120,12 @@ export function SecuriaSessionProvider({ children }: { children: React.ReactNode
         success: false, 
         message: 'Network error occurred' 
       };
+    } finally {
+      setIsAuthenticating(false);
     }
-  };
+  }, [apiCall]);
 
-  const logoutSecuria = async () => {
+  const logoutSecuria = useCallback(async () => {
     try {
       await apiCall('/api/securia/logout', {
         method: 'POST',
@@ -114,12 +135,13 @@ export function SecuriaSessionProvider({ children }: { children: React.ReactNode
     } finally {
       clearSecuriaSession();
     }
-  };
+  }, [apiCall, clearSecuriaSession]);
 
   const value = {
     isSecuriaAuthenticated,
     securiaSessionId,
     loading,
+    isAuthenticating,
     checkSecuriaSession,
     authenticateSecuria,
     logoutSecuria,

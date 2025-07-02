@@ -13,7 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ShieldCheck } from "lucide-react"; // Security icon
+import { ShieldCheck } from "lucide-react";
 
 export default function SecuriaProtectedRoute({
   children,
@@ -25,6 +25,7 @@ export default function SecuriaProtectedRoute({
   const { 
     isSecuriaAuthenticated, 
     loading: securiaLoading, 
+    isAuthenticating,
     authenticateSecuria,
     checkSecuriaSession 
   } = useSecuriaSession();
@@ -32,7 +33,6 @@ export default function SecuriaProtectedRoute({
   const [canAccess, setCanAccess] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -55,7 +55,7 @@ export default function SecuriaProtectedRoute({
   // Check Securia session when user role is confirmed as Admin
   useEffect(() => {
     if (canAccess && !securiaLoading && !isSecuriaAuthenticated) {
-      checkSecuriaSession();
+      checkSecuriaSession(true); // Don't show loading spinner for this check
     }
   }, [canAccess, securiaLoading, isSecuriaAuthenticated, checkSecuriaSession]);
 
@@ -63,7 +63,6 @@ export default function SecuriaProtectedRoute({
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
 
-    setIsAuthenticating(true);
     try {
       const result = await authenticateSecuria(email, password);
 
@@ -88,15 +87,21 @@ export default function SecuriaProtectedRoute({
         variant: "destructive",
       });
       setPassword("");
-    } finally {
-      setIsAuthenticating(false);
     }
   };
 
-  if (authLoading || roleLoading || canAccess === null || securiaLoading) {
+  // Show loading state for any pending operations (only show Securia loading on initial load)
+  if (authLoading || roleLoading || canAccess === null || (securiaLoading && !isSecuriaAuthenticated)) {
     return (
-      <div className="p-8 text-center text-sm text-muted-foreground">
-        Loading...
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
