@@ -1,10 +1,60 @@
-import { Response } from 'express';
-import { AuthRequest } from '../types';
+import express from 'express';
+import User from '../models/User';
 import Consultant from '../models/Consultant';
 import SecuriaClient from '../models/SecuriaClient';
 import SecuriaAuditLog from '../models/SecuriaAuditLog';
-import User from '../models/User';
+import { AuthRequest } from '../types';
+import { Response } from 'express';
 import logger from '../../utils/logger';
+
+// In-memory store for Securia sessions (in production, use Redis or database)
+const securiaSessionStore = new Map<string, { userId: string, timestamp: number }>();
+
+// Session timeout: 8 hours
+const SECURIA_SESSION_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+
+// Helper function to clean expired sessions
+const cleanExpiredSessions = () => {
+  const now = Date.now();
+  for (const [sessionId, session] of securiaSessionStore.entries()) {
+    if (now - session.timestamp > SECURIA_SESSION_TIMEOUT) {
+      securiaSessionStore.delete(sessionId);
+    }
+  }
+};
+
+// Helper function to generate session ID
+const generateSessionId = (userId: string): string => {
+  return `securia_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
+// Helper function to check if user has valid Securia session
+export const hasValidSecuriaSession = (userId: string): boolean => {
+  cleanExpiredSessions();
+  for (const [sessionId, session] of securiaSessionStore.entries()) {
+    if (session.userId === userId && (Date.now() - session.timestamp) < SECURIA_SESSION_TIMEOUT) {
+      return true;
+    }
+  }
+  return false;
+};
+
+// Helper function to create Securia session
+const createSecuriaSession = (userId: string): string => {
+  cleanExpiredSessions();
+  const sessionId = generateSessionId(userId);
+  securiaSessionStore.set(sessionId, { userId, timestamp: Date.now() });
+  return sessionId;
+};
+
+// Helper function to invalidate user's Securia sessions
+export const invalidateUserSecuriaSessions = (userId: string): void => {
+  for (const [sessionId, session] of securiaSessionStore.entries()) {
+    if (session.userId === userId) {
+      securiaSessionStore.delete(sessionId);
+    }
+  }
+};
 
 // Helper function to calculate completion percentage
 const calculateCompletionPercentage = (clientData: any): number => {
@@ -117,9 +167,13 @@ export const reauthSecuria = async (req: AuthRequest, res: Response): Promise<vo
 
     await logAuditEvent(req, 'SECURIA_REAUTH_SUCCESS', 'authentication', user._id.toString(), { email });
     
+    // Create Securia session
+    const sessionId = createSecuriaSession(user._id.toString());
+    
     res.json({
       success: true,
       message: 'Authentication successful',
+      sessionId,
       user: {
         id: user._id,
         email: user.email,
@@ -128,6 +182,68 @@ export const reauthSecuria = async (req: AuthRequest, res: Response): Promise<vo
     });
   } catch (error) {
     logger.error('Securia reauth error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
+    });
+  }
+};
+
+// Add new endpoint to check Securia session status
+export const checkSecuriaSession = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
+      return;
+    }
+
+    const hasSession = hasValidSecuriaSession(req.user._id.toString());
+    
+    res.json({
+      success: true,
+      hasSecuriaAccess: hasSession,
+      user: {
+        id: req.user._id,
+        email: req.user.email,
+        role: req.user.role
+      }
+    });
+  } catch (error) {
+    logger.error('Check Securia session error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
+    });
+  }
+};
+
+// Add endpoint to logout from Securia (invalidate session)
+export const logoutSecuria = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
+      return;
+    }
+
+    // Invalidate all Securia sessions for this user
+    invalidateUserSecuriaSessions(req.user._id.toString());
+    
+    await logAuditEvent(req, 'SECURIA_LOGOUT', 'authentication', req.user._id.toString(), { 
+      email: req.user.email 
+    });
+    
+    res.json({
+      success: true,
+      message: 'Securia session ended successfully'
+    });
+  } catch (error) {
+    logger.error('Securia logout error:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Server error' 

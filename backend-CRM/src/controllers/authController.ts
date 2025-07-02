@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { AuthRequest, RegisterRequest, LoginRequest, ApiResponse } from '../types';
 import logger from '../../utils/logger';
+// Import Securia session invalidation function
+import { invalidateUserSecuriaSessions } from './securiaController';
 
 const generateToken = (id: string): string => {
   const jwtSecret = process.env.JWT_SECRET;
@@ -159,6 +161,26 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
   } catch (error) {
     logger.error('Get profile error:', error);
     res.status(500).json({ error: 'Failed to get profile' });
+  }
+};
+
+// Logout endpoint that also clears Securia sessions
+export const logout = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (req.user) {
+      // Clear any Securia sessions for this user
+      invalidateUserSecuriaSessions(req.user._id.toString());
+      
+      logger.info(`User logged out: ${req.user.email}`);
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Logged out successfully' 
+    });
+  } catch (error) {
+    logger.error('Logout error:', error);
+    res.status(500).json({ error: 'Logout failed' });
   }
 };
 

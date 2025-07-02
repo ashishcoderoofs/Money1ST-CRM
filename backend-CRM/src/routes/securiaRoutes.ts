@@ -3,8 +3,11 @@ import {  validateMinimumClientFields, validateClientUpdate } from '../middlewar
 import { validateMultiStageClient, validateSectionUpdate, validateBulkUpdate } from '../middleware/multiStageClientValidation';
 import { authenticate } from '../middleware/auth';
 import { AuthRequest } from '../types';
+import { Response, NextFunction } from 'express';
 import {
   reauthSecuria,
+  checkSecuriaSession,
+  logoutSecuria,
   getConsultants,
   createConsultant,
   getConsultantById,
@@ -280,6 +283,39 @@ router.use((req: AuthRequest, res, next) => {
   next();
 });
 
+// Import session checking function
+import { hasValidSecuriaSession } from '../controllers/securiaController';
+
+// Middleware to check Securia session for protected routes
+const checkSecuriaSessionMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+  // Skip session check for auth-related endpoints
+  if (req.path === '/reauth' || req.path === '/status' || req.path === '/logout') {
+    return next();
+  }
+
+  if (!req.user) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Authentication required' 
+    });
+  }
+
+  const hasSession = hasValidSecuriaSession(req.user._id.toString());
+  
+  if (!hasSession) {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Securia session required. Please re-authenticate.',
+      requiresReauth: true
+    });
+  }
+
+  next();
+};
+
+// Apply session checking middleware to all routes except auth endpoints
+router.use(checkSecuriaSessionMiddleware);
+
 // Authentication Endpoints
 
 /**
@@ -373,28 +409,34 @@ router.post('/reauth', reauthSecuria);
  *       500:
  *         description: Server error
  */
-router.get('/status', async (req: AuthRequest, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ success: false, message: "Authentication required" });
-    }
+router.get('/status', checkSecuriaSession);
 
-    const hasSecuriaAccess = req.user.role === 'Admin';
-    
-    return res.status(200).json({
-      success: true,
-      hasAccess: hasSecuriaAccess,
-      user: {
-        email: req.user.email,
-        role: req.user.role
-      },
-      message: hasSecuriaAccess ? 'Securia access available' : 'Securia access denied'
-    });
-  } catch (err) {
-    console.error("🔥 Securia status error:", err);
-    return res.status(500).json({ success: false, message: "Internal server error" });
-  }
-});
+/**
+ * @swagger
+ * /api/securia/logout:
+ *   post:
+ *     summary: Logout from Securia (invalidate session)
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Securia session ended successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Server error
+ */
+router.post('/logout', logoutSecuria);
 
 // Consultant Management Endpoints
 

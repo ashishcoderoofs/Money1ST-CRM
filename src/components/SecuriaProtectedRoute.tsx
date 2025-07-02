@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useSecuriaReauth } from "@/hooks/useSecuriaReauth";
+import { useSecuriaSession } from "@/hooks/useSecuriaSession";
 import { Navigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
@@ -22,12 +22,17 @@ export default function SecuriaProtectedRoute({
 }) {
   const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole(user?.id ?? null);
-  const securiaReauth = useSecuriaReauth();
+  const { 
+    isSecuriaAuthenticated, 
+    loading: securiaLoading, 
+    authenticateSecuria,
+    checkSecuriaSession 
+  } = useSecuriaSession();
 
   const [canAccess, setCanAccess] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -37,7 +42,6 @@ export default function SecuriaProtectedRoute({
 
     if (role === "Admin") {
       setCanAccess(true);
-      setIsAuthenticated(false);
     } else {
       setCanAccess(false);
     }
@@ -48,22 +52,26 @@ export default function SecuriaProtectedRoute({
     setEmail(user?.email || "");
   }, [user?.id, user?.email]);
 
+  // Check Securia session when user role is confirmed as Admin
+  useEffect(() => {
+    if (canAccess && !securiaLoading && !isSecuriaAuthenticated) {
+      checkSecuriaSession();
+    }
+  }, [canAccess, securiaLoading, isSecuriaAuthenticated, checkSecuriaSession]);
+
   const handleSecuriaLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
 
+    setIsAuthenticating(true);
     try {
-      const result = await securiaReauth.mutateAsync({
-        email,
-        password,
-      });
+      const result = await authenticateSecuria(email, password);
 
       if (result.success) {
         toast({
           title: "Success",
-          description: "Securia access granted",
+          description: "Securia access granted and will persist until logout",
         });
-        setIsAuthenticated(true);
       } else {
         toast({
           title: "Error",
@@ -80,10 +88,12 @@ export default function SecuriaProtectedRoute({
         variant: "destructive",
       });
       setPassword("");
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
-  if (authLoading || roleLoading || canAccess === null) {
+  if (authLoading || roleLoading || canAccess === null || securiaLoading) {
     return (
       <div className="p-8 text-center text-sm text-muted-foreground">
         Loading...
@@ -118,7 +128,7 @@ export default function SecuriaProtectedRoute({
     );
   }
 
-  if (isAuthenticated) {
+  if (isSecuriaAuthenticated) {
     return <>{children}</>;
   }
 
@@ -135,6 +145,8 @@ export default function SecuriaProtectedRoute({
           </CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
             Please re-enter your password to access the secure Securia portal.
+            <br />
+            <span className="text-green-600 font-medium">Access will persist until logout.</span>
           </CardDescription>
         </CardHeader>
 
@@ -166,9 +178,9 @@ export default function SecuriaProtectedRoute({
             <Button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={securiaReauth.isPending || !password.trim()}
+              disabled={isAuthenticating || !password.trim()}
             >
-              {securiaReauth.isPending ? "Verifying..." : "Access Securia"}
+              {isAuthenticating ? "Verifying..." : "Access Securia"}
             </Button>
           </form>
 

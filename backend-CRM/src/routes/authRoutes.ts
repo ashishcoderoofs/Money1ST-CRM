@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getProfile } from '../controllers/authController';
+import { register, login, getProfile, logout } from '../controllers/authController';
 import { authenticate, authorize } from '../middleware/auth';
 import { validateRegistration, validateLogin } from '../middleware/validation';
 
@@ -118,5 +118,30 @@ router.post('/register', authenticate, authorize('Admin', 'IBA'), validateRegist
  *               $ref: '#/components/schemas/Error'
  */
 router.get('/profile', authenticate, getProfile);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: User logout (clears Securia sessions)
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Logout failed
+ */
+router.post('/logout', authenticate, logout);
 
 export default router;

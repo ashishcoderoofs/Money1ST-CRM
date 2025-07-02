@@ -170,8 +170,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Call logout endpoint to clear server-side sessions (including Securia)
+      if (token) {
+        try {
+          await fetch(`${API_BASE_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+        } catch (error) {
+          console.warn('Error calling logout endpoint:', error);
+          // Continue with local logout even if server call fails
+        }
+      }
+      
+      // Clear local storage
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
+      localStorage.removeItem('securia_session_id'); // Also clear Securia session
       setToken(null);
       setUser(null);
     } catch (error) {
