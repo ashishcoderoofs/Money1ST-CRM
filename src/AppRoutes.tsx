@@ -14,6 +14,8 @@ import NewConsultant from "./pages/NewConsultant";
 import EditConsultant from "./pages/EditConsultant";
 import ConsultantDetails from "./pages/ConsultantDetails";
 import NewClient from "./pages/NewClient";
+import UserDetails from "./pages/UserDetails";
+import EditUser from "./pages/EditUser";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RBACProtectedRoute from "./components/RBACProtectedRoute";
@@ -262,6 +264,30 @@ const AppRoutes = () => (
                 <EditClient />
               </Layout>
             </SecuriaProtectedRoute>
+          </RBACProtectedRoute>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/users/:userId"
+      element={
+        <ProtectedRoute>
+          <RBACProtectedRoute pageName="Admin">
+            <Layout>
+              <UserDetails />
+            </Layout>
+          </RBACProtectedRoute>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/users/:userId/edit"
+      element={
+        <ProtectedRoute>
+          <RBACProtectedRoute pageName="Admin">
+            <Layout>
+              <EditUser />
+            </Layout>
           </RBACProtectedRoute>
         </ProtectedRoute>
       }

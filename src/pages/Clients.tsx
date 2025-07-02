@@ -1,8 +1,5 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -28,64 +25,10 @@ import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useSecuriaClients, useDeleteClient } from "@/hooks/useSecuriaClients";
 import { toast } from "sonner";
 
-function ClientModal({ open, onClose, client, mode }: any) {
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {mode === "view" ? "View Client" : "Edit Client"}
-          </DialogTitle>
-        </DialogHeader>
-        {client && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Name</label>
-                <p className="text-sm">{client.firstName} {client.lastName}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Client ID</label>
-                <p className="text-sm font-mono">{client.clientId || `CLI${client._id.slice(-6).toUpperCase()}`}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <p className="text-sm">{client.email}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Phone</label>
-                <p className="text-sm">{client.phone}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Status</label>
-                <Badge variant={client.status === 'active' ? 'default' : 'secondary'}>
-                  {client.status}
-                </Badge>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Risk Tolerance</label>
-                <p className="text-sm capitalize">{client.financialInfo?.riskTolerance || 'N/A'}</p>
-              </div>
-            </div>
-            {client.address && (
-              <div>
-                <label className="text-sm font-medium">Address</label>
-                <p className="text-sm">
-                  {client.address.street}, {client.address.city}, {client.address.state} {client.address.zipCode}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-        <Button onClick={onClose}>Close</Button>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function ClientsTable({ onEdit, onView, onAdd }: any) {
+function ClientsTable({ onAdd }: any) {
   const { data, isLoading, error } = useSecuriaClients();
   const deleteClientMutation = useDeleteClient();
+  const navigate = useNavigate();
 
   const handleDelete = async (id: string, name: string) => {
     try {
@@ -189,14 +132,14 @@ function ClientsTable({ onEdit, onView, onAdd }: any) {
                     <Button
                       size="sm"
                       className="bg-cyan-500 text-primary-foreground hover:bg-cyan-600"
-                      onClick={() => onView(client)}
+                      onClick={() => navigate(`/securia/clients/${client._id}`)}
                     >
                       <Eye /> View
                     </Button>
                     <Button
                       size="sm"
                       className="bg-yellow-400 text-secondary-foreground hover:bg-yellow-500"
-                      onClick={() => onEdit(client)}
+                      onClick={() => navigate(`/securia/clients/${client._id}/edit`)}
                     >
                       <Pencil /> Edit
                     </Button>
@@ -237,21 +180,8 @@ function ClientsTable({ onEdit, onView, onAdd }: any) {
 }
 
 export default function Clients() {
-  const [showView, setShowView] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [modalClient, setModalClient] = useState<any>(null);
   const navigate = useNavigate();
 
-  const handleView = (client: any) => {
-    setModalClient(client);
-    setShowView(true);
-  };
-  
-  const handleEdit = (client: any) => {
-    setModalClient(client);
-    setShowEdit(true);
-  };
-  
   const handleAdd = () => {
     navigate("/securia/clients/new");
   };
@@ -259,13 +189,7 @@ export default function Clients() {
   return (
     <div className="flex flex-col items-center justify-start min-h-screen w-full px-2 py-2">
       <div className="w-full flex justify-center">
-        <ClientsTable onEdit={handleEdit} onView={handleView} onAdd={handleAdd} />
-        {showView && (
-          <ClientModal open={showView} onClose={() => setShowView(false)} client={modalClient} mode="view" />
-        )}
-        {showEdit && (
-          <ClientModal open={showEdit} onClose={() => setShowEdit(false)} client={modalClient} mode="edit" />
-        )}
+        <ClientsTable onAdd={handleAdd} />
       </div>
     </div>
   );

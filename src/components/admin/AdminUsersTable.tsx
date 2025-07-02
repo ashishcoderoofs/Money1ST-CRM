@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,11 +15,11 @@ import {
   useUpdateUserRole, 
   useResetUserPassword 
 } from '@/hooks/useAdminAPI';
-import { Search, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Users, ChevronLeft, ChevronRight, Eye, Pencil, Key } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-// Types
-interface User {
+// Types - keeping the MongoDB User type for backend compatibility
+interface AdminUser {
   _id: string;
   firstName: string;
   lastName: string;
@@ -41,6 +42,8 @@ interface Filters {
 const ROLES = ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'];
 
 export function AdminUsersTable() {
+  const navigate = useNavigate();
+  
   // State
   const [filters, setFilters] = useState<Filters>({
     page: 1,
@@ -50,18 +53,16 @@ export function AdminUsersTable() {
     search: ''
   });
   
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
+  const [resetPasswordUser, setResetPasswordUser] = useState<AdminUser | null>(null);
   const [newPassword, setNewPassword] = useState('');
 
   // API Hooks
   const { data: usersData, isLoading } = useAdminUsers(filters);
   const toggleStatusMutation = useToggleUserStatus();
-  const updateRoleMutation = useUpdateUserRole();
   const resetPasswordMutation = useResetUserPassword();
 
   // Derived State
-  const users: User[] = usersData?.users || [];
+  const users: AdminUser[] = usersData?.users || [];
   const pagination = usersData?.pagination || {};
 
   // Utility Functions
@@ -96,16 +97,6 @@ export function AdminUsersTable() {
     try {
       await toggleStatusMutation.mutateAsync(userId);
       showToast('success', 'Success', 'User status updated successfully');
-    } catch (error: any) {
-      showToast('error', 'Error', error.message);
-    }
-  };
-
-  const handleUpdateRole = async (userId: string, role: string) => {
-    try {
-      await updateRoleMutation.mutateAsync({ userId, role });
-      showToast('success', 'Success', 'User role updated successfully');
-      setEditingUser(null);
     } catch (error: any) {
       showToast('error', 'Error', error.message);
     }
@@ -170,7 +161,7 @@ export function AdminUsersTable() {
     </div>
   );
 
-  const renderUserRow = (user: User) => (
+  const renderUserRow = (user: AdminUser) => (
     <TableRow key={user._id}>
       <TableCell>
         <div>
@@ -202,22 +193,35 @@ export function AdminUsersTable() {
         </span>
       </TableCell>
       <TableCell>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setEditingUser(user)}
-        >
-          Edit
-        </Button>
-      </TableCell>
-      <TableCell>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setResetPasswordUser(user)}
-        >
-          Reset Password
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/admin/users/${user._id}`)}
+            className="bg-cyan-500 text-white hover:bg-cyan-600"
+          >
+            <Eye className="w-4 h-4 mr-1" />
+            View
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/admin/users/${user._id}/edit`)}
+            className="bg-yellow-500 text-white hover:bg-yellow-600"
+          >
+            <Pencil className="w-4 h-4 mr-1" />
+            Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setResetPasswordUser(user)}
+            className="bg-purple-500 text-white hover:bg-purple-600"
+          >
+            <Key className="w-4 h-4 mr-1" />
+            Reset
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );
@@ -225,7 +229,7 @@ export function AdminUsersTable() {
   const renderLoadingRows = () => 
     Array.from({ length: 5 }).map((_, i) => (
       <TableRow key={i}>
-        {Array.from({ length: 7 }).map((_, j) => (
+        {Array.from({ length: 5 }).map((_, j) => (
           <TableCell key={j}>
             <div className="h-4 bg-gray-200 rounded animate-pulse" />
           </TableCell>
@@ -235,7 +239,7 @@ export function AdminUsersTable() {
 
   const renderEmptyState = () => (
     <TableRow>
-      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
         No users found
       </TableCell>
     </TableRow>
@@ -296,8 +300,7 @@ export function AdminUsersTable() {
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Last Login</TableHead>
-                  <TableHead>Edit</TableHead>
-                  <TableHead>Reset Password</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -315,14 +318,7 @@ export function AdminUsersTable() {
         </CardContent>
       </Card>
 
-      {/* Dialogs */}
-      <EditUserDialog
-        user={editingUser}
-        onOpenChange={() => setEditingUser(null)}
-        onUpdateRole={handleUpdateRole}
-        roles={ROLES}
-      />
-
+      {/* Reset Password Dialog Only */}
       <ResetPasswordDialog
         user={resetPasswordUser}
         onOpenChange={() => setResetPasswordUser(null)}
@@ -335,52 +331,8 @@ export function AdminUsersTable() {
 }
 
 // Dialog Components
-interface EditUserDialogProps {
-  user: User | null;
-  onOpenChange: () => void;
-  onUpdateRole: (userId: string, role: string) => void;
-  roles: string[];
-}
-
-function EditUserDialog({ user, onOpenChange, onUpdateRole, roles }: EditUserDialogProps) {
-  return (
-    <Dialog open={!!user} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit User Role</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label>User</Label>
-            <p className="text-sm text-muted-foreground">
-              {user?.firstName} {user?.lastName} ({user?.email})
-            </p>
-          </div>
-          <div>
-            <Label>Current Role</Label>
-            <p className="text-sm">{user?.role}</p>
-          </div>
-          <div>
-            <Label>New Role</Label>
-            <Select onValueChange={(role) => user && onUpdateRole(user._id, role)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select new role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map(role => (
-                  <SelectItem key={role} value={role}>{role}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 interface ResetPasswordDialogProps {
-  user: User | null;
+  user: AdminUser | null;
   onOpenChange: () => void;
   password: string;
   onPasswordChange: (password: string) => void;

@@ -195,3 +195,60 @@ export function useResetUserPassword() {
     },
   });
 }
+
+// Hook for getting user by ID via MongoDB backend
+export function useAdminUserById(userId: string | undefined) {
+  const { apiCall } = useAuth();
+  
+  return useQuery({
+    queryKey: ['admin', 'user', userId],
+    queryFn: async () => {
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+
+      console.log("Fetching user by ID via MongoDB API:", userId);
+      const response = await apiCall(`/api/users/${userId}`, {
+        method: 'GET',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch user');
+      }
+      
+      const data = await response.json();
+      console.log("User fetched via MongoDB API:", data.user);
+      return data.user;
+    },
+    enabled: !!userId,
+  });
+}
+
+// Hook for updating user via MongoDB backend
+export function useUpdateAdminUser() {
+  const { apiCall } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ userId, userData }: { userId: string, userData: any }) => {
+      console.log("Updating user via MongoDB API:", userId, userData);
+      
+      const response = await apiCall(`/api/users/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update user');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'user'] });
+    },
+  });
+}
