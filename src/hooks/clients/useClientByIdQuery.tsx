@@ -1,8 +1,10 @@
-
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { mapMongoClientToFlatStructure } from "@/utils/clientDataMapper";
 
 export const useClientByIdQuery = (clientId: string | undefined) => {
+  const { apiCall } = useAuth();
+
   return useQuery({
     queryKey: ["clients", clientId],
     queryFn: async () => {
@@ -10,16 +12,25 @@ export const useClientByIdQuery = (clientId: string | undefined) => {
 
       // Log start time
       const t0 = performance.now();
-      const { data, error } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("id", clientId)
-        .maybeSingle();
+      const response = await apiCall(`/api/securia/clients/${clientId}`);
       const t1 = performance.now();
       console.log(`[useClientByIdQuery] Fetch took ${(t1 - t0).toFixed(2)}ms`);
 
-      if (error) throw error;
-      return data;
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Client not found');
+        }
+        throw new Error('Failed to fetch client');
+      }
+      
+      const result = await response.json();
+      const mongoClient = result.data;
+      
+      // Map MongoDB structure to flat structure expected by components
+      const mappedClient = mapMongoClientToFlatStructure(mongoClient);
+      console.log('[useClientByIdQuery] Mapped client data:', mappedClient);
+      
+      return mappedClient;
     },
     enabled: !!clientId,
   });

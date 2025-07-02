@@ -1,34 +1,22 @@
-
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useClientByIdQuery } from "./useClientByIdQuery";
 
 export function useLiabilitiesQuery(clientId?: string) {
+  const { data: client } = useClientByIdQuery(clientId);
+  
   return useQuery({
     queryKey: ["liabilities", clientId],
     queryFn: async () => {
-      console.log("[useLiabilitiesQuery] Fetching liabilities for client:", clientId);
+      console.log("[useLiabilitiesQuery] Extracting liabilities from client data");
       
-      if (!clientId) {
-        console.log("[useLiabilitiesQuery] No clientId provided, returning empty array");
+      if (!client || !client.liabilities) {
+        console.log("[useLiabilitiesQuery] No liabilities found in client data, returning empty array");
         return [];
       }
       
-      const { data, error } = await supabase
-        .from("client_liabilities")
-        .select("*")
-        .eq("client_id", clientId)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("[useLiabilitiesQuery] Error fetching liabilities:", error);
-        throw error;
-      }
-      
-      console.log("[useLiabilitiesQuery] Fetched liabilities:", data);
-      return data || [];
+      console.log("[useLiabilitiesQuery] Found liabilities:", client.liabilities);
+      return client.liabilities || [];
     },
-    enabled: !!clientId,
-    refetchOnWindowFocus: false,
-    staleTime: 0, // Always fetch fresh data
+    enabled: !!clientId && !!client,
   });
 }

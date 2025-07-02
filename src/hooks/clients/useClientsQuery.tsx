@@ -1,18 +1,18 @@
-
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useClientsQuery = () => {
+  const { apiCall } = useAuth();
+
   return useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      const response = await apiCall('/api/securia/clients');
+      if (!response.ok) {
+        throw new Error('Failed to fetch clients');
+      }
+      const result = await response.json();
+      return result.data || [];
     }
   });
 };

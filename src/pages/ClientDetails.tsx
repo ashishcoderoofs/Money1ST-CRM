@@ -38,7 +38,7 @@ export default function ClientDetails() {
         <div className="flex gap-3">
           <Button
             variant="outline"
-            onClick={() => navigate(`/securia/clients/${client.id}/edit`)}
+            onClick={() => navigate(`/securia/clients/${client._id}/edit`)}
           >
             <Edit className="w-4 h-4 mr-1" />
             Edit Client

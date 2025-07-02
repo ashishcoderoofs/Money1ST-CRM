@@ -31,11 +31,21 @@ export default function CaseSummaryCard({ client }: { client: any }) {
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-gray-700">Primary Applicant:</span>
-            <span className="text-base">{client.applicant ?? "N/A"}</span>
+            <span className="text-base">
+              {client.applicant_first_name || client.applicant_last_name 
+                ? `${client.applicant_first_name || ''} ${client.applicant_last_name || ''}`.trim()
+                : "N/A"
+              }
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-gray-700">Co-Applicant:</span>
-            <span className="text-base">{client.co_applicant ?? "None"}</span>
+            <span className="text-base">
+              {client.coapplicant_first_name || client.coapplicant_last_name 
+                ? `${client.coapplicant_first_name || ''} ${client.coapplicant_last_name || ''}`.trim()
+                : "None"
+              }
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-gray-700">Total Debt:</span>

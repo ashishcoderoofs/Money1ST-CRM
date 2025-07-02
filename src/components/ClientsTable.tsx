@@ -37,7 +37,7 @@ export default function ClientsTable({
 
   const handleDelete = (client: any) => {
     if (window.confirm("Delete this client?")) {
-      deleteClient(client.id, {
+      deleteClient(client._id, {
         onSuccess: () => {
           toast.success("Client deleted");
         },
@@ -49,7 +49,7 @@ export default function ClientsTable({
   };
 
   const handleEdit = (client: any) => {
-    navigate(`/securia/clients/${client.id}/edit`);
+    navigate(`/securia/clients/${client._id}/edit`);
   };
 
   return (
@@ -104,7 +104,7 @@ export default function ClientsTable({
             ) : (
               filteredClients.map((client: any, idx: number) => (
                 <tr
-                  key={client.id}
+                  key={client._id}
                   className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
                 >
                   <td className="px-4 py-3 font-mono text-sm uppercase whitespace-nowrap">{String(client.client_number).padStart(7, "0")}</td>
@@ -129,7 +129,7 @@ export default function ClientsTable({
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        onClick={() => navigate(`/securia/clients/${client.id}`)}
+                        onClick={() => navigate(`/securia/clients/${client._id}`)}
                         className="bg-cyan-400 hover:bg-cyan-500 text-white font-semibold px-3 py-1.5 rounded shadow inline-flex items-center justify-center text-xs"
                         title="View"
                         style={{ minWidth: 36, width: 36, height: 36, padding: 0 }}

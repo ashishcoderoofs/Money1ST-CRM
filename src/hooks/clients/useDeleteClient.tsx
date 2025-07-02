@@ -1,13 +1,18 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useDeleteClient = () => {
   const queryClient = useQueryClient();
+  const { apiCall } = useAuth();
+  
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("clients").delete().eq("id", id);
-      if (error) throw error;
+      const response = await apiCall(`/api/securia/clients/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete client');
+      }
       return id;
     },
     onSuccess: () => {
