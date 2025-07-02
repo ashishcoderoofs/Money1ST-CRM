@@ -2,7 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { useClientByIdQuery } from "@/hooks/clients/useClientByIdQuery";
+import { useSecuriaClient } from "@/hooks/useSecuriaClients";
 import CaseSummaryCard from "@/components/client-details/CaseSummaryCard";
 import DetailsTabSection from "@/components/client-details/DetailsTabSection";
 import { LiabilitiesViewTable } from "@/components/client-details/LiabilitiesViewTable";
@@ -21,7 +21,8 @@ import { Edit, Eye, ArrowLeft } from "lucide-react";
 export default function ClientDetails() {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
-  const { data: client, isLoading } = useClientByIdQuery(clientId);
+  const { data: clientResponse, isLoading } = useSecuriaClient(clientId!);
+  const client = clientResponse?.data;
 
   if (isLoading) {
     return <ClientDetailsSkeleton />;
@@ -34,11 +35,11 @@ export default function ClientDetails() {
     <div className="w-full px-6 py-6 space-y-6">
       {/* Header - Same structure as New Client and Edit Mode */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">View Client: {client.client_number}</h1>
+        <h1 className="text-2xl font-bold">View Client: {client.firstName} {client.lastName}</h1>
         <div className="flex gap-3">
           <Button
             variant="outline"
-            onClick={() => navigate(`/securia/clients/${client.id}/edit`)}
+            onClick={() => navigate(`/securia/clients/${client._id}/edit`)}
           >
             <Edit className="w-4 h-4 mr-1" />
             Edit Client

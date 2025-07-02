@@ -96,6 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
+      // Clear Securia session on main logout
+      localStorage.removeItem('securia_authenticated');
+      localStorage.removeItem('securia_user_id');
       setToken(null);
       setUser(null);
     } catch (error) {
@@ -136,6 +139,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Clear authentication state
           localStorage.removeItem('auth_token');
           localStorage.removeItem('auth_user');
+          // Clear Securia session on token expiration
+          localStorage.removeItem('securia_authenticated');
+          localStorage.removeItem('securia_user_id');
           setToken(null);
           setUser(null);
           

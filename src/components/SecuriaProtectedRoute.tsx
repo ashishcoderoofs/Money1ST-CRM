@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSecuriaReauth } from "@/hooks/useSecuriaReauth";
+import { useSecuriaSession } from "@/hooks/useSecuriaSession";
 import { Navigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
@@ -22,12 +23,12 @@ export default function SecuriaProtectedRoute({
 }) {
   const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole(user?.id ?? null);
+  const { isSecuriaAuthenticated, setSecuriaAuthenticated, clearSecuriaSession } = useSecuriaSession();
   const securiaReauth = useSecuriaReauth();
 
   const [canAccess, setCanAccess] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -37,7 +38,6 @@ export default function SecuriaProtectedRoute({
 
     if (role === "Admin") {
       setCanAccess(true);
-      setIsAuthenticated(false);
     } else {
       setCanAccess(false);
     }
@@ -63,7 +63,7 @@ export default function SecuriaProtectedRoute({
           title: "Success",
           description: "Securia access granted",
         });
-        setIsAuthenticated(true);
+        setSecuriaAuthenticated(true);
       } else {
         toast({
           title: "Error",
@@ -118,7 +118,7 @@ export default function SecuriaProtectedRoute({
     );
   }
 
-  if (isAuthenticated) {
+  if (isSecuriaAuthenticated) {
     return <>{children}</>;
   }
 

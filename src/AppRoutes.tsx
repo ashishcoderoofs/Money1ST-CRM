@@ -19,8 +19,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import RBACProtectedRoute from "./components/RBACProtectedRoute";
 import SecuriaProtectedRoute from "./components/SecuriaProtectedRoute";
 import Securia from "./pages/Securia";
-import ClientDetails from "./pages/ClientDetails";
-import EditClient from "./pages/EditClient";
+import SecuriaClientDetails from "./pages/SecuriaClientDetails";
+import SecuriaEditClient from "./pages/SecuriaEditClient";
 import Analytics from "./pages/Analytics";
 import ReportBug from "./pages/ReportBug";
 import HomeDashboard from "./pages/HomeDashboard";
@@ -245,7 +245,7 @@ const AppRoutes = () => (
           <RBACProtectedRoute pageName="Securia">
             <SecuriaProtectedRoute>
               <Layout>
-                <ClientDetails />
+                <SecuriaClientDetails />
               </Layout>
             </SecuriaProtectedRoute>
           </RBACProtectedRoute>
@@ -259,7 +259,7 @@ const AppRoutes = () => (
           <RBACProtectedRoute pageName="Securia">
             <SecuriaProtectedRoute>
               <Layout>
-                <EditClient />
+                <SecuriaEditClient />
               </Layout>
             </SecuriaProtectedRoute>
           </RBACProtectedRoute>
