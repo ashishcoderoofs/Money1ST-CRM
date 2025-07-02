@@ -101,9 +101,9 @@ export function useUserPageAccess(userRole: UserRole | null, pageName: string) {
         return false;
       }
 
-      // Check if user is active (assuming isActive field exists in user object)
-      if (user.status !== 'active') {
-        console.log("User is not active");
+      // Check if user is active (check for both 'Active' and 'active' status)
+      if (user.status !== 'Active' && user.status !== 'active') {
+        console.log("User is not active, current status:", user.status);
         return false;
       }
       
@@ -152,23 +152,33 @@ function getDefaultPermission(userRole: UserRole, pageName: string): boolean {
   const defaultPermissions: Record<UserRole, Record<string, boolean>> = {
     "Admin": {
       "Dashboard": true,
-      "Securia": true,
+      "Contacts": true,
+      "Deals": true,
+      "Tasks": true,
       "Reports": true,
+      "User Management": true,
+      "Securia Access": true,
+      "Securia": true,
+      "Admin": true,
+      "Analytics": true,
       "Organizational Chart": true,
       "Branch Development": true,
-      "FNA Training": true,
-      "Admin": true,
-      "Analytics": true
+      "FNA Training": true
     },
     "Field Builder": {
       "Dashboard": true,
-      "Securia": true,
+      "Contacts": true,
+      "Deals": true,
+      "Tasks": true,
       "Reports": true,
+      "User Management": true,
+      "Securia Access": false,
+      "Securia": false,
+      "Admin": false,
+      "Analytics": true,
       "Organizational Chart": true,
       "Branch Development": true,
-      "FNA Training": true,
-      "Admin": false,
-      "Analytics": true
+      "FNA Training": true
     },
     "Field Trainer": {
       "Dashboard": true,

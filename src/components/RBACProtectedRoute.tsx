@@ -31,6 +31,26 @@ export default function RBACProtectedRoute({ children, pageName }: RBACProtected
 
   console.log("RBACProtectedRoute Debug:", debugInfo);
   
+  // Enhanced debugging for Field Builder Dashboard access
+  if (pageName === 'Dashboard' && role === 'Field Builder') {
+    console.log("🔍 FIELD BUILDER DASHBOARD DEBUG:");
+    console.log("  - User object:", user);
+    console.log("  - User status:", user?.status);
+    console.log("  - Can access:", canAccess);
+    console.log("  - Access loading:", accessLoading);
+    console.log("  - Access error:", accessError);
+  }
+  
+  // Enhanced debugging for Field Trainer Dashboard access
+  if (pageName === 'Dashboard' && role === 'Field Trainer') {
+    console.log("🔍 FIELD TRAINER DASHBOARD DEBUG:");
+    console.log("  - User object:", user);
+    console.log("  - User status:", user?.status);
+    console.log("  - Can access:", canAccess);
+    console.log("  - Access loading:", accessLoading);
+    console.log("  - Access error:", accessError);
+  }
+  
   // Additional debugging for Securia
   if (pageName === 'Securia') {
     console.log("SECURIA DEBUG - Role:", role, "Type:", typeof role, "String value:", String(role));
@@ -55,6 +75,34 @@ export default function RBACProtectedRoute({ children, pageName }: RBACProtected
   // For Admin users, grant immediate access without waiting for permission checks
   if (role === 'Admin') {
     return <>{children}</>;
+  }
+
+  // Enhanced fallback for core pages when permission check fails/loads
+  const getCorePageAccess = (userRole: string | null, page: string): boolean => {
+    if (!userRole) return false;
+    
+    const corePermissions: Record<string, string[]> = {
+      'Dashboard': ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'],
+      'Contacts': ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'],
+      'Deals': ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'],
+      'Tasks': ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'],
+      'Reports': ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA'],
+      'User Management': ['Admin', 'Field Builder'],
+      'Securia Access': ['Admin'],
+      'Securia': ['Admin']
+    };
+    
+    return corePermissions[page]?.includes(userRole) || false;
+  };
+
+  // If permission check is still loading or failed, use core permissions as fallback
+  if ((accessLoading && canAccess === undefined) || accessError) {
+    const hasCoreAccess = getCorePageAccess(role, pageName);
+    console.log(`🔧 Using core permissions fallback for ${role} on ${pageName}: ${hasCoreAccess}`);
+    
+    if (hasCoreAccess) {
+      return <>{children}</>;
+    }
   }
 
   // For Securia page, only allow Admin users (deny all others immediately)

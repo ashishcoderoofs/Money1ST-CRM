@@ -223,7 +223,7 @@ export const initializeDefaultPages = async (req: AuthRequest, res: Response): P
         description: 'User administration and management',
         rolePermissions: {
           'Admin': true,
-          'Field Builder': false,
+          'Field Builder': true,
           'Field Trainer': false,
           'Senior BMA': false,
           'BMA': false,
@@ -233,6 +233,18 @@ export const initializeDefaultPages = async (req: AuthRequest, res: Response): P
       { 
         pageName: 'Securia Access', 
         description: 'Securia system access and operations',
+        rolePermissions: {
+          'Admin': true,
+          'Field Builder': false,
+          'Field Trainer': false,
+          'Senior BMA': false,
+          'BMA': false,
+          'IBA': false
+        }
+      },
+      { 
+        pageName: 'Securia', 
+        description: 'Securia system interface and management',
         rolePermissions: {
           'Admin': true,
           'Field Builder': false,
@@ -340,5 +352,170 @@ export const deletePagePermission = async (req: AuthRequest, res: Response): Pro
   } catch (error) {
     logger.error('Delete page permission error:', error);
     res.status(500).json({ error: 'Failed to delete page permission' });
+  }
+};
+
+// Bulk insert permissions
+export const bulkInsertPermissions = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { permissions } = req.body;
+
+    if (!permissions || !Array.isArray(permissions)) {
+      res.status(400).json({ error: 'Permissions array is required' });
+      return;
+    }
+
+    const insertedPermissions = [];
+
+    for (const permissionData of permissions) {
+      const { page_name, role_name, can_access } = permissionData;
+
+      if (!page_name || !role_name || can_access === undefined) {
+        continue; // Skip invalid entries
+      }
+
+      // Find or create the page permission
+      let pagePermission = await PagePermission.findOne({ pageName: page_name });
+      
+      if (!pagePermission) {
+        // Create new page permission
+        const defaultPermissions = {
+          'Admin': false,
+          'Field Builder': false,
+          'Field Trainer': false,
+          'Senior BMA': false,
+          'BMA': false,
+          'IBA': false
+        };
+        
+        pagePermission = await PagePermission.create({
+          pageName: page_name,
+          rolePermissions: defaultPermissions
+        });
+      }
+
+      // Update the specific role permission
+      if (!pagePermission.rolePermissions || typeof pagePermission.rolePermissions !== 'object') {
+        pagePermission.rolePermissions = {
+          'Admin': false,
+          'Field Builder': false,
+          'Field Trainer': false,
+          'Senior BMA': false,
+          'BMA': false,
+          'IBA': false
+        };
+      }
+
+      (pagePermission.rolePermissions as any)[role_name] = can_access;
+      pagePermission.markModified('rolePermissions');
+      await pagePermission.save();
+
+      insertedPermissions.push({
+        page_name,
+        role_name,
+        can_access
+      });
+    }
+
+    logger.info(`Bulk permissions inserted: ${insertedPermissions.length} permissions by ${req.user!.email}`);
+
+    res.json({
+      success: true,
+      message: `${insertedPermissions.length} permissions inserted successfully`,
+      permissions: insertedPermissions
+    });
+  } catch (error) {
+    logger.error('Bulk insert permissions error:', error);
+    res.status(500).json({ error: 'Failed to bulk insert permissions' });
+  }
+};
+
+// Reset all permissions (delete all page permissions)
+export const resetAllPermissions = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const result = await PagePermission.deleteMany({});
+
+    logger.info(`All permissions reset: ${result.deletedCount} permissions deleted by ${req.user!.email}`);
+
+    res.json({
+      success: true,
+      message: `${result.deletedCount} permissions deleted successfully`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    logger.error('Reset permissions error:', error);
+    res.status(500).json({ error: 'Failed to reset permissions' });
+  }
+};
+
+// Get all permissions in a format compatible with the frontend
+export const getAllPermissions = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pagePermissions = await PagePermission.find({ isActive: true });
+    
+    const permissions = [];
+    
+    for (const page of pagePermissions) {
+      if (page.rolePermissions && typeof page.rolePermissions === 'object') {
+        for (const [role, canAccess] of Object.entries(page.rolePermissions)) {
+          permissions.push({
+            page_name: page.pageName,
+            role_name: role,
+            can_access: canAccess
+          });
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      permissions
+    });
+  } catch (error) {
+    logger.error('Get all permissions error:', error);
+    res.status(500).json({ error: 'Failed to get permissions' });
+  }
+};
+
+// Check user access to a specific page
+export const checkUserPageAccess = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { role, page } = req.query;
+
+    if (!role || !page) {
+      res.status(400).json({ error: 'Role and page parameters are required' });
+      return;
+    }
+
+    // Convert to string to handle TypeScript typing
+    const roleName = String(role);
+    const pageName = String(page);
+
+    // Find the page permission
+    const pagePermission = await PagePermission.findOne({ pageName: pageName });
+    
+    if (!pagePermission) {
+      // If no permission found, return false for safety
+      res.json({
+        success: true,
+        hasPermission: false,
+        message: `No permission record found for page: ${pageName}`
+      });
+      return;
+    }
+
+    // Check if the role has access
+    const hasAccess = pagePermission.rolePermissions && 
+                     (pagePermission.rolePermissions as any)[roleName] === true;
+
+    res.json({
+      success: true,
+      hasPermission: hasAccess,
+      page: pageName,
+      role: roleName
+    });
+  } catch (error) {
+    logger.error('Check page access error:', error);
+    res.status(500).json({ error: 'Failed to check page access' });
   }
 };

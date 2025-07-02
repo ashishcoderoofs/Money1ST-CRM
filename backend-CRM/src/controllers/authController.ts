@@ -88,7 +88,8 @@ export const register = async (req: AuthRequest, res: Response): Promise<void> =
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role
+        role: user.role,
+        status: user.status
       }
     });
   } catch (error) {
@@ -142,6 +143,7 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        status: user.status,
         lastLogin: user.lastLogin
       }
     });

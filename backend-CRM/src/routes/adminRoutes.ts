@@ -17,7 +17,11 @@ import {
   toggleRolePermission,
   initializeDefaultPages,
   deletePagePermission,
-  getUserPagePermissions
+  getUserPagePermissions,
+  bulkInsertPermissions,
+  resetAllPermissions,
+  getAllPermissions,
+  checkUserPageAccess
 } from '../controllers/pagePermissionController';
 import { authenticate, authorizeAdmin } from '../middleware/auth';
 import { validateRegistration, validateBulkUpdate } from '../middleware/validation';
@@ -440,6 +444,61 @@ router.delete('/page-permissions/:pageName', deletePagePermission);
  *       200:
  *         description: Permissions retrieved successfully
  */
-router.get('/permissions', getPermissions);
+router.get('/permissions', getAllPermissions);
+
+/**
+ * @swagger
+ * /api/admin/permissions/check:
+ *   get:
+ *     summary: Check user access to a specific page (Admin only)
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: query
+ *         name: role
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User role to check
+ *       - in: query
+ *         name: page
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Page name to check access for
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Access check completed successfully
+ */
+router.get('/permissions/check', checkUserPageAccess);
+
+/**
+ * @swagger
+ * /api/admin/permissions/bulk:
+ *   post:
+ *     summary: Bulk insert page permissions (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Permissions inserted successfully
+ */
+router.post('/permissions/bulk', bulkInsertPermissions);
+
+/**
+ * @swagger
+ * /api/admin/permissions/reset:
+ *   delete:
+ *     summary: Reset all page permissions (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Permissions reset successfully
+ */
+router.delete('/permissions/reset', resetAllPermissions);
 
 export default router;

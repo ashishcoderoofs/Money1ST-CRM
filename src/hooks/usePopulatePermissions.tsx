@@ -12,7 +12,8 @@ const pages = [
   "Tasks",
   "Reports",
   "User Management",
-  "Securia Access"
+  "Securia Access",
+  "Securia"
 ];
 
 const roles: UserRole[] = ["Admin", "Field Builder", "Field Trainer", "Senior BMA", "BMA", "IBA"];
@@ -26,7 +27,8 @@ const defaultPermissions: Record<UserRole, Record<string, boolean>> = {
     "Tasks": true,
     "Reports": true,
     "User Management": true,
-    "Securia Access": true
+    "Securia Access": true,
+    "Securia": true
   },
   "Field Builder": {
     "Dashboard": true,
@@ -34,8 +36,9 @@ const defaultPermissions: Record<UserRole, Record<string, boolean>> = {
     "Deals": true,
     "Tasks": true,
     "Reports": true,
-    "User Management": false,
-    "Securia Access": true
+    "User Management": true,
+    "Securia Access": false,
+    "Securia": false
   },
   "Field Trainer": {
     "Dashboard": true,
@@ -44,16 +47,18 @@ const defaultPermissions: Record<UserRole, Record<string, boolean>> = {
     "Tasks": true,
     "Reports": true,
     "User Management": false,
-    "Securia Access": false
+    "Securia Access": false,
+    "Securia": false
   },
   "Senior BMA": {
     "Dashboard": true,
     "Contacts": true,
     "Deals": true,
     "Tasks": true,
-    "Reports": false,
+    "Reports": true,
     "User Management": false,
-    "Securia Access": false
+    "Securia Access": false,
+    "Securia": false
   },
   "BMA": {
     "Dashboard": true,
@@ -62,7 +67,8 @@ const defaultPermissions: Record<UserRole, Record<string, boolean>> = {
     "Tasks": true,
     "Reports": false,
     "User Management": false,
-    "Securia Access": false
+    "Securia Access": false,
+    "Securia": false
   },
   "IBA": {
     "Dashboard": true,
@@ -71,7 +77,8 @@ const defaultPermissions: Record<UserRole, Record<string, boolean>> = {
     "Tasks": true,
     "Reports": false,
     "User Management": false,
-    "Securia Access": false
+    "Securia Access": false,
+    "Securia": false
   }
 };
 
