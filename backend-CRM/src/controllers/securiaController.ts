@@ -1,4 +1,5 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import Consultant from '../models/Consultant';
 import SecuriaClient from '../models/SecuriaClient';
@@ -29,10 +30,16 @@ const generateSessionId = (userId: string): string => {
 };
 
 // Helper function to check if user has valid Securia session
-export const hasValidSecuriaSession = (userId: string): boolean => {
+export const hasValidSecuriaSession = (userId: string, jwtIssuedAt?: number): boolean => {
   cleanExpiredSessions();
   for (const [sessionId, session] of securiaSessionStore.entries()) {
     if (session.userId === userId && (Date.now() - session.timestamp) < SECURIA_SESSION_TIMEOUT) {
+      // If JWT issued time is provided, check if Securia session was created after JWT
+      if (jwtIssuedAt) {
+        const jwtIssuedTimestamp = jwtIssuedAt * 1000; // Convert to milliseconds
+        // Session is only valid if it was created after the current JWT token
+        return session.timestamp > jwtIssuedTimestamp;
+      }
       return true;
     }
   }
@@ -54,6 +61,28 @@ export const invalidateUserSecuriaSessions = (userId: string): void => {
       securiaSessionStore.delete(sessionId);
     }
   }
+};
+
+// Helper function to get session info for a user
+const getSessionInfo = (userId: string): { active: boolean; count: number; lastActivity?: number } => {
+  cleanExpiredSessions();
+  let activeSessions = 0;
+  let lastActivity: number | undefined;
+
+  for (const [sessionId, session] of securiaSessionStore.entries()) {
+    if (session.userId === userId) {
+      activeSessions++;
+      if (!lastActivity || session.timestamp > lastActivity) {
+        lastActivity = session.timestamp;
+      }
+    }
+  }
+
+  return {
+    active: activeSessions > 0,
+    count: activeSessions,
+    lastActivity
+  };
 };
 
 // Helper function to calculate completion percentage
@@ -200,7 +229,19 @@ export const checkSecuriaSession = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    const hasSession = hasValidSecuriaSession(req.user._id.toString());
+    // Extract JWT token and get issued time
+    let jwtIssuedAt: number | undefined;
+    try {
+      const token = req.header('Authorization')?.replace('Bearer ', '');
+      if (token) {
+        const decoded = jwt.decode(token) as any;
+        jwtIssuedAt = decoded?.iat;
+      }
+    } catch (error) {
+      logger.warn('Could not decode JWT for session validation:', error);
+    }
+
+    const hasSession = hasValidSecuriaSession(req.user._id.toString(), jwtIssuedAt);
     
     res.json({
       success: true,
@@ -1477,4 +1518,51 @@ const getSectionProgress = (clientData: any): Record<string, { completed: boolea
   });
   
   return progress;
+};
+
+// Add debug endpoint to check session state
+export const debugSecuriaSession = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
+      return;
+    }
+
+    const userId = req.user._id.toString();
+    const sessionInfo = getSessionInfo(userId);
+    
+    // Get all sessions for debugging
+    const allSessions: any[] = [];
+    cleanExpiredSessions();
+    
+    for (const [sessionId, session] of securiaSessionStore.entries()) {
+      allSessions.push({
+        sessionId,
+        userId: session.userId,
+        timestamp: session.timestamp,
+        age: Date.now() - session.timestamp,
+        isExpired: (Date.now() - session.timestamp) > SECURIA_SESSION_TIMEOUT
+      });
+    }
+    
+    res.json({
+      success: true,
+      debug: {
+        currentUserId: userId,
+        currentUserSessions: sessionInfo,
+        allActiveSessions: allSessions,
+        sessionTimeout: SECURIA_SESSION_TIMEOUT,
+        currentTime: Date.now()
+      }
+    });
+  } catch (error) {
+    logger.error('Debug Securia session error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
+    });
+  }
 };

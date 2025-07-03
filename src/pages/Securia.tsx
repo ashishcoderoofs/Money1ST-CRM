@@ -110,7 +110,7 @@ export default function Securia() {
           <svg className="w-4 h-4 text-green-300" fill="none" stroke="currentColor" strokeWidth="2"
             viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round"
-              d="M12 6v6l4 2M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10-10 10z" />
+              d="M12 6v6l4 2M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10z" />
           </svg>
           {new Date().toLocaleTimeString('en-IN')}
         </p>

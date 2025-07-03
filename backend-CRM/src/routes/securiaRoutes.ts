@@ -7,6 +7,7 @@ import { Response, NextFunction } from 'express';
 import {
   reauthSecuria,
   checkSecuriaSession,
+  debugSecuriaSession,
   logoutSecuria,
   getConsultants,
   createConsultant,
@@ -1575,5 +1576,8 @@ router.get('/dashboard/charts', getChartData);
  *         description: Failed to get audit logs
  */
 router.get('/audit/logs', getAuditLogs);
+
+// Add debug endpoint (remove in production)
+router.get('/debug-session', debugSecuriaSession);
 
 export default router;

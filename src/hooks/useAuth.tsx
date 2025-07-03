@@ -227,9 +227,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             errorData.error?.includes('invalid') || errorData.error?.includes('denied')) {
           console.warn('Token expired or invalid, signing out user');
           
-          // Clear authentication state
+          // Clear authentication state and Securia session
           localStorage.removeItem('auth_token');
           localStorage.removeItem('auth_user');
+          localStorage.removeItem('securia_session_id'); // Clear Securia session on JWT expiration
           setToken(null);
           setUser(null);
           

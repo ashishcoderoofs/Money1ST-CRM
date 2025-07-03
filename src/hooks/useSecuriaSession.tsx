@@ -67,9 +67,17 @@ export function SecuriaSessionProvider({ children }: { children: React.ReactNode
     setLoading(true); // Set loading only when we actually start checking
     const storedSessionId = localStorage.getItem('securia_session_id');
     if (storedSessionId) {
-      setSecuriaSessionId(storedSessionId);
+      // Don't set the session ID until we verify it's valid
       // Check session status without showing loading spinner again
-      checkSecuriaSession(true).finally(() => {
+      checkSecuriaSession(true).then((isValid) => {
+        if (isValid) {
+          setSecuriaSessionId(storedSessionId);
+        } else {
+          // Session is invalid, clear it
+          localStorage.removeItem('securia_session_id');
+          setSecuriaSessionId(null);
+        }
+      }).finally(() => {
         setLoading(false);
         setHasInitialized(true);
       });
