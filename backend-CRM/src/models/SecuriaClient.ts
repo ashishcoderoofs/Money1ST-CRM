@@ -820,5 +820,33 @@ SecuriaClientSchema.index({ consultantId: 1 });
 SecuriaClientSchema.index({ status: 1 });
 SecuriaClientSchema.index({ firstName: 1, lastName: 1 });
 SecuriaClientSchema.index({ 'financialInfo.riskTolerance': 1 });
+SecuriaClientSchema.index({ clientId: 1 });
+
+// Pre-save hook to auto-generate clientId
+SecuriaClientSchema.pre('save', async function(next) {
+  if (this.isNew && !this.clientId) {
+    try {
+      // Find the highest clientId number
+      const lastClient = await mongoose.model('SecuriaClient').findOne(
+        { clientId: { $regex: /^CLI\d+$/ } },
+        {},
+        { sort: { clientId: -1 } }
+      );
+      
+      let nextNumber = 1;
+      if (lastClient && lastClient.clientId) {
+        const lastNumber = parseInt(lastClient.clientId.replace('CLI', ''));
+        if (!isNaN(lastNumber)) {
+          nextNumber = lastNumber + 1;
+        }
+      }
+      
+      this.clientId = `CLI${String(nextNumber).padStart(6, '0')}`;
+    } catch (error) {
+      return next(error as Error);
+    }
+  }
+  next();
+});
 
 export default mongoose.model<ISecuriaClient>('SecuriaClient', SecuriaClientSchema);

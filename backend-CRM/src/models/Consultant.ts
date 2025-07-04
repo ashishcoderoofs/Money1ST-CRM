@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IConsultant extends Document {
   // Basic Information
-  consultantId: string;
+  consultantId?: string;
   entryDate: Date;
   position?: string;
   status: 'Active' | 'Inactive';
@@ -78,7 +78,6 @@ const consultantSchema = new Schema<IConsultant>({
   // Basic Information
   consultantId: {
     type: String,
-    required: [true, 'Consultant ID is required'],
     unique: true,
     trim: true,
     uppercase: true
@@ -376,6 +375,33 @@ consultantSchema.index({ email: 1 });
 consultantSchema.index({ status: 1 });
 consultantSchema.index({ firstName: 1, lastName: 1 });
 consultantSchema.index({ createdAt: -1 });
+
+// Pre-save hook to auto-generate consultantId
+consultantSchema.pre('save', async function(next) {
+  if (this.isNew && !this.consultantId) {
+    try {
+      // Find the highest consultantId number
+      const lastConsultant = await mongoose.model('Consultant').findOne(
+        { consultantId: { $regex: /^CON\d+$/ } },
+        {},
+        { sort: { consultantId: -1 } }
+      );
+      
+      let nextNumber = 1;
+      if (lastConsultant && lastConsultant.consultantId) {
+        const lastNumber = parseInt(lastConsultant.consultantId.replace('CON', ''));
+        if (!isNaN(lastNumber)) {
+          nextNumber = lastNumber + 1;
+        }
+      }
+      
+      this.consultantId = `CON${String(nextNumber).padStart(4, '0')}`;
+    } catch (error) {
+      return next(error as Error);
+    }
+  }
+  next();
+});
 
 // Virtual for full name
 consultantSchema.virtual('fullName').get(function() {

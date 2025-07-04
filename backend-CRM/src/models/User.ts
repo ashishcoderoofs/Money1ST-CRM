@@ -6,7 +6,6 @@ const userSchema = new Schema<IUser>({
   // Main Information
   consultantId: {
     type: String,
-    required: [true, 'Consultant ID is required'],
     unique: true,
     trim: true,
     uppercase: true
@@ -190,6 +189,30 @@ userSchema.methods.hasPermission = function(requiredRole: UserRole): boolean {
 
 // Hash password before saving
 userSchema.pre<IUser>('save', async function(next) {
+  // Auto-generate consultantId if new user and no consultantId provided
+  if (this.isNew && !this.consultantId) {
+    try {
+      // Find the highest consultantId number
+      const lastUser = await mongoose.model('User').findOne(
+        { consultantId: { $regex: /^USR\d+$/ } },
+        {},
+        { sort: { consultantId: -1 } }
+      );
+      
+      let nextNumber = 1;
+      if (lastUser && lastUser.consultantId) {
+        const lastNumber = parseInt(lastUser.consultantId.replace('USR', ''));
+        if (!isNaN(lastNumber)) {
+          nextNumber = lastNumber + 1;
+        }
+      }
+      
+      this.consultantId = `USR${String(nextNumber).padStart(4, '0')}`;
+    } catch (error) {
+      return next(error as Error);
+    }
+  }
+
   if (!this.isModified('password')) return next();
   
   try {
