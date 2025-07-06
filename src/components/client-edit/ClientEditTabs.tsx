@@ -52,6 +52,11 @@ export function ClientEditTabs({ client, form, isSubmitting }: ClientEditTabsPro
               type="submit" 
               disabled={isSubmitting} 
               className="h-10 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => {
+                console.log("🔘 CREATE BUTTON CLICKED");
+                console.log("Form is submitting:", isSubmitting);
+                console.log("Button disabled state:", isSubmitting);
+              }}
             >
               {isSubmitting ? "Creating..." : "Create Client"}
             </Button>

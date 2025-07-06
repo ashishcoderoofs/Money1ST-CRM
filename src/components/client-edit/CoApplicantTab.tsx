@@ -3,11 +3,7 @@ import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/for
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tables } from "@/integrations/supabase/types";
 import { useState } from "react";
-import { CoApplicantBasicInfo } from "./coapplicant/CoApplicantBasicInfo";
-import { CoApplicantAddress } from "./coapplicant/CoApplicantAddress";
-import { CoApplicantContact } from "./coapplicant/CoApplicantContact";
-import { CoApplicantEmployment } from "./coapplicant/CoApplicantEmployment";
-import { CoApplicantDemographics } from "./coapplicant/CoApplicantDemographics";
+import { CoApplicantForm } from "./coapplicant/CoApplicantForm";
 
 interface CoApplicantTabProps {
   client: Tables<"clients">;
@@ -49,10 +45,7 @@ export function CoApplicantTab({ client, form }: CoApplicantTabProps) {
         </p>
       ) : (
         <div className="space-y-6">
-          <CoApplicantBasicInfo form={form} />
-          <CoApplicantAddress form={form} />
-          <CoApplicantEmployment form={form} />
-          <CoApplicantDemographics form={form} />
+          <CoApplicantForm form={form} client={client} />
         </div>
       )}
     </div>

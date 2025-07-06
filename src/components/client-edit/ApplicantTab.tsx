@@ -84,7 +84,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Entry Date *</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} defaultValue={new Date().toISOString().split('T')[0]} />
+                  <Input type="date" {...field} value={field.value || new Date().toISOString().split('T')[0]} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -162,7 +162,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Processor</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter processor name" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter processor name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -206,7 +206,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>First Name *</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter first name" required />
+                  <Input {...field} value={field.value || ''} placeholder="Enter first name" required />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -220,7 +220,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Middle Initial</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="MI" maxLength={1} />
+                  <Input {...field} value={field.value || ''} placeholder="MI" maxLength={1} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -234,7 +234,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Last Name *</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter last name" required />
+                  <Input {...field} value={field.value || ''} placeholder="Enter last name" required />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -273,7 +273,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Maiden Name</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter maiden name" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter maiden name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -311,7 +311,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Address</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter street address" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter street address" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -325,7 +325,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>City</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter city" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter city" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -466,7 +466,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Cell Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter cell phone" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter cell phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -494,7 +494,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" {...field} placeholder="Enter email address" />
+                  <Input type="email" {...field} value={field.value || ''} placeholder="Enter email address" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

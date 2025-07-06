@@ -3,12 +3,52 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
+import { Tables } from "@/integrations/supabase/types";
+import { useUpdateApplicantBasicInfo } from "@/hooks/clients/useApplicantMutations";
+import { toast } from "sonner";
 
 interface ApplicantBasicInfoProps {
   form: any;
+  client: Tables<"clients">;
 }
 
-export function ApplicantBasicInfo({ form }: ApplicantBasicInfoProps) {
+export function ApplicantBasicInfo({ form, client }: ApplicantBasicInfoProps) {
+  const updateApplicantBasicInfo = useUpdateApplicantBasicInfo();
+
+  const handleSave = async () => {
+    try {
+      const formData = form.getValues();
+      
+      // Prepare data for backend API
+      const applicantData = {
+        title: formData.applicant_title,
+        firstName: formData.applicant_first_name,
+        mi: formData.applicant_mi,
+        lastName: formData.applicant_last_name,
+        suffix: formData.applicant_suffix,
+        maidenName: formData.applicant_maiden_name,
+        isConsultant: formData.applicant_is_consultant || false,
+        homePhone: formData.applicant_home_phone,
+        workPhone: formData.applicant_work_phone,
+        cellPhone: formData.applicant_cell_phone,
+        otherPhone: formData.applicant_other_phone,
+        fax: formData.applicant_fax,
+        email: formData.applicant_email
+      };
+
+      await updateApplicantBasicInfo.mutateAsync({
+        clientId: client.id,
+        data: applicantData
+      });
+
+      toast.success("Applicant basic information saved successfully");
+    } catch (error) {
+      console.error("Failed to save applicant basic info:", error);
+      toast.error("Failed to save applicant basic information");
+    }
+  };
   return (
     <div>
       <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
@@ -143,6 +183,19 @@ export function ApplicantBasicInfo({ form }: ApplicantBasicInfoProps) {
             </FormItem>
           )}
         />
+      </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end mt-6">
+        <Button 
+          type="button" 
+          onClick={handleSave}
+          disabled={updateApplicantBasicInfo.isPending}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <Save className="w-4 h-4 mr-2" />
+          {updateApplicantBasicInfo.isPending ? "Saving..." : "Save Basic Info"}
+        </Button>
       </div>
     </div>
   );

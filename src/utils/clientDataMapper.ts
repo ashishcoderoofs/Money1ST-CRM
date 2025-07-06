@@ -11,6 +11,8 @@ export function mapMongoClientToFlatStructure(mongoClient: any) {
     // Ensure both id and _id are available for backward compatibility
     id: mongoClient._id,
     _id: mongoClient._id,
+    // Add client_number for compatibility with view pages
+    client_number: mongoClient.clientId || `CLI${mongoClient._id.slice(-6).toUpperCase()}`,
     // Applicant basic info
     applicant_title: applicant?.title || '',
     applicant_first_name: applicant?.firstName || '',

@@ -10,33 +10,52 @@ export const useCreateClient = () => {
   
   return useMutation({
     mutationFn: async (values: any) => {
-      console.log("Creating client with values:", values);
+      console.log("🚀 CREATE CLIENT MUTATION STARTED");
+      console.log("Raw form values received:", values);
       
       let processedValues = processDateFields(values);
-      processedValues = processHouseholdMembers(processedValues);
-      processedValues = processLiabilitiesForCreate(processedValues);
+      console.log("After date processing:", processedValues);
       
-      console.log("Final client data for creation:", processedValues);
+      processedValues = processHouseholdMembers(processedValues);
+      console.log("After household members processing:", processedValues);
+      
+      processedValues = processLiabilitiesForCreate(processedValues);
+      console.log("After liabilities processing:", processedValues);
+      
+      console.log("Final client data for creation:", JSON.stringify(processedValues, null, 2));
 
-      const response = await apiCall('/api/securia/clients', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(processedValues),
-      });
+      try {
+        console.log("Making API call to /api/securia/clients");
+        const response = await apiCall('/api/securia/clients', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(processedValues),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to create client');
+        console.log("API Response received:", response);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("API Error Response:", errorData);
+          throw new Error(errorData.message || 'Failed to create client');
+        }
+
+        const result = await response.json();
+        console.log("Client created successfully:", result);
+        return result.data;
+      } catch (error) {
+        console.error("🔥 CREATE CLIENT ERROR:", error);
+        throw error;
       }
-
-      const result = await response.json();
-      console.log("Client created successfully:", result);
-      return result.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("✅ Mutation onSuccess called with:", data);
       queryClient.invalidateQueries({ queryKey: ["clients"] });
+    },
+    onError: (error) => {
+      console.error("❌ Mutation onError called with:", error);
     },
   });
 };

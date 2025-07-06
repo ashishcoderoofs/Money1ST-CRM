@@ -51,31 +51,33 @@ const liabilitySchema = z.object({
 );
 
 export const clientFormSchema = z.object({
-  applicant: z.string().min(1, "Primary applicant name is required"),
+  applicant: z.string().optional().or(z.literal("")), // Made optional since we use first/last name fields
   co_applicant: z.string().optional(),
   consultant_name: z.string().optional(),
   processor_name: z.string().optional(),
-  total_debt: z.number().min(0, "Total debt must be non-negative"),
+  total_debt: z.union([z.number(), z.string().transform((val) => val === "" ? 0 : Number(val))]).default(0),
   payoff_amount: z.union([z.number(), z.string().transform((val) => val === "" ? undefined : Number(val))]).optional(),
   status: z.enum(["Open", "Closed"]),
   entry_date: z.string(),
   // Contact fields
   applicant_contact: z.string().optional(),
-  applicant_email: z.string().email().optional().or(z.literal("")),
+  applicant_email: z.string().email("Please enter a valid email address").min(1, "Email is required"),
+  applicant_cell_phone: z.string().min(1, "Cell phone is required"),
   coapplicant_contact: z.string().optional(),
-  coapplicant_email: z.string().email().optional().or(z.literal("")),
-  co_applicant_total_debt: z.number().optional(),
+  coapplicant_email: z.string().optional(),
+  coapplicant_cell_phone: z.string().optional(),
+  co_applicant_total_debt: z.union([z.number(), z.string().transform((val) => val === "" ? undefined : Number(val))]).optional(),
   // Name breakdown fields
   applicant_title: z.string().optional(),
-  applicant_first_name: z.string().optional(),
+  applicant_first_name: z.string().min(1, "First name is required"),
   applicant_mi: z.string().optional(),
-  applicant_last_name: z.string().optional(),
+  applicant_last_name: z.string().min(1, "Last name is required"),
   applicant_suffix: z.string().optional(),
   applicant_maiden_name: z.string().optional(),
   applicant_is_consultant: z.boolean().optional(),
   // Address fields
-  applicant_address: z.string().optional(),
-  applicant_city: z.string().optional(),
+  applicant_address: z.string().min(1, "Street address is required"),
+  applicant_city: z.string().min(1, "City is required"),
   applicant_county: z.string().optional(),
   applicant_state: z.string().optional(),
   applicant_zip_code: z.string().optional(),
@@ -117,7 +119,7 @@ export const clientFormSchema = z.object({
   applicant_spouse_name: z.string().optional(),
   applicant_spouse_occupation: z.string().optional(),
   applicant_dependents_count: z.union([z.number(), z.string().transform((val) => val === "" ? undefined : Number(val))]).optional(),
-  // Co-applicant fields
+  // Co-applicant fields - Required when co-applicant data is provided
   coapplicant_title: z.string().optional(),
   coapplicant_first_name: z.string().optional(),
   coapplicant_mi: z.string().optional(),
@@ -169,4 +171,30 @@ export const clientFormSchema = z.object({
   coapplicant_household_members: z.array(householdMemberSchema).optional(),
   // Liabilities
   liabilities: z.array(liabilitySchema).optional(),
-});
+}).refine(
+  (data) => {
+    // If co-applicant is provided, enforce required fields
+    const hasCoApplicantData = data.co_applicant || 
+                               data.coapplicant_first_name || 
+                               data.coapplicant_last_name || 
+                               data.coapplicant_email ||
+                               data.coapplicant_cell_phone ||
+                               data.coapplicant_address ||
+                               data.coapplicant_city;
+    
+    if (hasCoApplicantData) {
+      // Required co-applicant fields when co-applicant data is provided
+      if (!data.coapplicant_first_name) return false;
+      if (!data.coapplicant_last_name) return false;  
+      if (!data.coapplicant_email) return false;
+      if (!data.coapplicant_cell_phone) return false;
+      if (!data.coapplicant_address) return false;
+      if (!data.coapplicant_city) return false;
+    }
+    return true;
+  },
+  {
+    message: "When co-applicant information is provided, first name, last name, email, cell phone, address, and city are required",
+    path: ["coapplicant_first_name"],
+  }
+);

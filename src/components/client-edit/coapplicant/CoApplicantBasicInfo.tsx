@@ -2,16 +2,51 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
+import { Tables } from "@/integrations/supabase/types";
+import { useUpdateCoApplicantBasicInfo } from "@/hooks/clients/useCoApplicantMutations";
 
 interface CoApplicantBasicInfoProps {
   form: any;
+  client: Tables<"clients">;
 }
 
-export function CoApplicantBasicInfo({ form }: CoApplicantBasicInfoProps) {
+export function CoApplicantBasicInfo({ form, client }: CoApplicantBasicInfoProps) {
+  const updateBasicInfo = useUpdateCoApplicantBasicInfo();
+
+  const handleSave = async () => {
+    const formData = form.getValues();
+    const basicInfoData = {
+      title: formData.coapplicant_title,
+      firstName: formData.coapplicant_first_name,
+      middleInitial: formData.coapplicant_mi,
+      lastName: formData.coapplicant_last_name,
+      suffix: formData.coapplicant_suffix,
+      maidenName: formData.coapplicant_maiden_name,
+      isConsultant: formData.coapplicant_is_consultant
+    };
+
+    await updateBasicInfo.mutateAsync({
+      clientId: client.id,
+      data: basicInfoData
+    });
+  };
+
   return (
     <div>
-      <div className="bg-green-600 text-white px-4 py-2 mb-4">
+      <div className="bg-green-600 text-white px-4 py-2 mb-4 flex justify-between items-center">
         <h3 className="text-lg font-semibold">Name Information</h3>
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={updateBasicInfo.isPending}
+          size="sm"
+          className="bg-white text-green-600 hover:bg-gray-100"
+        >
+          <Save className="w-4 h-4 mr-1" />
+          {updateBasicInfo.isPending ? "Saving..." : "Save"}
+        </Button>
       </div>
       
       <div className="grid grid-cols-5 gap-4 mb-4">

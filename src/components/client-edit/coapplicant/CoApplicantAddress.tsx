@@ -2,12 +2,56 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
+import { Tables } from "@/integrations/supabase/types";
+import { useUpdateCoApplicantAddress } from "@/hooks/clients/useApplicantMutations";
+import { toast } from "sonner";
 
 interface CoApplicantAddressProps {
   form: any;
+  client: Tables<"clients">;
 }
 
-export function CoApplicantAddress({ form }: CoApplicantAddressProps) {
+export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
+  const updateCoApplicantAddress = useUpdateCoApplicantAddress();
+
+  const handleSave = async () => {
+    try {
+      const formData = form.getValues();
+      
+      // Prepare data for backend API
+      const addressData = {
+        currentAddress: {
+          street: formData.coapplicant_address,
+          city: formData.coapplicant_city,
+          state: formData.coapplicant_state,
+          zipCode: formData.coapplicant_zip,
+          county: formData.coapplicant_county,
+          howLongYears: parseInt(formData.coapplicant_years_at_address) || 0,
+          howLongMonths: parseInt(formData.coapplicant_months_at_address) || 0
+        },
+        previousAddress: {
+          street: formData.coapplicant_previous_address,
+          city: formData.coapplicant_previous_city,
+          state: formData.coapplicant_previous_state,
+          zipCode: formData.coapplicant_previous_zip,
+          howLongYears: parseInt(formData.coapplicant_previous_years) || 0,
+          howLongMonths: parseInt(formData.coapplicant_previous_months) || 0
+        }
+      };
+
+      await updateCoApplicantAddress.mutateAsync({
+        clientId: client.id,
+        data: addressData
+      });
+
+      toast.success("Co-applicant address information saved successfully");
+    } catch (error) {
+      console.error("Failed to save co-applicant address:", error);
+      toast.error("Failed to save co-applicant address information");
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Current Address */}
@@ -328,6 +372,19 @@ export function CoApplicantAddress({ form }: CoApplicantAddressProps) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <Button 
+          type="button" 
+          onClick={handleSave}
+          disabled={updateCoApplicantAddress.isPending}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <Save className="w-4 h-4 mr-2" />
+          {updateCoApplicantAddress.isPending ? "Saving..." : "Save Address Info"}
+        </Button>
       </div>
     </div>
   );

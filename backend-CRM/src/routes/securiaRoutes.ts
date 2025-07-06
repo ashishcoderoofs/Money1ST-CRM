@@ -1,6 +1,18 @@
 import express from 'express';
 import {  validateMinimumClientFields, validateClientUpdate } from '../middleware/clientValidation';
-import { validateMultiStageClient, validateSectionUpdate, validateBulkUpdate } from '../middleware/multiStageClientValidation';
+import { 
+  validateMultiStageClient, 
+  validateSectionUpdate, 
+  validateBulkUpdate,
+  validateRequiredApplicantBasicInfo,
+  validateRequiredApplicantAddress,
+  validateOptionalApplicantEmployment,
+  validateOptionalApplicantDemographics,
+  validateRequiredCoApplicantBasicInfo,
+  validateRequiredCoApplicantAddress,
+  validateOptionalCoApplicantEmployment,
+  validateOptionalCoApplicantDemographics
+} from '../middleware/multiStageClientValidation';
 import { authenticate } from '../middleware/auth';
 import { AuthRequest } from '../types/types';
 import { Response, NextFunction } from 'express';
@@ -26,9 +38,14 @@ import {
   getAuditLogs,
   createMultiStageClient,
   updateClientSection,
-  getClientSection,
-  getClientProgress,
-  bulkUpdateClientSections
+  updateApplicantBasicInfo,
+  updateApplicantAddress,
+  updateApplicantEmployment,
+  updateApplicantDemographics,
+  updateCoApplicantBasicInfo,
+  updateCoApplicantAddress,
+  updateCoApplicantEmployment,
+  updateCoApplicantDemographics
 } from '../controllers/securiaController';
 
 const router = express.Router();
@@ -976,7 +993,7 @@ router.patch('/consultants/:id/status', toggleConsultantStatus);
 router.post('/clients/partial', validateMinimumClientFields, createClient);
 
 router.get('/clients', getClients);
-router.post('/clients', validateMinimumClientFields, createClient);
+router.post('/clients', createClient);
 
 /**
  * @swagger
@@ -1323,7 +1340,8 @@ router.post('/clients/multistage', validateMultiStageClient, createMultiStageCli
  *         description: Failed to get section data
  */
 router.put('/clients/:id/section/:section', validateSectionUpdate, updateClientSection);
-router.get('/clients/:id/section/:section', getClientSection);
+// Get client section route temporarily disabled - function not implemented
+// router.get('/clients/:id/section/:section', getClientSection);
 
 /**
  * @swagger
@@ -1374,7 +1392,8 @@ router.get('/clients/:id/section/:section', getClientSection);
  *       500:
  *         description: Failed to get progress
  */
-router.get('/clients/:id/progress', getClientProgress);
+// Progress route temporarily disabled - function not implemented
+// router.get('/clients/:id/progress', getClientProgress);
 
 /**
  * @swagger
@@ -1414,7 +1433,374 @@ router.get('/clients/:id/progress', getClientProgress);
  *       500:
  *         description: Failed to update sections
  */
-router.put('/clients/:id/bulk-update', validateBulkUpdate, bulkUpdateClientSections);
+// Bulk update route temporarily disabled - function not implemented
+// router.put('/clients/:id/bulk-update', validateBulkUpdate, bulkUpdateClientSections);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/applicant/basic-info:
+ *   put:
+ *     summary: Update applicant basic information
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 enum: [Mr., Mrs., Ms., Dr., Prof.]
+ *               firstName:
+ *                 type: string
+ *               mi:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               suffix:
+ *                 type: string
+ *               maidenName:
+ *                 type: string
+ *               isConsultant:
+ *                 type: boolean
+ *               homePhone:
+ *                 type: string
+ *               workPhone:
+ *                 type: string
+ *               cellPhone:
+ *                 type: string
+ *               otherPhone:
+ *                 type: string
+ *               fax:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Applicant basic info updated successfully
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to update applicant basic info
+ */
+router.put('/clients/:id/applicant/basic-info', validateRequiredApplicantBasicInfo, updateApplicantBasicInfo);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/applicant/address:
+ *   put:
+ *     summary: Update applicant address information
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               currentAddress:
+ *                 type: object
+ *               previousAddress:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Applicant address updated successfully
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to update applicant address
+ */
+router.put('/clients/:id/applicant/address', validateRequiredApplicantAddress, updateApplicantAddress);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/applicant/employment:
+ *   put:
+ *     summary: Update applicant employment information
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employment:
+ *                 type: object
+ *               previousEmployment:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Applicant employment updated successfully
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to update applicant employment
+ */
+router.put('/clients/:id/applicant/employment', validateOptionalApplicantEmployment, updateApplicantEmployment);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/applicant/demographics:
+ *   put:
+ *     summary: Update applicant demographics information
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               birthPlace:
+ *                 type: string
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
+ *               ssn:
+ *                 type: string
+ *               race:
+ *                 type: string
+ *               maritalStatus:
+ *                 type: string
+ *               anniversary:
+ *                 type: string
+ *                 format: date
+ *               spouseName:
+ *                 type: string
+ *               spouseOccupation:
+ *                 type: string
+ *               numberOfDependents:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Applicant demographics updated successfully
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to update applicant demographics
+ */
+router.put('/clients/:id/applicant/demographics', validateOptionalApplicantDemographics, updateApplicantDemographics);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/co-applicant/basic-info:
+ *   put:
+ *     summary: Update co-applicant basic information
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               includeCoApplicant:
+ *                 type: boolean
+ *               title:
+ *                 type: string
+ *                 enum: [Mr., Mrs., Ms., Dr., Prof.]
+ *               firstName:
+ *                 type: string
+ *               mi:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               suffix:
+ *                 type: string
+ *               maidenName:
+ *                 type: string
+ *               isConsultant:
+ *                 type: boolean
+ *               homePhone:
+ *                 type: string
+ *               workPhone:
+ *                 type: string
+ *               cellPhone:
+ *                 type: string
+ *               otherPhone:
+ *                 type: string
+ *               fax:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Co-applicant basic info updated successfully
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to update co-applicant basic info
+ */
+router.put('/clients/:id/co-applicant/basic-info', validateRequiredCoApplicantBasicInfo, updateCoApplicantBasicInfo);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/co-applicant/address:
+ *   put:
+ *     summary: Update co-applicant address information
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               currentAddress:
+ *                 type: object
+ *               previousAddress:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Co-applicant address updated successfully
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to update co-applicant address
+ */
+router.put('/clients/:id/co-applicant/address', validateRequiredCoApplicantAddress, updateCoApplicantAddress);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/co-applicant/employment:
+ *   put:
+ *     summary: Update co-applicant employment information
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               employment:
+ *                 type: object
+ *               previousEmployment:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Co-applicant employment updated successfully
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to update co-applicant employment
+ */
+router.put('/clients/:id/co-applicant/employment', validateOptionalCoApplicantEmployment, updateCoApplicantEmployment);
+
+/**
+ * @swagger
+ * /api/securia/clients/{id}/co-applicant/demographics:
+ *   put:
+ *     summary: Update co-applicant demographics information
+ *     tags: [Securia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               birthPlace:
+ *                 type: string
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
+ *               race:
+ *                 type: string
+ *               maritalStatus:
+ *                 type: string
+ *               anniversary:
+ *                 type: string
+ *                 format: date
+ *               spouseName:
+ *                 type: string
+ *               spouseOccupation:
+ *                 type: string
+ *               numberOfDependents:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Co-applicant demographics updated successfully
+ *       404:
+ *         description: Client not found
+ *       500:
+ *         description: Failed to update co-applicant demographics
+ */
+router.put('/clients/:id/co-applicant/demographics', validateOptionalCoApplicantDemographics, updateCoApplicantDemographics);
 
 /**
  * @swagger

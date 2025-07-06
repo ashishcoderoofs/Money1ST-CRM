@@ -2,12 +2,63 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Tables } from "@/integrations/supabase/types";
 
 interface CoApplicantEmploymentProps {
   form: any;
+  client: Tables<"clients">;
 }
 
-export function CoApplicantEmployment({ form }: CoApplicantEmploymentProps) {
+export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentProps) {
+  const updateCoApplicantEmployment = useUpdateCoApplicantEmployment();
+
+  const handleSave = async () => {
+    try {
+      const formData = form.getValues();
+      
+      // Prepare data for backend API
+      const employmentData = {
+        employment: {
+          employmentStatus: formData.coapplicant_employment_status,
+          isBusinessOwner: formData.coapplicant_is_business_owner || false,
+          occupation: formData.coapplicant_occupation,
+          employerName: formData.coapplicant_employer_name,
+          employerAddress: formData.coapplicant_employer_address,
+          employerCity: formData.coapplicant_employer_city,
+          employerState: formData.coapplicant_employer_state,
+          employerZipCode: formData.coapplicant_employer_zip,
+          monthlyGrossSalary: parseFloat(formData.coapplicant_monthly_salary) || 0,
+          startDate: formData.coapplicant_start_date ? new Date(formData.coapplicant_start_date) : undefined,
+          endDate: formData.coapplicant_end_date ? new Date(formData.coapplicant_end_date) : undefined,
+          supervisor: formData.coapplicant_supervisor,
+          supervisorPhone: formData.coapplicant_supervisor_phone,
+          additionalIncome: parseFloat(formData.coapplicant_additional_income) || 0,
+          source: formData.coapplicant_additional_income_source
+        },
+        previousEmployment: {
+          employerName: formData.coapplicant_previous_employer,
+          employerAddress: formData.coapplicant_previous_employer_address,
+          city: formData.coapplicant_previous_employer_city,
+          state: formData.coapplicant_previous_employer_state,
+          zipCode: formData.coapplicant_previous_employer_zip,
+          occupation: formData.coapplicant_previous_occupation,
+          fromDate: formData.coapplicant_previous_from_date ? new Date(formData.coapplicant_previous_from_date) : undefined,
+          toDate: formData.coapplicant_previous_to_date ? new Date(formData.coapplicant_previous_to_date) : undefined
+        }
+      };
+
+      await updateCoApplicantEmployment.mutateAsync({
+        clientId: client.id,
+        data: employmentData
+      });
+
+      toast.success("Co-applicant employment information saved successfully");
+    } catch (error) {
+      console.error("Failed to save co-applicant employment:", error);
+      toast.error("Failed to save co-applicant employment information");
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Current Employment Information */}

@@ -2,9 +2,15 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
+import { Tables } from "@/integrations/supabase/types";
+import { useUpdateApplicantAddress } from "@/hooks/clients/useApplicantMutations";
+import { toast } from "sonner";
 
 interface ApplicantAddressProps {
   form: any;
+  client: Tables<"clients">;
 }
 
 const US_STATES = [
@@ -15,7 +21,45 @@ const US_STATES = [
   "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
 ];
 
-export function ApplicantAddress({ form }: ApplicantAddressProps) {
+export function ApplicantAddress({ form, client }: ApplicantAddressProps) {
+  const updateApplicantAddress = useUpdateApplicantAddress();
+
+  const handleSave = async () => {
+    try {
+      const formData = form.getValues();
+      
+      // Prepare data for backend API
+      const addressData = {
+        currentAddress: {
+          street: formData.applicant_address,
+          city: formData.applicant_city,
+          state: formData.applicant_state,
+          zipCode: formData.applicant_zip,
+          county: formData.applicant_county,
+          howLongYears: parseInt(formData.applicant_years_at_address) || 0,
+          howLongMonths: parseInt(formData.applicant_months_at_address) || 0
+        },
+        previousAddress: {
+          street: formData.applicant_previous_address,
+          city: formData.applicant_previous_city,
+          state: formData.applicant_previous_state,
+          zipCode: formData.applicant_previous_zip,
+          howLongYears: parseInt(formData.applicant_previous_years) || 0,
+          howLongMonths: parseInt(formData.applicant_previous_months) || 0
+        }
+      };
+
+      await updateApplicantAddress.mutateAsync({
+        clientId: client.id,
+        data: addressData
+      });
+
+      toast.success("Applicant address information saved successfully");
+    } catch (error) {
+      console.error("Failed to save applicant address:", error);
+      toast.error("Failed to save applicant address information");
+    }
+  };
   return (
     <div>
       <h3 className="text-lg font-semibold mb-4 border-b pb-2">Contact & Current Address</h3>
@@ -130,6 +174,19 @@ export function ApplicantAddress({ form }: ApplicantAddressProps) {
             </FormItem>
           )}
         />
+      </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end mt-6">
+        <Button 
+          type="button" 
+          onClick={handleSave}
+          disabled={updateApplicantAddress.isPending}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <Save className="w-4 h-4 mr-2" />
+          {updateApplicantAddress.isPending ? "Saving..." : "Save Address Info"}
+        </Button>
       </div>
     </div>
   );

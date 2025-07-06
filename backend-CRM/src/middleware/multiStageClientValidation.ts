@@ -3,6 +3,137 @@ import * as Joi from 'joi';
 
 // Validation schemas for each section of the multi-stage client form
 
+// Required Applicant Basic Info Schema
+const RequiredApplicantBasicInfoSchema = Joi.object({
+  title: Joi.string().valid('Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.').optional(),
+  firstName: Joi.string().trim().min(1).max(50).required().messages({
+    'string.empty': 'First name is required',
+    'any.required': 'First name is required'
+  }),
+  mi: Joi.string().trim().max(1).optional(),
+  lastName: Joi.string().trim().min(1).max(50).required().messages({
+    'string.empty': 'Last name is required',
+    'any.required': 'Last name is required'
+  }),
+  suffix: Joi.string().valid('Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD').optional(),
+  maidenName: Joi.string().trim().max(50).optional(),
+  isConsultant: Joi.boolean().default(false),
+  homePhone: Joi.string().trim().optional(),
+  workPhone: Joi.string().trim().optional(),
+  cellPhone: Joi.string().trim().min(1).required().messages({
+    'string.empty': 'Cell phone is required',
+    'any.required': 'Cell phone is required'
+  }),
+  otherPhone: Joi.string().trim().optional(),
+  fax: Joi.string().trim().optional(),
+  email: Joi.string().trim().email().required().messages({
+    'string.empty': 'Email is required',
+    'string.email': 'Please enter a valid email address',
+    'any.required': 'Email is required'
+  })
+});
+
+// Required Applicant Address Schema
+const RequiredApplicantAddressSchema = Joi.object({
+  currentAddress: Joi.object({
+    street: Joi.string().trim().min(1).max(200).required().messages({
+      'string.empty': 'Street address is required',
+      'any.required': 'Street address is required'
+    }),
+    city: Joi.string().trim().min(1).max(100).required().messages({
+      'string.empty': 'City is required',
+      'any.required': 'City is required'
+    }),
+    state: Joi.string().trim().max(50).optional(),
+    zipCode: Joi.string().trim().pattern(/^\d{5}(-\d{4})?$/).optional(),
+    county: Joi.string().trim().max(100).optional(),
+    howLongYears: Joi.number().min(0).default(0),
+    howLongMonths: Joi.number().min(0).max(11).default(0)
+  }).required(),
+  previousAddress: Joi.object({
+    street: Joi.string().trim().max(200).optional(),
+    city: Joi.string().trim().max(100).optional(),
+    state: Joi.string().trim().max(50).optional(),
+    zipCode: Joi.string().trim().pattern(/^\d{5}(-\d{4})?$/).optional(),
+    howLongYears: Joi.number().min(0).default(0),
+    howLongMonths: Joi.number().min(0).max(11).default(0)
+  }).optional()
+});
+
+// Required Co-Applicant Basic Info Schema
+const RequiredCoApplicantBasicInfoSchema = Joi.object({
+  includeCoApplicant: Joi.boolean().default(false),
+  title: Joi.string().valid('Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.').optional(),
+  firstName: Joi.when('includeCoApplicant', {
+    is: true,
+    then: Joi.string().trim().min(1).max(50).required().messages({
+      'string.empty': 'Co-applicant first name is required',
+      'any.required': 'Co-applicant first name is required'
+    }),
+    otherwise: Joi.string().trim().max(50).optional()
+  }),
+  mi: Joi.string().trim().max(1).optional(),
+  lastName: Joi.when('includeCoApplicant', {
+    is: true,
+    then: Joi.string().trim().min(1).max(50).required().messages({
+      'string.empty': 'Co-applicant last name is required',
+      'any.required': 'Co-applicant last name is required'
+    }),
+    otherwise: Joi.string().trim().max(50).optional()
+  }),
+  suffix: Joi.string().valid('Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD').optional(),
+  maidenName: Joi.string().trim().max(50).optional(),
+  isConsultant: Joi.boolean().default(false),
+  homePhone: Joi.string().trim().optional(),
+  workPhone: Joi.string().trim().optional(),
+  cellPhone: Joi.when('includeCoApplicant', {
+    is: true,
+    then: Joi.string().trim().min(1).required().messages({
+      'string.empty': 'Co-applicant cell phone is required',
+      'any.required': 'Co-applicant cell phone is required'
+    }),
+    otherwise: Joi.string().trim().optional()
+  }),
+  otherPhone: Joi.string().trim().optional(),
+  fax: Joi.string().trim().optional(),
+  email: Joi.when('includeCoApplicant', {
+    is: true,
+    then: Joi.string().trim().email().required().messages({
+      'string.empty': 'Co-applicant email is required',
+      'string.email': 'Please enter a valid email address',
+      'any.required': 'Co-applicant email is required'
+    }),
+    otherwise: Joi.string().trim().email().optional()
+  })
+});
+
+// Required Co-Applicant Address Schema
+const RequiredCoApplicantAddressSchema = Joi.object({
+  currentAddress: Joi.object({
+    street: Joi.string().trim().min(1).max(200).required().messages({
+      'string.empty': 'Co-applicant street address is required',
+      'any.required': 'Co-applicant street address is required'
+    }),
+    city: Joi.string().trim().min(1).max(100).required().messages({
+      'string.empty': 'Co-applicant city is required',
+      'any.required': 'Co-applicant city is required'
+    }),
+    state: Joi.string().trim().max(50).optional(),
+    zipCode: Joi.string().trim().pattern(/^\d{5}(-\d{4})?$/).optional(),
+    county: Joi.string().trim().max(100).optional(),
+    howLongYears: Joi.number().min(0).default(0),
+    howLongMonths: Joi.number().min(0).max(11).default(0)
+  }).required(),
+  previousAddress: Joi.object({
+    street: Joi.string().trim().max(200).optional(),
+    city: Joi.string().trim().max(100).optional(),
+    state: Joi.string().trim().max(50).optional(),
+    zipCode: Joi.string().trim().pattern(/^\d{5}(-\d{4})?$/).optional(),
+    howLongYears: Joi.number().min(0).default(0),
+    howLongMonths: Joi.number().min(0).max(11).default(0)
+  }).optional()
+});
+
 const AddressSchema = Joi.object({
   street: Joi.string().trim().max(200).optional(),
   city: Joi.string().trim().max(100).optional(),
@@ -406,3 +537,89 @@ export const validateRentersSection = (data: any) => RentersSchema.validate(data
 export const validateIncomeProtectionSection = (data: any) => IncomeProtectionSchema.validate(data);
 export const validateRetirementSection = (data: any) => RetirementSchema.validate(data);
 export const validateLineageSection = (data: any) => LineageSchema.validate(data);
+
+// Validation functions for required applicant and co-applicant fields
+export const validateRequiredApplicantBasicInfo = (req: Request, res: Response, next: NextFunction): void => {
+  const { error } = RequiredApplicantBasicInfoSchema.validate(req.body);
+  if (error) {
+    res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({
+        field: detail.path.join('.'),
+        message: detail.message
+      }))
+    });
+    return;
+  }
+  next();
+};
+
+export const validateRequiredApplicantAddress = (req: Request, res: Response, next: NextFunction): void => {
+  const { error } = RequiredApplicantAddressSchema.validate(req.body);
+  if (error) {
+    res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({
+        field: detail.path.join('.'),
+        message: detail.message
+      }))
+    });
+    return;
+  }
+  next();
+};
+
+export const validateRequiredCoApplicantBasicInfo = (req: Request, res: Response, next: NextFunction): void => {
+  const { error } = RequiredCoApplicantBasicInfoSchema.validate(req.body);
+  if (error) {
+    res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({
+        field: detail.path.join('.'),
+        message: detail.message
+      }))
+    });
+    return;
+  }
+  next();
+};
+
+export const validateRequiredCoApplicantAddress = (req: Request, res: Response, next: NextFunction): void => {
+  const { error } = RequiredCoApplicantAddressSchema.validate(req.body);
+  if (error) {
+    res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({
+        field: detail.path.join('.'),
+        message: detail.message
+      }))
+    });
+    return;
+  }
+  next();
+};
+
+// Optional validation for employment and demographics (no required fields)
+export const validateOptionalApplicantEmployment = (req: Request, res: Response, next: NextFunction): void => {
+  // No required fields, just pass through
+  next();
+};
+
+export const validateOptionalApplicantDemographics = (req: Request, res: Response, next: NextFunction): void => {
+  // No required fields, just pass through
+  next();
+};
+
+export const validateOptionalCoApplicantEmployment = (req: Request, res: Response, next: NextFunction): void => {
+  // No required fields, just pass through
+  next();
+};
+
+export const validateOptionalCoApplicantDemographics = (req: Request, res: Response, next: NextFunction): void => {
+  // No required fields, just pass through
+  next();
+};

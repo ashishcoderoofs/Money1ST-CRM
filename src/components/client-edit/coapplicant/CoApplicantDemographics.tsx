@@ -1,12 +1,44 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Tables } from "@/integrations/supabase/types";
 
 interface CoApplicantDemographicsProps {
   form: any;
+  client: Tables<"clients">;
 }
 
-export function CoApplicantDemographics({ form }: CoApplicantDemographicsProps) {
+export function CoApplicantDemographics({ form, client }: CoApplicantDemographicsProps) {
+  const updateCoApplicantDemographics = useUpdateCoApplicantDemographics();
+
+  const handleSave = async () => {
+    try {
+      const formData = form.getValues();
+      
+      // Prepare data for backend API
+      const demographicsData = {
+        birthPlace: formData.coapplicant_birth_place,
+        dateOfBirth: formData.coapplicant_date_of_birth ? new Date(formData.coapplicant_date_of_birth) : undefined,
+        race: formData.coapplicant_race,
+        maritalStatus: formData.coapplicant_marital_status,
+        anniversary: formData.coapplicant_anniversary ? new Date(formData.coapplicant_anniversary) : undefined,
+        spouseName: formData.coapplicant_spouse_name,
+        spouseOccupation: formData.coapplicant_spouse_occupation,
+        numberOfDependents: parseInt(formData.coapplicant_number_of_dependents) || 0
+      };
+
+      await updateCoApplicantDemographics.mutateAsync({
+        clientId: client.id,
+        data: demographicsData
+      });
+
+      toast.success("Co-applicant demographics information saved successfully");
+    } catch (error) {
+      console.error("Failed to save co-applicant demographics:", error);
+      toast.error("Failed to save co-applicant demographics information");
+    }
+  };
   return (
     <div>
       <div className="bg-green-600 text-white px-4 py-2 mb-4">
@@ -154,6 +186,19 @@ export function CoApplicantDemographics({ form }: CoApplicantDemographicsProps) 
             </FormItem>
           )}
         />
+      </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end mt-6">
+        <Button 
+          type="button" 
+          onClick={handleSave}
+          disabled={updateCoApplicantDemographics.isPending}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <Save className="w-4 h-4 mr-2" />
+          {updateCoApplicantDemographics.isPending ? "Saving..." : "Save Demographics Info"}
+        </Button>
       </div>
     </div>
   );
