@@ -1,7 +1,7 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface CoApplicantEmploymentProps {
   form: any;
@@ -9,105 +9,107 @@ interface CoApplicantEmploymentProps {
 
 export function CoApplicantEmployment({ form }: CoApplicantEmploymentProps) {
   return (
-    <div>
-      <h3 className="text-lg font-semibold mb-4 border-b pb-2">Employment Information</h3>
-      
-      {/* Current Employment */}
-      <div className="space-y-4 mb-6">
-        <h4 className="text-md font-semibold">Current Employment</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="coapplicant_employment_status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Employment Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Employed">Employed</SelectItem>
-                    <SelectItem value="Self-Employed">Self-Employed</SelectItem>
-                    <SelectItem value="Unemployed">Unemployed</SelectItem>
-                    <SelectItem value="Retired">Retired</SelectItem>
-                    <SelectItem value="Student">Student</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="coapplicant_business_owner"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Business Owner</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Yes">Yes</SelectItem>
-                    <SelectItem value="No">No</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="coapplicant_employer_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Employer Name</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Employer name" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="coapplicant_occupation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Occupation</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Job title/occupation" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Employer Address */}
+    <div className="space-y-6">
+      {/* Current Employment Information */}
+      <div>
+        <h4 className="font-medium text-green-700 mb-3">Current Employment Information</h4>
         <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="coapplicant_employer_address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Employer Address</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Employer street address" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex gap-4">
+            <div className="w-[400px]">
+              <div className="flex items-center justify-between">
+                <div className="font-medium text-sm text-black">Employment Status</div>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="coapplicant_is_business_owner"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className="text-sm font-normal">Business Owner</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2 mt-3">
+                <FormField
+                  control={form.control}
+                  name="coapplicant_employment_status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Employed">Employed</SelectItem>
+                          <SelectItem value="Full-time">Full-time</SelectItem>
+                          <SelectItem value="Self-Employed">Self-Employed</SelectItem>
+                          <SelectItem value="Unemployed">Unemployed</SelectItem>
+                          <SelectItem value="Retired">Retired</SelectItem>
+                          <SelectItem value="Student">Student</SelectItem>
+                          <SelectItem value="Part-Time">Part-Time</SelectItem>
+                          <SelectItem value="Contract">Contract</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="coapplicant_occupation"
+              render={({ field }) => (
+                <FormItem className="w-[400px]">
+                  <FormLabel>Occupation</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Enter occupation" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <FormField
+              control={form.control}
+              name="coapplicant_employer_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Employer Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Enter employer name" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="coapplicant_employer_address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Employer Address</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Enter employer address" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <FormField
               control={form.control}
               name="coapplicant_employer_city"
@@ -115,12 +117,13 @@ export function CoApplicantEmployment({ form }: CoApplicantEmploymentProps) {
                 <FormItem>
                   <FormLabel>City</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="City" />
+                    <Input {...field} placeholder="Enter city" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
             <FormField
               control={form.control}
               name="coapplicant_employer_state"
@@ -128,20 +131,119 @@ export function CoApplicantEmployment({ form }: CoApplicantEmploymentProps) {
                 <FormItem>
                   <FormLabel>State</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="State" />
+                    <Input {...field} placeholder="Enter state" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
             <FormField
               control={form.control}
-              name="coapplicant_employer_zip"
+              name="coapplicant_employer_zip_code"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ZIP Code</FormLabel>
+                  <FormLabel>Zip Code</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="ZIP code" />
+                    <Input {...field} placeholder="Enter zip code" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="coapplicant_monthly_salary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gross Monthly Salary</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="$0.00" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="coapplicant_employment_start_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="coapplicant_employment_end_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>End Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="coapplicant_employment_supervisor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Supervisor</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Enter supervisor name" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="coapplicant_employment_supervisor_phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Supervisor Phone</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Enter supervisor phone" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="coapplicant_other_income"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Additional Income</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="$0.00" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="coapplicant_employment_source"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Source</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Enter source" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -149,162 +251,175 @@ export function CoApplicantEmployment({ form }: CoApplicantEmploymentProps) {
             />
           </div>
         </div>
-
-        {/* Employment Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="coapplicant_employer_phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Employer Phone</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Employer phone" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="coapplicant_start_date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Start Date</FormLabel>
-                <FormControl>
-                  <Input {...field} type="date" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="coapplicant_end_date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>End Date (if applicable)</FormLabel>
-                <FormControl>
-                  <Input {...field} type="date" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Income Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="coapplicant_monthly_salary"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Monthly Salary</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" step="0.01" placeholder="Monthly salary" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="coapplicant_additional_income"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Additional Income</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" step="0.01" placeholder="Additional monthly income" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="coapplicant_additional_income_source"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Additional Income Source</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Source of additional income" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </div>
 
       {/* Previous Employment */}
-      <div className="border-t pt-4">
-        <h4 className="text-md font-semibold mb-3">Previous Employment</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <h4 className="font-medium text-green-700 mb-3">Previous Employment</h4>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <FormField
             control={form.control}
-            name="coapplicant_previous_employer"
+            name="coapplicant_previous_employer_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Previous Employer</FormLabel>
+                <FormLabel>Employer Name</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Previous employer name" />
+                  <Input {...field} placeholder="Enter employer name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="coapplicant_previous_occupation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Previous Occupation</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Previous job title" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          
           <FormField
             control={form.control}
             name="coapplicant_previous_employer_address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Previous Employer Address</FormLabel>
+                <FormLabel>Employer Address</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Previous employer address" />
+                  <Input {...field} placeholder="Enter employer address" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          
           <FormField
             control={form.control}
-            name="coapplicant_previous_employment_from"
+            name="coapplicant_previous_employer_city"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employment From</FormLabel>
+                <FormLabel>City</FormLabel>
                 <FormControl>
-                  <Input {...field} type="date" />
+                  <Input {...field} placeholder="Enter city" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          
           <FormField
             control={form.control}
-            name="coapplicant_previous_employment_to"
+            name="coapplicant_previous_employer_state"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employment To</FormLabel>
+                <FormLabel>State</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="AL">Alabama</SelectItem>
+                    <SelectItem value="AK">Alaska</SelectItem>
+                    <SelectItem value="AZ">Arizona</SelectItem>
+                    <SelectItem value="AR">Arkansas</SelectItem>
+                    <SelectItem value="CA">California</SelectItem>
+                    <SelectItem value="CO">Colorado</SelectItem>
+                    <SelectItem value="CT">Connecticut</SelectItem>
+                    <SelectItem value="DE">Delaware</SelectItem>
+                    <SelectItem value="FL">Florida</SelectItem>
+                    <SelectItem value="GA">Georgia</SelectItem>
+                    <SelectItem value="HI">Hawaii</SelectItem>
+                    <SelectItem value="ID">Idaho</SelectItem>
+                    <SelectItem value="IL">Illinois</SelectItem>
+                    <SelectItem value="IN">Indiana</SelectItem>
+                    <SelectItem value="IA">Iowa</SelectItem>
+                    <SelectItem value="KS">Kansas</SelectItem>
+                    <SelectItem value="KY">Kentucky</SelectItem>
+                    <SelectItem value="LA">Louisiana</SelectItem>
+                    <SelectItem value="ME">Maine</SelectItem>
+                    <SelectItem value="MD">Maryland</SelectItem>
+                    <SelectItem value="MA">Massachusetts</SelectItem>
+                    <SelectItem value="MI">Michigan</SelectItem>
+                    <SelectItem value="MN">Minnesota</SelectItem>
+                    <SelectItem value="MS">Mississippi</SelectItem>
+                    <SelectItem value="MO">Missouri</SelectItem>
+                    <SelectItem value="MT">Montana</SelectItem>
+                    <SelectItem value="NE">Nebraska</SelectItem>
+                    <SelectItem value="NV">Nevada</SelectItem>
+                    <SelectItem value="NH">New Hampshire</SelectItem>
+                    <SelectItem value="NJ">New Jersey</SelectItem>
+                    <SelectItem value="NM">New Mexico</SelectItem>
+                    <SelectItem value="NY">New York</SelectItem>
+                    <SelectItem value="NC">North Carolina</SelectItem>
+                    <SelectItem value="ND">North Dakota</SelectItem>
+                    <SelectItem value="OH">Ohio</SelectItem>
+                    <SelectItem value="OK">Oklahoma</SelectItem>
+                    <SelectItem value="OR">Oregon</SelectItem>
+                    <SelectItem value="PA">Pennsylvania</SelectItem>
+                    <SelectItem value="RI">Rhode Island</SelectItem>
+                    <SelectItem value="SC">South Carolina</SelectItem>
+                    <SelectItem value="SD">South Dakota</SelectItem>
+                    <SelectItem value="TN">Tennessee</SelectItem>
+                    <SelectItem value="TX">Texas</SelectItem>
+                    <SelectItem value="UT">Utah</SelectItem>
+                    <SelectItem value="VT">Vermont</SelectItem>
+                    <SelectItem value="VA">Virginia</SelectItem>
+                    <SelectItem value="WA">Washington</SelectItem>
+                    <SelectItem value="WV">West Virginia</SelectItem>
+                    <SelectItem value="WI">Wisconsin</SelectItem>
+                    <SelectItem value="WY">Wyoming</SelectItem>
+                    <SelectItem value="DC">District of Columbia</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_previous_employer_zip_code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Zip Code</FormLabel>
                 <FormControl>
-                  <Input {...field} type="date" />
+                  <Input {...field} placeholder="Enter zip code" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_previous_employment_occupation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Occupation</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter occupation" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_previous_employment_from_date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>From Date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_previous_employment_to_date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>To Date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

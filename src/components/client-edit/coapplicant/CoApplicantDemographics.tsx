@@ -1,4 +1,3 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,8 +9,25 @@ interface CoApplicantDemographicsProps {
 export function CoApplicantDemographics({ form }: CoApplicantDemographicsProps) {
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4 border-b pb-2">Demographic Information</h3>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-green-600 text-white px-4 py-2 mb-4">
+        <h3 className="text-lg font-semibold">Demographic Information</h3>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <FormField
+          control={form.control}
+          name="coapplicant_birth_place"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Birth Place</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Enter birth place" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <FormField
           control={form.control}
           name="coapplicant_dob"
@@ -19,49 +35,13 @@ export function CoApplicantDemographics({ form }: CoApplicantDemographicsProps) 
             <FormItem>
               <FormLabel>Date of Birth</FormLabel>
               <FormControl>
-                <Input {...field} type="date" />
+                <Input {...field} type="date" placeholder="dd-mm-yyyy" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="coapplicant_ssn"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>SSN</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="SSN" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="coapplicant_marital_status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Marital Status</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Single">Single</SelectItem>
-                  <SelectItem value="Married">Married</SelectItem>
-                  <SelectItem value="Divorced">Divorced</SelectItem>
-                  <SelectItem value="Separated">Separated</SelectItem>
-                  <SelectItem value="Widowed">Widowed</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        
         <FormField
           control={form.control}
           name="coapplicant_race"
@@ -71,7 +51,7 @@ export function CoApplicantDemographics({ form }: CoApplicantDemographicsProps) 
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select" />
+                    <SelectValue placeholder="Select race" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -90,7 +70,33 @@ export function CoApplicantDemographics({ form }: CoApplicantDemographicsProps) 
           )}
         />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+      
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <FormField
+          control={form.control}
+          name="coapplicant_marital_status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Marital Status</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select marital status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Single">Single</SelectItem>
+                  <SelectItem value="Married">Married</SelectItem>
+                  <SelectItem value="Divorced">Divorced</SelectItem>
+                  <SelectItem value="Separated">Separated</SelectItem>
+                  <SelectItem value="Widowed">Widowed</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <FormField
           control={form.control}
           name="coapplicant_anniversary"
@@ -98,33 +104,51 @@ export function CoApplicantDemographics({ form }: CoApplicantDemographicsProps) 
             <FormItem>
               <FormLabel>Anniversary</FormLabel>
               <FormControl>
-                <Input {...field} type="date" />
+                <Input {...field} type="date" placeholder="dd-mm-yyyy" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="coapplicant_spouse_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Spouse's Name</FormLabel>
+              <FormLabel>Spouse Name</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Spouse's name" />
+                <Input {...field} placeholder="Enter spouse name" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="coapplicant_spouse_occupation"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Spouse's Occupation</FormLabel>
+              <FormLabel>Spouse Occupation</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Spouse's occupation" />
+                <Input {...field} placeholder="Enter spouse occupation" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="coapplicant_number_of_dependents"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Number of Dependents</FormLabel>
+              <FormControl>
+                <Input {...field} type="number" placeholder="0" min="0" />
               </FormControl>
               <FormMessage />
             </FormItem>

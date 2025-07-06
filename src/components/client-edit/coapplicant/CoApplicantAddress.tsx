@@ -1,6 +1,7 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CoApplicantAddressProps {
   form: any;
@@ -8,23 +9,25 @@ interface CoApplicantAddressProps {
 
 export function CoApplicantAddress({ form }: CoApplicantAddressProps) {
   return (
-    <div>
-      <h3 className="text-lg font-semibold mb-4 border-b pb-2">Current Address</h3>
-      <div className="space-y-4">
-        <FormField
-          control={form.control}
-          name="coapplicant_address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Street Address</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Street address" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="space-y-6">
+      {/* Current Address */}
+      <div>
+        <h4 className="font-medium text-green-700 mb-3">Current Address</h4>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <FormField
+            control={form.control}
+            name="coapplicant_address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter street address" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
           <FormField
             control={form.control}
             name="coapplicant_city"
@@ -32,12 +35,13 @@ export function CoApplicantAddress({ form }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>City</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="City" />
+                  <Input {...field} placeholder="Enter city" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          
           <FormField
             control={form.control}
             name="coapplicant_state"
@@ -45,27 +49,27 @@ export function CoApplicantAddress({ form }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>State</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="State" />
+                  <Input {...field} placeholder="Enter state" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          
           <FormField
             control={form.control}
             name="coapplicant_zip_code"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>ZIP Code</FormLabel>
+                <FormLabel>Zip Code</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="ZIP code" />
+                  <Input {...field} placeholder="Enter zip code" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
           <FormField
             control={form.control}
             name="coapplicant_county"
@@ -73,55 +77,255 @@ export function CoApplicantAddress({ form }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>County</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="County" />
+                  <Input {...field} placeholder="Enter county" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          
           <FormField
             control={form.control}
-            name="coapplicant_time_at_address"
+            name="coapplicant_home_phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Time at Address</FormLabel>
+                <FormLabel>Home Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="e.g., 2 years" />
+                  <Input {...field} placeholder="Enter Home Phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_work_phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Work Phone</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter Work Phone" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_cell_phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cell Phone</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter cell Phone" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_other_phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Other Phone</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter other Phone" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" {...field} placeholder="email@example.com" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_fax"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fax</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter Fax" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="space-y-2">
+            <FormLabel>How Long at Current Address</FormLabel>
+            <div className="flex gap-4">
+              <FormField
+                control={form.control}
+                name="coapplicant_current_address_years"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select onValueChange={field.onChange} value={field.value || "0"}>
+                      <FormControl>
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="0 years" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.from({ length: 51 }, (_, i) => (
+                          <SelectItem key={i} value={i.toString()}>{i} years</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="coapplicant_current_address_months"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select onValueChange={field.onChange} value={field.value || "0"}>
+                      <FormControl>
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="0 months" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <SelectItem key={i} value={i.toString()}>{i} months</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
         </div>
-        <div className="border-t pt-4 mt-4">
-          <h4 className="text-md font-semibold mb-3">Previous Address</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="coapplicant_previous_address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Previous Address</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Previous address" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="coapplicant_previous_address_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Time at Previous Address</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g., 3 years" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      </div>
+
+      {/* Previous Address Information */}
+      <div>
+        <h4 className="font-medium text-green-700 mb-3">Previous Address Information (if less than 2 years at current address)</h4>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <FormField
+            control={form.control}
+            name="coapplicant_previous_address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter address" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_previous_city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>City</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter city" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_previous_state"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>State</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter state" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coapplicant_previous_zip_code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Zip Code</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Enter zip code" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="space-y-2">
+            <FormLabel>How Long at Previous Address</FormLabel>
+            <div className="flex gap-4">
+              <FormField
+                control={form.control}
+                name="coapplicant_previous_address_years"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select onValueChange={field.onChange} value={field.value || "0"}>
+                      <FormControl>
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="0 years" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.from({ length: 51 }, (_, i) => (
+                          <SelectItem key={i} value={i.toString()}>{i} years</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="coapplicant_previous_address_months"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select onValueChange={field.onChange} value={field.value || "0"}>
+                      <FormControl>
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="0 months" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <SelectItem key={i} value={i.toString()}>{i} months</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
         </div>
       </div>
