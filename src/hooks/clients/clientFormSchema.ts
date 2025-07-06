@@ -57,7 +57,7 @@ export const clientFormSchema = z.object({
   processor_name: z.string().optional(),
   total_debt: z.union([z.number(), z.string().transform((val) => val === "" ? 0 : Number(val))]).default(0),
   payoff_amount: z.union([z.number(), z.string().transform((val) => val === "" ? undefined : Number(val))]).optional(),
-  status: z.enum(["Open", "Closed"]),
+  status: z.enum(["draft", "submitted", "active", "inactive"]),
   entry_date: z.string(),
   // Contact fields
   applicant_contact: z.string().optional(),
@@ -173,17 +173,12 @@ export const clientFormSchema = z.object({
   liabilities: z.array(liabilitySchema).optional(),
 }).refine(
   (data) => {
-    // If co-applicant is provided, enforce required fields
-    const hasCoApplicantData = data.co_applicant || 
-                               data.coapplicant_first_name || 
-                               data.coapplicant_last_name || 
-                               data.coapplicant_email ||
-                               data.coapplicant_cell_phone ||
-                               data.coapplicant_address ||
-                               data.coapplicant_city;
+    // Only validate co-applicant fields if include_co_applicant is explicitly checked
+    // or if co_applicant field is filled (for backward compatibility)
+    const includeCoApplicant = data.include_co_applicant || data.co_applicant;
     
-    if (hasCoApplicantData) {
-      // Required co-applicant fields when co-applicant data is provided
+    if (includeCoApplicant) {
+      // Required co-applicant fields when co-applicant is explicitly included
       if (!data.coapplicant_first_name) return false;
       if (!data.coapplicant_last_name) return false;  
       if (!data.coapplicant_email) return false;
@@ -194,7 +189,7 @@ export const clientFormSchema = z.object({
     return true;
   },
   {
-    message: "When co-applicant information is provided, first name, last name, email, cell phone, address, and city are required",
+    message: "When co-applicant is included, first name, last name, email, cell phone, address, and city are required",
     path: ["coapplicant_first_name"],
   }
 );

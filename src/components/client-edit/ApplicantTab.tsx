@@ -7,6 +7,8 @@ import { Tables } from "@/integrations/supabase/types";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
+import { useConsultantOptions } from "@/hooks/clients/useConsultants";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ApplicantTabProps {
   client: Tables<"clients">;
@@ -25,6 +27,9 @@ interface HouseholdMember {
 }
 
 export function ApplicantTab({ client, form }: ApplicantTabProps) {
+  const { options: consultantOptions, isLoading: consultantsLoading, error: consultantsError } = useConsultantOptions();
+  const { isAuthenticated } = useAuth();
+  
   const [householdMembers, setHouseholdMembers] = useState<HouseholdMember[]>([
     {
       firstName: "",
@@ -130,27 +135,48 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
           
           <FormField
             control={form.control}
-            name="consultant"
+            name="consultant_name"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Consultant</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={consultantsLoading}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select consultant" />
+                      <SelectValue placeholder={
+                        consultantsLoading 
+                          ? "Loading consultants..." 
+                          : consultantsError 
+                          ? "Please log in to load consultants"
+                          : consultantOptions.length === 0
+                          ? "No consultants available"
+                          : "Select consultant"
+                      } />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Jennifer Williams">Jennifer Williams (CON004)</SelectItem>
-                    <SelectItem value="Michael Chen">Michael Chen (CON003)</SelectItem>
-                    <SelectItem value="Maria Rodriguez">Maria Rodriguez (CON002)</SelectItem>
-                    <SelectItem value="James Thompson">James Thompson (CON001)</SelectItem>
-                    <SelectItem value="Martie McLean">Martie McLean (CON1750362389503)</SelectItem>
-                    <SelectItem value="Test user2">Test user2 (CON1750361168106)</SelectItem>
-                    <SelectItem value="Test user">Test user (CON1750358147687)</SelectItem>
+                    {consultantOptions.length === 0 && !consultantsLoading && !consultantsError && (
+                      <SelectItem value="" disabled>No consultants found</SelectItem>
+                    )}
+                    {consultantsError && (
+                      <SelectItem value="" disabled>
+                        {consultantsError.message || "Error loading consultants"}
+                      </SelectItem>
+                    )}
+                    {consultantOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
+                {consultantsError && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {consultantsError.message === "Please log in to load consultants" 
+                      ? "Please log in to load consultant options" 
+                      : "Error loading consultants. Please try again."}
+                  </p>
+                )}
               </FormItem>
             )}
           />

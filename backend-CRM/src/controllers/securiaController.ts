@@ -673,29 +673,32 @@ export const createClient = async (req: AuthRequest, res: Response): Promise<Res
       // Employment Info
       employment: clientData.applicant_employment_status ? {
         status: clientData.applicant_employment_status,
-        isBusinessOwner: clientData.applicant_business_owner,
+        isBusinessOwner: clientData.applicant_business_owner === 'Yes' || clientData.applicant_business_owner === true,
         employerName: clientData.applicant_employer_name,
-        employerAddress: clientData.applicant_employer_address,
-        employerCity: clientData.applicant_employer_city,
-        employerState: clientData.applicant_employer_state,
-        employerZip: clientData.applicant_employer_zip,
+        employerAddress: {
+          street: clientData.applicant_employer_address,
+          city: clientData.applicant_employer_city,
+          state: clientData.applicant_employer_state,
+          zipCode: clientData.applicant_employer_zip,
+        },
         occupation: clientData.applicant_occupation,
         monthlySalary: clientData.applicant_monthly_salary,
         employerPhone: clientData.applicant_employer_phone,
-        startDate: clientData.applicant_start_date,
-        endDate: clientData.applicant_end_date,
+        startDate: clientData.applicant_start_date ? new Date(clientData.applicant_start_date) : undefined,
+        endDate: clientData.applicant_end_date ? new Date(clientData.applicant_end_date) : undefined,
         additionalIncome: clientData.applicant_additional_income,
         additionalIncomeSource: clientData.applicant_additional_income_source,
+        supervisor: clientData.applicant_supervisor,
       } : undefined,
       
       // Demographics
       demographics: {
-        dateOfBirth: clientData.applicant_dob,
+        dateOfBirth: clientData.applicant_dob ? new Date(clientData.applicant_dob) : undefined,
         ssn: clientData.applicant_ssn,
         birthPlace: clientData.applicant_birth_place,
         race: cleanEnumField(clientData.applicant_race),
         maritalStatus: cleanEnumField(clientData.applicant_marital_status),
-        anniversary: clientData.applicant_anniversary,
+        anniversary: clientData.applicant_anniversary ? new Date(clientData.applicant_anniversary) : undefined,
         spouseName: clientData.applicant_spouse_name,
         spouseOccupation: clientData.applicant_spouse_occupation,
         numberOfDependents: clientData.applicant_dependents_count,
@@ -758,29 +761,31 @@ export const createClient = async (req: AuthRequest, res: Response): Promise<Res
         // Employment Info
         employment: clientData.coapplicant_employment_status ? {
           status: clientData.coapplicant_employment_status,
-          isBusinessOwner: clientData.coapplicant_business_owner,
+          isBusinessOwner: clientData.coapplicant_business_owner === 'Yes' || clientData.coapplicant_business_owner === true,
           employerName: clientData.coapplicant_employer_name,
-          employerAddress: clientData.coapplicant_employer_address,
-          employerCity: clientData.coapplicant_employer_city,
-          employerState: clientData.coapplicant_employer_state,
-          employerZip: clientData.coapplicant_employer_zip,
+          employerAddress: {
+            street: clientData.coapplicant_employer_address,
+            city: clientData.coapplicant_employer_city,
+            state: clientData.coapplicant_employer_state,
+            zipCode: clientData.coapplicant_employer_zip,
+          },
           occupation: clientData.coapplicant_occupation,
           monthlySalary: clientData.coapplicant_monthly_salary,
           employerPhone: clientData.coapplicant_employer_phone,
-          startDate: clientData.coapplicant_start_date,
-          endDate: clientData.coapplicant_end_date,
+          startDate: clientData.coapplicant_start_date ? new Date(clientData.coapplicant_start_date) : undefined,
+          endDate: clientData.coapplicant_end_date ? new Date(clientData.coapplicant_end_date) : undefined,
           additionalIncome: clientData.coapplicant_additional_income,
           additionalIncomeSource: clientData.coapplicant_additional_income_source,
         } : undefined,
         
         // Demographics
         demographics: {
-          dateOfBirth: clientData.coapplicant_dob,
+          dateOfBirth: clientData.coapplicant_dob ? new Date(clientData.coapplicant_dob) : undefined,
           ssn: clientData.coapplicant_ssn,
           birthPlace: clientData.coapplicant_birth_place,
           race: cleanEnumField(clientData.coapplicant_race),
           maritalStatus: cleanEnumField(clientData.coapplicant_marital_status),
-          anniversary: clientData.coapplicant_anniversary,
+          anniversary: clientData.coapplicant_anniversary ? new Date(clientData.coapplicant_anniversary) : undefined,
           spouseName: clientData.coapplicant_spouse_name,
           spouseOccupation: clientData.coapplicant_spouse_occupation,
           numberOfDependents: clientData.coapplicant_dependents_count,
@@ -895,8 +900,128 @@ export const getClientById = async (req: AuthRequest, res: Response): Promise<vo
         createdAt: applicant.createdAt,
         updatedAt: applicant.updatedAt,
         
-        // Include original applicant structure for compatibility
-        applicant: {
+        // Map Applicant fields to flat frontend form structure
+        applicant_title: applicant.title || '',
+        applicant_first_name: applicant.firstName || '',
+        applicant_mi: applicant.mi || '',
+        applicant_last_name: applicant.lastName || '',
+        applicant_suffix: applicant.suffix || '',
+        applicant_maiden_name: applicant.maidenName || '',
+        applicant_is_consultant: applicant.isConsultant || false,
+        
+        // Contact Info
+        applicant_home_phone: applicant.homePhone || '',
+        applicant_other_phone: applicant.workPhone || '',
+        applicant_cell_phone: applicant.cellPhone || '',
+        applicant_fax: applicant.fax || '',
+        applicant_email: applicant.email || '',
+        
+        // Address Info
+        applicant_address: applicant.currentAddress?.street || '',
+        applicant_city: applicant.currentAddress?.city || '',
+        applicant_state: applicant.currentAddress?.state || '',
+        applicant_zip_code: applicant.currentAddress?.zipCode || '',
+        applicant_county: applicant.currentAddress?.county || '',
+        applicant_time_at_address: '', // Not stored in current model
+        applicant_previous_address: applicant.previousAddress?.street || '',
+        applicant_previous_address_time: '', // Not stored in current model
+        
+        // Employment Info
+        applicant_employment_status: applicant.employment?.status || '',
+        applicant_business_owner: applicant.employment?.isBusinessOwner ? 'Yes' : 'No',
+        applicant_employer_name: applicant.employment?.employerName || '',
+        applicant_employer_address: applicant.employment?.employerAddress?.street || '',
+        applicant_employer_city: applicant.employment?.employerAddress?.city || '',
+        applicant_employer_state: applicant.employment?.employerAddress?.state || '',
+        applicant_employer_zip: applicant.employment?.employerAddress?.zipCode || '',
+        applicant_occupation: applicant.employment?.occupation || '',
+        applicant_monthly_salary: applicant.employment?.monthlySalary || 0,
+        applicant_employer_phone: applicant.employment?.employerPhone || '',
+        applicant_start_date: applicant.employment?.startDate ? new Date(applicant.employment.startDate).toISOString().split('T')[0] : '',
+        applicant_end_date: applicant.employment?.endDate ? new Date(applicant.employment.endDate).toISOString().split('T')[0] : '',
+        applicant_additional_income: applicant.employment?.additionalIncome || 0,
+        applicant_additional_income_source: applicant.employment?.additionalIncomeSource || '',
+        applicant_supervisor: applicant.employment?.supervisor || '',
+        
+        // Demographics
+        applicant_dob: applicant.demographics?.dateOfBirth ? new Date(applicant.demographics.dateOfBirth).toISOString().split('T')[0] : '',
+        applicant_ssn: applicant.demographics?.ssn || '',
+        applicant_birth_place: applicant.demographics?.birthPlace || '',
+        applicant_race: applicant.demographics?.race || '',
+        applicant_marital_status: applicant.demographics?.maritalStatus || '',
+        applicant_anniversary: applicant.demographics?.anniversary ? new Date(applicant.demographics.anniversary).toISOString().split('T')[0] : '',
+        applicant_spouse_name: applicant.demographics?.spouseName || '',
+        applicant_spouse_occupation: applicant.demographics?.spouseOccupation || '',
+        applicant_dependents_count: applicant.demographics?.numberOfDependents || 0,
+        
+        // Map Co-Applicant fields to flat frontend form structure if co-applicant exists
+        ...(coApplicant && {
+          coapplicant_title: coApplicant.title || '',
+          coapplicant_first_name: coApplicant.firstName || '',
+          coapplicant_mi: coApplicant.mi || '',
+          coapplicant_last_name: coApplicant.lastName || '',
+          coapplicant_suffix: coApplicant.suffix || '',
+          coapplicant_maiden_name: coApplicant.maidenName || '',
+          coapplicant_is_consultant: coApplicant.isConsultant || false,
+          
+          // Contact Info
+          coapplicant_home_phone: coApplicant.homePhone || '',
+          coapplicant_other_phone: coApplicant.workPhone || '',
+          coapplicant_cell_phone: coApplicant.cellPhone || '',
+          coapplicant_fax: coApplicant.fax || '',
+          coapplicant_email: coApplicant.email || '',
+          
+          // Address Info
+          coapplicant_address: coApplicant.currentAddress?.street || '',
+          coapplicant_city: coApplicant.currentAddress?.city || '',
+          coapplicant_state: coApplicant.currentAddress?.state || '',
+          coapplicant_zip_code: coApplicant.currentAddress?.zipCode || '',
+          coapplicant_county: coApplicant.currentAddress?.county || '',
+          coapplicant_time_at_address: '', // Not stored in current model
+          coapplicant_previous_address: coApplicant.previousAddress?.street || '',
+          coapplicant_previous_address_time: '', // Not stored in current model
+          
+          // Employment Info
+          coapplicant_employment_status: coApplicant.employment?.status || '',
+          coapplicant_business_owner: coApplicant.employment?.isBusinessOwner ? 'Yes' : 'No',
+          coapplicant_employer_name: coApplicant.employment?.employerName || '',
+          coapplicant_employer_address: coApplicant.employment?.employerAddress?.street || '',
+          coapplicant_employer_city: coApplicant.employment?.employerAddress?.city || '',
+          coapplicant_employer_state: coApplicant.employment?.employerAddress?.state || '',
+          coapplicant_employer_zip: coApplicant.employment?.employerAddress?.zipCode || '',
+          coapplicant_occupation: coApplicant.employment?.occupation || '',
+          coapplicant_monthly_salary: coApplicant.employment?.monthlySalary || 0,
+          coapplicant_employer_phone: coApplicant.employment?.employerPhone || '',
+          coapplicant_start_date: coApplicant.employment?.startDate ? new Date(coApplicant.employment.startDate).toISOString().split('T')[0] : '',
+          coapplicant_end_date: coApplicant.employment?.endDate ? new Date(coApplicant.employment.endDate).toISOString().split('T')[0] : '',
+          coapplicant_additional_income: coApplicant.employment?.additionalIncome || 0,
+          coapplicant_additional_income_source: coApplicant.employment?.additionalIncomeSource || '',
+          
+          // Demographics
+          coapplicant_dob: coApplicant.demographics?.dateOfBirth ? new Date(coApplicant.demographics.dateOfBirth).toISOString().split('T')[0] : '',
+          coapplicant_ssn: coApplicant.demographics?.ssn || '',
+          coapplicant_birth_place: coApplicant.demographics?.birthPlace || '',
+          coapplicant_race: coApplicant.demographics?.race || '',
+          coapplicant_marital_status: coApplicant.demographics?.maritalStatus || '',
+          coapplicant_anniversary: coApplicant.demographics?.anniversary ? new Date(coApplicant.demographics.anniversary).toISOString().split('T')[0] : '',
+          coapplicant_spouse_name: coApplicant.demographics?.spouseName || '',
+          coapplicant_spouse_occupation: coApplicant.demographics?.spouseOccupation || '',
+          coapplicant_dependents_count: coApplicant.demographics?.numberOfDependents || 0,
+        }),
+        
+        // Initialize other form fields with defaults
+        total_debt: 0,
+        payoff_amount: 0,
+        entry_date: new Date().toISOString().split('T')[0],
+        applicant_contact: '',
+        coapplicant_contact: '',
+        co_applicant_total_debt: 0,
+        household_members: applicant.householdMembers || [],
+        coapplicant_household_members: coApplicant?.householdMembers || [],
+        liabilities: [], // Will be populated separately
+        
+        // Include original nested structure for backward compatibility (using different names to avoid conflicts)
+        applicantData: {
           firstName: applicant.firstName,
           lastName: applicant.lastName,
           title: applicant.title,
@@ -913,9 +1038,9 @@ export const getClientById = async (req: AuthRequest, res: Response): Promise<vo
           demographics: applicant.demographics
         },
         
-        // Include co-applicant if exists
+        // Include co-applicant nested structure if exists
         ...(coApplicant && {
-          coApplicant: {
+          coApplicantData: {
             firstName: coApplicant.firstName,
             lastName: coApplicant.lastName,
             title: coApplicant.title,
@@ -1023,30 +1148,33 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<Res
         // Employment Info
         employment: updateData.applicant_employment_status ? {
           status: updateData.applicant_employment_status,
-          isBusinessOwner: updateData.applicant_business_owner,
+          isBusinessOwner: updateData.applicant_business_owner === 'Yes' || updateData.applicant_business_owner === true,
           employerName: updateData.applicant_employer_name,
-          employerAddress: updateData.applicant_employer_address,
-          employerCity: updateData.applicant_employer_city,
-          employerState: updateData.applicant_employer_state,
-          employerZip: updateData.applicant_employer_zip,
+          employerAddress: {
+            street: updateData.applicant_employer_address,
+            city: updateData.applicant_employer_city,
+            state: updateData.applicant_employer_state,
+            zipCode: updateData.applicant_employer_zip,
+          },
           occupation: updateData.applicant_occupation,
           monthlySalary: updateData.applicant_monthly_salary,
           employerPhone: updateData.applicant_employer_phone,
-          startDate: updateData.applicant_start_date,
-          endDate: updateData.applicant_end_date,
+          startDate: updateData.applicant_start_date ? new Date(updateData.applicant_start_date) : undefined,
+          endDate: updateData.applicant_end_date ? new Date(updateData.applicant_end_date) : undefined,
           additionalIncome: updateData.applicant_additional_income,
           additionalIncomeSource: updateData.applicant_additional_income_source,
+          supervisor: updateData.applicant_supervisor,
         } : applicant.employment,
         
         // Demographics
         demographics: {
           ...applicant.demographics,
-          dateOfBirth: updateData.applicant_dob || applicant.demographics?.dateOfBirth,
+          dateOfBirth: updateData.applicant_dob ? new Date(updateData.applicant_dob) : applicant.demographics?.dateOfBirth,
           ssn: updateData.applicant_ssn || applicant.demographics?.ssn,
           birthPlace: updateData.applicant_birth_place || applicant.demographics?.birthPlace,
           race: cleanEnumField(updateData.applicant_race) || applicant.demographics?.race,
           maritalStatus: cleanEnumField(updateData.applicant_marital_status) || applicant.demographics?.maritalStatus,
-          anniversary: updateData.applicant_anniversary || applicant.demographics?.anniversary,
+          anniversary: updateData.applicant_anniversary ? new Date(updateData.applicant_anniversary) : applicant.demographics?.anniversary,
           spouseName: updateData.applicant_spouse_name || applicant.demographics?.spouseName,
           spouseOccupation: updateData.applicant_spouse_occupation || applicant.demographics?.spouseOccupation,
           numberOfDependents: updateData.applicant_dependents_count || applicant.demographics?.numberOfDependents,
@@ -1076,6 +1204,7 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<Res
         console.log('🔄 Updating or creating co-applicant...');
         
         const coApplicantUpdateData = {
+          clientId: applicant.clientId, // Add missing clientId field
           applicantId: applicant._id,
           firstName: updateData.coapplicant_first_name,
           lastName: updateData.coapplicant_last_name,
@@ -1109,29 +1238,31 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<Res
           // Employment Info
           employment: updateData.coapplicant_employment_status ? {
             status: updateData.coapplicant_employment_status,
-            isBusinessOwner: updateData.coapplicant_business_owner,
+            isBusinessOwner: updateData.coapplicant_business_owner === 'Yes' || updateData.coapplicant_business_owner === true,
             employerName: updateData.coapplicant_employer_name,
-            employerAddress: updateData.coapplicant_employer_address,
-            employerCity: updateData.coapplicant_employer_city,
-            employerState: updateData.coapplicant_employer_state,
-            employerZip: updateData.coapplicant_employer_zip,
+            employerAddress: {
+              street: updateData.coapplicant_employer_address,
+              city: updateData.coapplicant_employer_city,
+              state: updateData.coapplicant_employer_state,
+              zipCode: updateData.coapplicant_employer_zip,
+            },
             occupation: updateData.coapplicant_occupation,
             monthlySalary: updateData.coapplicant_monthly_salary,
             employerPhone: updateData.coapplicant_employer_phone,
-            startDate: updateData.coapplicant_start_date,
-            endDate: updateData.coapplicant_end_date,
+            startDate: updateData.coapplicant_start_date ? new Date(updateData.coapplicant_start_date) : undefined,
+            endDate: updateData.coapplicant_end_date ? new Date(updateData.coapplicant_end_date) : undefined,
             additionalIncome: updateData.coapplicant_additional_income,
             additionalIncomeSource: updateData.coapplicant_additional_income_source,
           } : undefined,
           
           // Demographics
           demographics: {
-            dateOfBirth: updateData.coapplicant_dob,
+            dateOfBirth: updateData.coapplicant_dob ? new Date(updateData.coapplicant_dob) : undefined,
             ssn: updateData.coapplicant_ssn,
             birthPlace: updateData.coapplicant_birth_place,
             race: cleanEnumField(updateData.coapplicant_race),
             maritalStatus: cleanEnumField(updateData.coapplicant_marital_status),
-            anniversary: updateData.coapplicant_anniversary,
+            anniversary: updateData.coapplicant_anniversary ? new Date(updateData.coapplicant_anniversary) : undefined,
             spouseName: updateData.coapplicant_spouse_name,
             spouseOccupation: updateData.coapplicant_spouse_occupation,
             numberOfDependents: updateData.coapplicant_dependents_count,

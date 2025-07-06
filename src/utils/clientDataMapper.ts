@@ -4,6 +4,19 @@
 export function mapMongoClientToFlatStructure(mongoClient: any) {
   if (!mongoClient) return null;
 
+  // If the data is already in flat structure (newer format), return as-is with some enhancements
+  if (mongoClient.applicant_first_name !== undefined || mongoClient.coapplicant_first_name !== undefined) {
+    return {
+      ...mongoClient,
+      // Ensure both id and _id are available for backward compatibility
+      id: mongoClient._id,
+      _id: mongoClient._id,
+      // Add client_number if not present
+      client_number: mongoClient.client_number || mongoClient.clientId || `CLI${mongoClient._id.slice(-6).toUpperCase()}`,
+    };
+  }
+
+  // Handle older nested structure (applicant/coApplicant objects)
   const { applicant, coApplicant, liabilities, ...rest } = mongoClient;
 
   return {
