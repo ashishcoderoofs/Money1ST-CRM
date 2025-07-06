@@ -1,116 +1,183 @@
-// Utility to map MongoDB client structure to the expected flat structure
-// This is a temporary solution to bridge the gap between MongoDB nested structure and component expectations
+/**
+ * Client Data Mapper Utility
+ * 
+ * Handles the mapping between MongoDB's nested client structure and the frontend's 
+ * flat structure for backward compatibility and ease of use.
+ * 
+ * Features:
+ * - Supports both legacy nested format and modern flat format
+ * - Automatic format detection
+ * - Safe data extraction with fallbacks
+ * - Maintains data integrity across different storage formats
+ * 
+ * Use Cases:
+ * - API response transformation
+ * - Database migration support
+ * - Component data standardization
+ */
 
+// ================================
+// TYPE DEFINITIONS
+// ================================
+
+/**
+ * Nested applicant structure (legacy MongoDB format)
+ */
+
+interface NestedApplicant {
+  title?: string;
+  firstName?: string;
+  mi?: string;
+  lastName?: string;
+  suffix?: string;
+  maidenName?: string;
+  homePhone?: string;
+  mobilePhone?: string;
+  otherPhone?: string;
+  fax?: string;
+  email?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    county?: string;
+    state?: string;
+    zipCode?: string;
+    country?: string;
+  };
+  employment?: {
+    employerName?: string;
+    position?: string;
+    workPhone?: string;
+    yearsAtJob?: number;
+    monthlyIncome?: number;
+    annualIncome?: number;
+    employmentType?: string;
+  };
+  demographics?: {
+    dateOfBirth?: string;
+    age?: number;
+    ssn?: string;
+    sex?: string;
+    maritalStatus?: string;
+    race?: string;
+    ethnicity?: string;
+  };
+}
+
+interface LegacyClientStructure {
+  _id: string;
+  clientId?: string;
+  applicant?: NestedApplicant;
+  coApplicant?: NestedApplicant;
+  liabilities?: any[];
+  [key: string]: any;
+}
+
+interface ModernClientStructure {
+  _id: string;
+  clientId?: string;
+  applicant_first_name?: string;
+  coapplicant_first_name?: string;
+  [key: string]: any;
+}
+
+/**
+ * Determines if the client data is in the modern flat format
+ */
+function isModernFormat(data: any): data is ModernClientStructure {
+  return data.applicant_first_name !== undefined || 
+         data.coapplicant_first_name !== undefined ||
+         (data.applicant === undefined && data.coApplicant === undefined);
+}
+
+/**
+ * Maps legacy nested applicant data to flat structure
+ */
+function mapApplicantData(applicant: NestedApplicant | undefined, prefix: 'applicant' | 'coapplicant') {
+  if (!applicant) return {};
+  
+  return {
+    [`${prefix}_title`]: applicant.title || '',
+    [`${prefix}_first_name`]: applicant.firstName || '',
+    [`${prefix}_mi`]: applicant.mi || '',
+    [`${prefix}_last_name`]: applicant.lastName || '',
+    [`${prefix}_suffix`]: applicant.suffix || '',
+    [`${prefix}_maiden_name`]: applicant.maidenName || '',
+    
+    // Contact info
+    [`${prefix}_home_phone`]: applicant.homePhone || '',
+    [`${prefix}_mobile_phone`]: applicant.mobilePhone || '',
+    [`${prefix}_other_phone`]: applicant.otherPhone || '',
+    [`${prefix}_fax`]: applicant.fax || '',
+    [`${prefix}_email`]: applicant.email || '',
+    
+    // Address
+    [`${prefix}_address`]: applicant.address?.street || '',
+    [`${prefix}_city`]: applicant.address?.city || '',
+    [`${prefix}_county`]: applicant.address?.county || '',
+    [`${prefix}_state`]: applicant.address?.state || '',
+    [`${prefix}_zip`]: applicant.address?.zipCode || '',
+    [`${prefix}_country`]: applicant.address?.country || '',
+    
+    // Employment
+    [`${prefix}_employer_name`]: applicant.employment?.employerName || '',
+    [`${prefix}_occupation`]: applicant.employment?.position || '',
+    [`${prefix}_work_phone`]: applicant.employment?.workPhone || '',
+    [`${prefix}_years_at_job`]: applicant.employment?.yearsAtJob || 0,
+    [`${prefix}_monthly_salary`]: applicant.employment?.monthlyIncome || 0,
+    [`${prefix}_annual_income`]: applicant.employment?.annualIncome || 0,
+    [`${prefix}_employment_status`]: applicant.employment?.employmentType || '',
+    
+    // Demographics
+    [`${prefix}_dob`]: applicant.demographics?.dateOfBirth || '',
+    [`${prefix}_age`]: applicant.demographics?.age || 0,
+    [`${prefix}_ssn`]: applicant.demographics?.ssn || '',
+    [`${prefix}_sex`]: applicant.demographics?.sex || '',
+    [`${prefix}_marital_status`]: applicant.demographics?.maritalStatus || '',
+    [`${prefix}_race`]: applicant.demographics?.race || '',
+    [`${prefix}_ethnicity`]: applicant.demographics?.ethnicity || '',
+  };
+}
+
+/**
+ * Main function to map MongoDB client structure to flat structure
+ */
 export function mapMongoClientToFlatStructure(mongoClient: any) {
   if (!mongoClient) return null;
 
-  // If the data is already in flat structure (newer format), return as-is with some enhancements
-  if (mongoClient.applicant_first_name !== undefined || mongoClient.coapplicant_first_name !== undefined) {
+  // Handle modern flat format - just enhance with missing fields
+  if (isModernFormat(mongoClient)) {
     return {
       ...mongoClient,
       // Ensure both id and _id are available for backward compatibility
       id: mongoClient._id,
       _id: mongoClient._id,
       // Add client_number if not present
-      client_number: mongoClient.client_number || mongoClient.clientId || `CLI${mongoClient._id.slice(-6).toUpperCase()}`,
+      client_number: mongoClient.client_number || 
+                    mongoClient.clientId || 
+                    `CLI${mongoClient._id.slice(-6).toUpperCase()}`,
     };
   }
 
-  // Handle older nested structure (applicant/coApplicant objects)
-  const { applicant, coApplicant, liabilities, ...rest } = mongoClient;
+  // Handle legacy nested format
+  const { applicant, coApplicant, liabilities, ...rest } = mongoClient as LegacyClientStructure;
 
   return {
     ...rest,
-    // Ensure both id and _id are available for backward compatibility
+    // Core identifiers
     id: mongoClient._id,
     _id: mongoClient._id,
-    // Add client_number for compatibility with view pages
     client_number: mongoClient.clientId || `CLI${mongoClient._id.slice(-6).toUpperCase()}`,
-    // Applicant basic info
-    applicant_title: applicant?.title || '',
-    applicant_first_name: applicant?.firstName || '',
-    applicant_mi: applicant?.mi || '',
-    applicant_last_name: applicant?.lastName || '',
-    applicant_suffix: applicant?.suffix || '',
-    applicant_maiden_name: applicant?.maidenName || '',
     
-    // Applicant contact
-    applicant_home_phone: applicant?.homePhone || '',
-    applicant_mobile_phone: applicant?.mobilePhone || '',
-    applicant_other_phone: applicant?.otherPhone || '',
-    applicant_fax: applicant?.fax || '',
-    applicant_email: applicant?.email || '',
+    // Map applicant data
+    ...mapApplicantData(applicant, 'applicant'),
     
-    // Applicant address
-    applicant_address: applicant?.address?.street || '',
-    applicant_city: applicant?.address?.city || '',
-    applicant_county: applicant?.address?.county || '',
-    applicant_state: applicant?.address?.state || '',
-    applicant_zip: applicant?.address?.zipCode || '',
-    applicant_country: applicant?.address?.country || '',
-    
-    // Applicant employment
-    applicant_employer_name: applicant?.employment?.employerName || '',
-    applicant_occupation: applicant?.employment?.position || '',
-    applicant_work_phone: applicant?.employment?.workPhone || '',
-    applicant_years_at_job: applicant?.employment?.yearsAtJob || 0,
-    applicant_monthly_salary: applicant?.employment?.monthlyIncome || 0,
-    applicant_annual_income: applicant?.employment?.annualIncome || 0,
-    applicant_employment_status: applicant?.employment?.employmentType || '',
-    
-    // Applicant demographics
-    applicant_dob: applicant?.demographics?.dateOfBirth || '',
-    applicant_age: applicant?.demographics?.age || 0,
-    applicant_ssn: applicant?.demographics?.ssn || '',
-    applicant_sex: applicant?.demographics?.sex || '',
-    applicant_marital_status: applicant?.demographics?.maritalStatus || '',
-    applicant_race: applicant?.demographics?.race || '',
-    applicant_ethnicity: applicant?.demographics?.ethnicity || '',
-    
-    // Co-Applicant basic info
-    coapplicant_title: coApplicant?.title || '',
-    coapplicant_first_name: coApplicant?.firstName || '',
-    coapplicant_mi: coApplicant?.mi || '',
-    coapplicant_last_name: coApplicant?.lastName || '',
-    coapplicant_suffix: coApplicant?.suffix || '',
-    coapplicant_maiden_name: coApplicant?.maidenName || '',
-    
-    // Co-Applicant contact
-    coapplicant_home_phone: coApplicant?.homePhone || '',
-    coapplicant_mobile_phone: coApplicant?.mobilePhone || '',
-    coapplicant_other_phone: coApplicant?.otherPhone || '',
-    coapplicant_fax: coApplicant?.fax || '',
-    coapplicant_email: coApplicant?.email || '',
-    
-    // Co-Applicant address
-    coapplicant_address: coApplicant?.address?.street || '',
-    coapplicant_city: coApplicant?.address?.city || '',
-    coapplicant_county: coApplicant?.address?.county || '',
-    coapplicant_state: coApplicant?.address?.state || '',
-    coapplicant_zip: coApplicant?.address?.zipCode || '',
-    coapplicant_country: coApplicant?.address?.country || '',
-    
-    // Co-Applicant employment
-    coapplicant_employer_name: coApplicant?.employment?.employerName || '',
-    coapplicant_occupation: coApplicant?.employment?.position || '',
-    coapplicant_work_phone: coApplicant?.employment?.workPhone || '',
-    coapplicant_years_at_job: coApplicant?.employment?.yearsAtJob || 0,
-    coapplicant_monthly_salary: coApplicant?.employment?.monthlyIncome || 0,
-    coapplicant_annual_income: coApplicant?.employment?.annualIncome || 0,
-    coapplicant_employment_status: coApplicant?.employment?.employmentType || '',
-    
-    // Co-Applicant demographics
-    coapplicant_dob: coApplicant?.demographics?.dateOfBirth || '',
-    coapplicant_age: coApplicant?.demographics?.age || 0,
-    coapplicant_ssn: coApplicant?.demographics?.ssn || '',
-    coapplicant_sex: coApplicant?.demographics?.sex || '',
-    coapplicant_marital_status: coApplicant?.demographics?.maritalStatus || '',
-    coapplicant_race: coApplicant?.demographics?.race || '',
-    coapplicant_ethnicity: coApplicant?.demographics?.ethnicity || '',
+    // Map co-applicant data  
+    ...mapApplicantData(coApplicant, 'coapplicant'),
     
     // Preserve original nested structures for components that can use them
     applicant,
     coApplicant,
-    liabilities
+    liabilities,
   };
 }
