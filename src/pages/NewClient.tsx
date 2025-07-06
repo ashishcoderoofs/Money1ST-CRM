@@ -5,8 +5,6 @@ import { useClientForm } from "@/hooks/clients/useClientForm";
 import { useCreateClient } from "@/hooks/clients/useClientMutations";
 import { toast } from "sonner";
 import { ClientEditTabs } from "@/components/client-edit/ClientEditTabs";
-import { NewClientHeader } from "@/components/client-edit/NewClientHeader";
-import { NewClientActions } from "@/components/client-edit/NewClientActions";
 import { createMockClient } from "@/components/client-edit/MockClientData";
 
 export default function NewClient() {
@@ -32,13 +30,14 @@ export default function NewClient() {
   const mockClient = createMockClient();
 
   return (
-    <div className="w-full mt-6 space-y-6">
-      <NewClientHeader />
-
+    <div className="flex-1 p-6 bg-gray-50">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <ClientEditTabs client={mockClient} form={form} />
-          <NewClientActions isSubmitting={createMutation.isPending} />
+          <ClientEditTabs 
+            client={mockClient} 
+            form={form} 
+            isSubmitting={createMutation.isPending}
+          />
         </form>
       </Form>
     </div>

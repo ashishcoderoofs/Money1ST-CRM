@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tables } from "@/integrations/supabase/types";
 import { UseFormReturn } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { ApplicantTab } from "./ApplicantTab";
 import { CoApplicantTab } from "./CoApplicantTab";
 import { LiabilitiesTab } from "./LiabilitiesTab";
@@ -19,13 +21,46 @@ import { LineageTab } from "./LineageTab";
 interface ClientEditTabsProps {
   client: Tables<"clients">;
   form: UseFormReturn<any>;
+  isSubmitting?: boolean;
 }
 
-export function ClientEditTabs({ client, form }: ClientEditTabsProps) {
+export function ClientEditTabs({ client, form, isSubmitting }: ClientEditTabsProps) {
+  const navigate = useNavigate();
+  
   return (
-    <Card className="w-full">
-      <Tabs defaultValue="applicant" className="w-full">
-        <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto">
+    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+      <div className="flex flex-col space-y-1.5 p-6">
+        <div className="text-2xl font-semibold leading-none tracking-tight flex items-center justify-between">
+          <span className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus w-5 h-5 mr-2">
+              <path d="M5 12h14"></path>
+              <path d="M12 5v14"></path>
+            </svg>
+            New Client Information
+          </span>
+          <div className="flex space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/securia/clients")}
+              disabled={isSubmitting}
+              className="border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="h-10 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isSubmitting ? "Creating..." : "Create Client"}
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div className="p-6 pt-0">
+        <Tabs defaultValue="applicant" className="w-full">
+          <TabsList className="items-center rounded-md text-muted-foreground flex flex-wrap w-full gap-1 p-2 h-auto bg-muted/50 justify-start">
           <TabsTrigger 
             value="applicant" 
             className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
@@ -104,63 +139,63 @@ export function ClientEditTabs({ client, form }: ClientEditTabsProps) {
           >
             Lineage
           </TabsTrigger>
+          <TabsTrigger 
+            value="notes" 
+            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+          >
+            Notes
+          </TabsTrigger>
         </TabsList>
         
-        <div className="bg-white border border-gray-200 rounded-b-lg mt-2">
-          <TabsContent value="applicant" className="p-6 m-0">
-            <div className="bg-cyan-400 text-white px-4 py-2 font-semibold rounded-t mb-4">Primary Applicant Information</div>
-            <ApplicantTab client={client} form={form} />
-          </TabsContent>
-          <TabsContent value="coapplicant" className="p-6 m-0">
-            <div className="bg-cyan-400 text-white px-4 py-2 font-semibold rounded-t mb-4">Co-Applicant Information</div>
-            <CoApplicantTab client={client} form={form} />
-          </TabsContent>
-          <TabsContent value="liabilities" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Liabilities</div>
-            <LiabilitiesTab form={form} />
-          </TabsContent>
-          <TabsContent value="mortgages" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Mortgages</div>
-            <MortgagesTab client={client} />
-          </TabsContent>
-          <TabsContent value="underwriting" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Underwriting</div>
-            <UnderwritingTab client={client} form={form} />
-          </TabsContent>
-          <TabsContent value="loanstatus" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Loan Status</div>
-            <LoanStatusTab client={client} />
-          </TabsContent>
-          <TabsContent value="drivers" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Drivers</div>
-            <DriversTab client={client} />
-          </TabsContent>
-          <TabsContent value="vehiclecoverage" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Vehicle Coverage</div>
-            <VehicleCoverageTab client={client} form={form} />
-          </TabsContent>
-          <TabsContent value="homeowners" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Homeowners</div>
-            <HomeownersTab client={client} />
-          </TabsContent>
-          <TabsContent value="renters" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Renters</div>
-            <RentersTab client={client} />
-          </TabsContent>
-          <TabsContent value="incomeprotection" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Income Protection</div>
-            <IncomeProtectionTab client={client} />
-          </TabsContent>
-          <TabsContent value="retirement" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Retirement</div>
-            <RetirementTab client={client} />
-          </TabsContent>
-          <TabsContent value="lineage" className="p-6 m-0">
-            <div className="bg-gray-700 text-white px-4 py-2 font-semibold rounded-t mb-4">Lineage</div>
-            <LineageTab client={client} />
-          </TabsContent>
-        </div>
-      </Tabs>
-    </Card>
+        <TabsContent value="applicant" className="space-y-4 mt-6">
+          <ApplicantTab client={client} form={form} />
+        </TabsContent>
+        <TabsContent value="coapplicant" className="space-y-4 mt-6">
+          <CoApplicantTab client={client} form={form} />
+        </TabsContent>
+        <TabsContent value="liabilities" className="space-y-4 mt-6">
+          <LiabilitiesTab form={form} />
+        </TabsContent>
+        <TabsContent value="mortgages" className="space-y-4 mt-6">
+          <MortgagesTab client={client} />
+        </TabsContent>
+        <TabsContent value="underwriting" className="space-y-4 mt-6">
+          <UnderwritingTab client={client} form={form} />
+        </TabsContent>
+        <TabsContent value="loanstatus" className="space-y-4 mt-6">
+          <LoanStatusTab client={client} />
+        </TabsContent>
+        <TabsContent value="drivers" className="space-y-4 mt-6">
+          <DriversTab client={client} />
+        </TabsContent>
+        <TabsContent value="vehiclecoverage" className="space-y-4 mt-6">
+          <VehicleCoverageTab client={client} form={form} />
+        </TabsContent>
+        <TabsContent value="homeowners" className="space-y-4 mt-6">
+          <HomeownersTab client={client} />
+        </TabsContent>
+        <TabsContent value="renters" className="space-y-4 mt-6">
+          <RentersTab client={client} />
+        </TabsContent>
+        <TabsContent value="incomeprotection" className="space-y-4 mt-6">
+          <IncomeProtectionTab client={client} />
+        </TabsContent>
+        <TabsContent value="retirement" className="space-y-4 mt-6">
+          <RetirementTab client={client} />
+        </TabsContent>
+        <TabsContent value="lineage" className="space-y-4 mt-6">
+          <LineageTab client={client} />
+        </TabsContent>
+        <TabsContent value="notes" className="space-y-4 mt-6">
+          <div className="space-y-4">
+            <textarea 
+              className="w-full h-32 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+              placeholder="Enter notes here..."
+            ></textarea>
+          </div>
+        </TabsContent>
+        </Tabs>
+      </div>
+    </div>
   );
 }
