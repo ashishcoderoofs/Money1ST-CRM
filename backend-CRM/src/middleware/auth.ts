@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
-import { AuthRequest, UserRole } from '../types';
+import { AuthRequest, UserRole } from '../types/types';
 import { validateUserStatus } from '../utils/userStatusValidator';
 import logger from '../../utils/logger';
 

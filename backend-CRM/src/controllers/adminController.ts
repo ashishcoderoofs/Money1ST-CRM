@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import User from '../models/User';
-import { AuthRequest, BulkUpdateRequest, RegisterRequest, DashboardStats } from '../types';
+import { AuthRequest, BulkUpdateRequest, RegisterRequest, DashboardStats } from '../types/types';
 import logger from '../../utils/logger';
 
 export const getDashboardStats = async (req: AuthRequest, res: Response): Promise<void> => {

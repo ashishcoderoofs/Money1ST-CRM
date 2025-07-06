@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import User from '../models/User';
-import { AuthRequest } from '../types';
+import { AuthRequest } from '../types/types';
 import { validateUserStatus, getUserStatusInfo } from '../utils/userStatusValidator';
 import logger from '../../utils/logger';
 

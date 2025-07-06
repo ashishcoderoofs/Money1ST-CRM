@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import * as Joi from 'joi';
-import { RegisterRequest, LoginRequest, UpdateUserRequest } from '../types';
+import { RegisterRequest, LoginRequest, UpdateUserRequest } from '../types/types';
 
 export const validateRegistration = (req: Request, res: Response, next: NextFunction): void => {
   const schema = Joi.object<RegisterRequest>({
     // Main Information
-    consultantId: Joi.string().required().uppercase().trim(),
+    consultantId: Joi.string().optional().uppercase().trim(),
     entryDate: Joi.date().optional(),
     position: Joi.string().optional().trim(),
+    status: Joi.string().valid('Active', 'Inactive').optional(),
     title: Joi.string().optional().trim(),
     firstName: Joi.string().min(2).max(50).required().trim(),
     middleInitial: Joi.string().max(5).optional().trim(),
@@ -39,7 +40,8 @@ export const validateRegistration = (req: Request, res: Response, next: NextFunc
     
     // System Fields
     password: Joi.string().min(6).required(),
-    role: Joi.string().valid('Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA').optional()
+    role: Joi.string().valid('Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA').optional(),
+    isAdmin: Joi.boolean().optional()
   });
 
   const { error } = schema.validate(req.body);
@@ -102,6 +104,7 @@ export const validateUserUpdate = (req: Request, res: Response, next: NextFuncti
     
     // System Fields
     role: Joi.string().valid('Admin', 'Field Builder', 'Field Trainer', 'Sr. BMA', 'BMA', 'IBA').optional(),
+    isAdmin: Joi.boolean().optional(),
     isActive: Joi.boolean().optional()
   });
 

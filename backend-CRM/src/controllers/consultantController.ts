@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import Consultant from '../models/Consultant';
-import { AuthRequest } from '../types';
+import { AuthRequest } from '../types/types';
 import logger from '../../utils/logger';
 
 // Get all consultants

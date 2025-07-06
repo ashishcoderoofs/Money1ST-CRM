@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PagePermissionsManager } from "@/components/admin/PagePermissionsManager";
@@ -34,7 +33,7 @@ export default function Admin() {
   }
 
   // Only show access denied after role is loaded and confirmed not admin
-  if (role !== "Admin") {
+  if (!user.isAdmin) {
     return <div className="p-8 text-center">Access denied. Only administrators can access this page.</div>;
   }
 

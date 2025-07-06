@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import User from '../models/User';
-import { AuthRequest, PaginationQuery, UpdateUserRequest } from '../types';
+import { AuthRequest, PaginationQuery, UpdateUserRequest } from '../types/types';
 import logger from '../../utils/logger';
 
 export const getUsers = async (req: AuthRequest, res: Response): Promise<void> => {

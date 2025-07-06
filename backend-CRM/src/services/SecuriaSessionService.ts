@@ -1,4 +1,4 @@
-import { AuthRequest } from '../types';
+import { AuthRequest } from '../types/types';
 import logger from '../../utils/logger';
 
 // In-memory store for Securia sessions (in production, use Redis or database)

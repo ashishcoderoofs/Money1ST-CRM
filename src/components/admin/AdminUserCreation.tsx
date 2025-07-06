@@ -16,15 +16,25 @@ export function AdminUserCreation() {
     password: '',
     confirmPassword: '',
     role: '',
-    consultantId: ''
+    consultantId: '',
+    isAdmin: false
   });
 
   const createUserMutation = useCreateUser();
 
   const roles = ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'];
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleRoleChange = (value: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      role: value,
+      // Automatically set isAdmin to true if role is Admin
+      isAdmin: value === 'Admin' ? true : prev.isAdmin
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +63,8 @@ export function AdminUserCreation() {
         email: formData.email,
         password: formData.password,
         role: formData.role,
-        consultantId: formData.consultantId || undefined
+        consultantId: formData.consultantId || undefined,
+        isAdmin: formData.isAdmin
       };
 
       await createUserMutation.mutateAsync(userData);
@@ -68,7 +79,8 @@ export function AdminUserCreation() {
         password: '',
         confirmPassword: '',
         role: '',
-        consultantId: ''
+        consultantId: '',
+        isAdmin: false
       });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -131,8 +143,8 @@ export function AdminUserCreation() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="role">Role *</Label>
-              <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
+              <Label htmlFor="role">Main Role *</Label>
+              <Select value={formData.role} onValueChange={handleRoleChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select user role" />
                 </SelectTrigger>
@@ -142,6 +154,32 @@ export function AdminUserCreation() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="isAdmin">Additional Admin Privileges</Label>
+              <Select 
+                value={formData.isAdmin ? "true" : "false"} 
+                onValueChange={(value) => handleInputChange('isAdmin', value === "true")}
+                disabled={formData.role === 'Admin'}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select admin privileges" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Grant Admin Access</SelectItem>
+                  <SelectItem value="false">Standard Access</SelectItem>
+                </SelectContent>
+              </Select>
+              {formData.role === 'Admin' ? (
+                <p className="text-sm text-muted-foreground">
+                  ✅ Admin role automatically grants admin privileges
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Choose whether this user should have admin privileges in addition to their main role
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -180,7 +218,8 @@ export function AdminUserCreation() {
                 password: '',
                 confirmPassword: '',
                 role: '',
-                consultantId: ''
+                consultantId: '',
+                isAdmin: false
               })}
             >
               Reset Form

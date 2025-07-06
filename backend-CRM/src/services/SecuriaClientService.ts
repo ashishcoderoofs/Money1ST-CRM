@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import SecuriaClient from '../models/SecuriaClient';
-import { AuthRequest } from '../types';
+import { AuthRequest } from '../types/types';
 import logger from '../../utils/logger';
 
 /**

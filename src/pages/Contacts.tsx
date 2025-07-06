@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ContactFormDialog } from "@/components/contacts/ContactFormDialog";
@@ -22,6 +21,11 @@ export default function Contacts() {
 
   if (!user) {
     return <div className="p-8 text-center">Please log in to view contacts.</div>;
+  }
+
+  // Use isAdmin for admin checks
+  if (user.isAdmin) {
+    // Admin logic here
   }
 
   const handleCreateContact = async (values: ContactFormData) => {

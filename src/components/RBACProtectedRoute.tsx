@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useUserPageAccess } from "@/hooks/usePagePermissions";
@@ -72,8 +71,8 @@ export default function RBACProtectedRoute({ children, pageName }: RBACProtected
     return <Navigate to="/login" replace />;
   }
 
-  // For Admin users, grant immediate access without waiting for permission checks
-  if (role === 'Admin') {
+  // Use isAdmin for admin checks
+  if (user.isAdmin) {
     return <>{children}</>;
   }
 

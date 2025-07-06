@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import PagePermission from '../models/PagePermission';
-import { AuthRequest, UserRole } from '../types';
+import { AuthRequest, UserRole } from '../types/types';
 import logger from '../../utils/logger';
 
 // Get all page permissions

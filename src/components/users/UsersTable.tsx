@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Trash2, User, CheckCircle, Clock, XCircle } from "lucide-react";
+import { UserRolesDisplay } from "@/components/ui/UserRolesDisplay";
 
 interface User {
   id: string;
@@ -20,6 +20,7 @@ interface User {
   has_access?: boolean;
   manager_id?: string;
   created_at: string;
+  isAdmin?: boolean; // Add isAdmin field
 }
 
 interface UsersTableProps {
@@ -150,9 +151,11 @@ export function UsersTable({
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={getRoleBadgeVariant(user.role)}>
-                        {user.role}
-                      </Badge>
+                      <UserRolesDisplay 
+                        mainRole={user.role} 
+                        isAdmin={user.isAdmin || false} 
+                        variant="compact"
+                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

@@ -4,7 +4,7 @@ import User from '../models/User';
 import Consultant from '../models/Consultant';
 import SecuriaClient from '../models/SecuriaClient';
 import SecuriaAuditLog from '../models/SecuriaAuditLog';
-import { AuthRequest } from '../types';
+import { AuthRequest } from '../types/types';
 import { Response } from 'express';
 import logger from '../../utils/logger';
 

@@ -39,6 +39,7 @@ const userEditSchema = z.object({
   zipCode: z.string().optional(),
   comment: z.string().optional(),
   remarks: z.string().optional(),
+  isAdmin: z.boolean().optional(),
 });
 
 type UserEditFormValues = z.infer<typeof userEditSchema>;
@@ -81,6 +82,7 @@ export default function EditUser() {
       zipCode: "",
       comment: "",
       remarks: "",
+      isAdmin: false,
     },
   });
 
@@ -110,6 +112,7 @@ export default function EditUser() {
         zipCode: user.zipCode || "",
         comment: user.comment || "",
         remarks: user.remarks || "",
+        isAdmin: user.isAdmin || false,
       });
     }
   }, [user, form]);
@@ -320,8 +323,8 @@ export default function EditUser() {
                 />
               </div>
 
-              {/* Email and Role */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Email */}
+              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="email"
@@ -335,12 +338,16 @@ export default function EditUser() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* Role and Admin Privileges Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="role"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Role *</FormLabel>
+                      <FormLabel>Main Role *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -358,6 +365,53 @@ export default function EditUser() {
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="isAdmin"
+                  render={({ field }) => {
+                    const currentRole = form.watch("role");
+                    const isAdminRole = currentRole === "Admin";
+                    
+                    // Automatically set isAdmin to true if role is Admin
+                    useEffect(() => {
+                      if (isAdminRole) {
+                        form.setValue("isAdmin", true);
+                      }
+                    }, [isAdminRole]);
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Additional Admin Privileges</FormLabel>
+                        <FormControl>
+                          <Select 
+                            onValueChange={(value) => field.onChange(value === "true")} 
+                            value={field.value ? "true" : "false"}
+                            disabled={isAdminRole}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="true">Grant Admin Access</SelectItem>
+                              <SelectItem value="false">Standard Access</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        {isAdminRole ? (
+                          <p className="text-sm text-muted-foreground">
+                            ✅ Admin role automatically grants admin privileges
+                          </p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            Choose whether this user should have admin privileges in addition to their main role
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
             </CardContent>

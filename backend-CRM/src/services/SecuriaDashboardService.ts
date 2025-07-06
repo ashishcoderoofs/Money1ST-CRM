@@ -1,7 +1,7 @@
 import SecuriaClient from '../models/SecuriaClient';
 import Consultant from '../models/Consultant';
 import SecuriaAuditLog from '../models/SecuriaAuditLog';
-import { AuthRequest } from '../types';
+import { AuthRequest } from '../types/types';
 import logger from '../../utils/logger';
 
 /**

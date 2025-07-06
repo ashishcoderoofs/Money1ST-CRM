@@ -2,7 +2,7 @@ import express from 'express';
 import {  validateMinimumClientFields, validateClientUpdate } from '../middleware/clientValidation';
 import { validateMultiStageClient, validateSectionUpdate, validateBulkUpdate } from '../middleware/multiStageClientValidation';
 import { authenticate } from '../middleware/auth';
-import { AuthRequest } from '../types';
+import { AuthRequest } from '../types/types';
 import { Response, NextFunction } from 'express';
 import {
   reauthSecuria,

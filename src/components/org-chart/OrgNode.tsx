@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +12,7 @@ interface User {
   role: string;
   manager_id?: string;
   email: string;
+  isAdmin?: boolean;
 }
 
 interface TreeNode {
@@ -72,9 +72,9 @@ export function OrgNode({ node, isRoot = false, level = 0 }: OrgNodeProps) {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm truncate">{fullName}</h3>
-              <Badge variant="outline" className={cn("text-xs mt-1", getRoleColor(user.role))}>
-                {user.role}
-              </Badge>
+              {/* Show main role and admin badge */}
+              <span className="text-xs mt-1">{user.role}</span>
+              {user.isAdmin && <span className="badge badge-admin">Admin</span>}
               <div className="flex items-center text-xs text-muted-foreground mt-1">
                 <Mail className="h-3 w-3 mr-1" />
                 <span className="truncate">{user.email}</span>

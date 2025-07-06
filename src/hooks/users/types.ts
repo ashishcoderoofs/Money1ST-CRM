@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   first_name: string;
@@ -31,6 +30,7 @@ export interface User {
   zip_code?: string;
   comment?: string;
   remarks?: string;
+  isAdmin: boolean;
 }
 
 export type UserRole = "Admin" | "Field Builder" | "Field Trainer" | "Senior BMA" | "BMA" | "IBA";

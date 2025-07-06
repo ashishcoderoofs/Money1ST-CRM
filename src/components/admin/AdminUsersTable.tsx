@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { UserRolesDisplay } from '@/components/ui/UserRolesDisplay';
 import { 
   useAdminUsers, 
   useToggleUserStatus, 
@@ -28,6 +29,7 @@ interface AdminUser {
   isActive: boolean;
   lastLogin?: string;
   consultantId?: string;
+  isAdmin?: boolean;
 }
 
 interface Filters {
@@ -173,7 +175,11 @@ export function AdminUsersTable() {
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant="outline">{user.role}</Badge>
+        <UserRolesDisplay 
+          mainRole={user.role} 
+          isAdmin={user.isAdmin || false} 
+          variant="default"
+        />
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">

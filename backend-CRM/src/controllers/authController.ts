@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
-import { AuthRequest, RegisterRequest, LoginRequest, ApiResponse } from '../types';
+import { AuthRequest, RegisterRequest, LoginRequest, ApiResponse } from '../types/types';
 import logger from '../../utils/logger';
 // Import Securia session invalidation function
 import { invalidateUserSecuriaSessions } from './securiaController';
@@ -73,6 +73,16 @@ export const register = async (req: AuthRequest, res: Response): Promise<void> =
     if (role && req.user && req.user.hasPermission('Admin')) {
       userData.role = role;
       userData.createdBy = req.user._id;
+      
+      // Automatically set isAdmin = true if role is Admin
+      if (role === 'Admin') {
+        userData.isAdmin = true;
+      } else {
+        userData.isAdmin = false;
+      }
+    } else {
+      // Default role assignment
+      userData.isAdmin = false;
     }
 
     const user = await User.create(userData);
@@ -89,7 +99,8 @@ export const register = async (req: AuthRequest, res: Response): Promise<void> =
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role
+        role: user.role,
+        isAdmin: user.isAdmin
       }
     });
   } catch (error) {
@@ -140,6 +151,7 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        isAdmin: user.isAdmin,
         lastLogin: user.lastLogin
       }
     });

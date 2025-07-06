@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -28,5 +27,9 @@ export function useUserRole(userId: string | null) {
     }
   }, [userId, user]);
 
-  return { role, loading };
+  return { 
+    role, 
+    isAdmin: user?.isAdmin ?? false, // Use isAdmin for role logic
+    loading 
+  };
 }

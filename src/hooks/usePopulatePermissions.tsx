@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -86,6 +85,9 @@ export function usePopulatePermissions() {
   const queryClient = useQueryClient();
   const { user, apiCall } = useAuth();
   
+  // Use isAdmin for permission logic
+  const isAdmin = user.isAdmin;
+  
   return useMutation({
     mutationFn: async ({ forceRefresh = false }: { forceRefresh?: boolean } = {}) => {
       console.log("Starting permission population...");
@@ -100,7 +102,7 @@ export function usePopulatePermissions() {
       }
 
       // Check if user is admin
-      if (user.role !== 'Admin') {
+      if (!isAdmin) {
         console.error("Permission population failed: User is not admin. Current role:", user.role);
         throw new Error("Only administrators can populate permissions");
       }

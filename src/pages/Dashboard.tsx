@@ -204,6 +204,11 @@ export default function Dashboard() {
   const totalTasks = tasks?.length ?? 0;
   const taskCompletion = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
+  // Use isAdmin for admin checks
+  if (user.isAdmin) {
+    // Admin-specific logic or components can be added here
+  }
+
   return (
     <div className="space-y-8">
       {/* Enhanced Header */}

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Attachment, IAttachment } from '../models/Attachment';
-import { AuthRequest } from '../types';
+import { AuthRequest } from '../types/types';
 import fs from 'fs/promises';
 import path from 'path';
 import logger from '../../utils/logger';

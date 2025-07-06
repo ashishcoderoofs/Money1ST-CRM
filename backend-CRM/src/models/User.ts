@@ -1,6 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { IUser, UserRole, RoleHierarchy } from '../types';
+import { IUser, UserRole, RoleHierarchy } from '../types/index';
 
 const userSchema = new Schema<IUser>({
   // Main Information
@@ -154,6 +154,12 @@ const userSchema = new Schema<IUser>({
     enum: ['Admin', 'Field Builder', 'Field Trainer', 'Senior BMA', 'BMA', 'IBA'],
     default: 'Field Builder'
   },
+  isAdmin: {
+    type: Boolean,
+    default: false,
+    // isAdmin is true if user is only admin or admin plus another role
+    // Set this field explicitly when creating/updating users
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -211,6 +217,11 @@ userSchema.pre<IUser>('save', async function(next) {
     } catch (error) {
       return next(error as Error);
     }
+  }
+
+  // Automatically set isAdmin based on role
+  if (this.isModified('role') || this.isNew) {
+    this.isAdmin = this.role === 'Admin';
   }
 
   if (!this.isModified('password')) return next();
