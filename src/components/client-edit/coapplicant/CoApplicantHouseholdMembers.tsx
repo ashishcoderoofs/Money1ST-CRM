@@ -190,7 +190,7 @@ export function CoApplicantHouseholdMembers({ form }: CoApplicantHouseholdMember
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
                               <SelectTrigger className="border-0 shadow-none">
                                 <SelectValue placeholder="Select" />
                               </SelectTrigger>

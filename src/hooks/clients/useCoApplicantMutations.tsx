@@ -38,6 +38,12 @@ export interface CoApplicantAddressData {
     howLongYears?: number;
     howLongMonths?: number;
   };
+  // Include phone and contact fields
+  homePhone?: string;
+  cellPhone?: string;
+  otherPhone?: string;
+  email?: string;
+  fax?: string;
 }
 
 export interface CoApplicantEmploymentData {

@@ -2,10 +2,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { clientFormSchema } from "./clientFormSchema";
 import { useCreateClient, useUpdateClient } from "./useClientMutations";
-import { Tables } from "@/integrations/supabase/types";
 import { useEffect } from "react";
+import { MongoClient } from "@/types/mongodb-client";
 
-export function useClientForm(client?: Tables<"clients"> | null) {
+export function useClientForm(client?: MongoClient | null) {
   const form = useForm({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
@@ -43,6 +43,7 @@ export function useClientForm(client?: Tables<"clients"> | null) {
       applicant_previous_address: "",
       applicant_previous_address_time: "",
       applicant_home_phone: "",
+      applicant_work_phone: "",
       applicant_other_phone: "",
       applicant_fax: "",
       applicant_employment_status: "",
@@ -86,9 +87,11 @@ export function useClientForm(client?: Tables<"clients"> | null) {
       coapplicant_county: "",
       coapplicant_state: "",
       coapplicant_zip_code: "",
-      coapplicant_time_at_address: "",
+      coapplicant_current_address_years: "0",
+      coapplicant_current_address_months: "0",
       coapplicant_previous_address: "",
-      coapplicant_previous_address_time: "",
+      coapplicant_previous_address_years: "0",
+      coapplicant_previous_address_months: "0",
       coapplicant_home_phone: "",
       coapplicant_other_phone: "",
       coapplicant_fax: "",
@@ -108,9 +111,18 @@ export function useClientForm(client?: Tables<"clients"> | null) {
       coapplicant_additional_income_source: "",
       coapplicant_previous_employer: "",
       coapplicant_previous_employer_address: "",
+      coapplicant_previous_employer_city: "",
+      coapplicant_previous_employer_state: "",
+      coapplicant_previous_employer_zip: "",
       coapplicant_previous_occupation: "",
       coapplicant_previous_employment_from: "",
       coapplicant_previous_employment_to: "",
+      coapplicant_supervisor_name: "",
+      coapplicant_supervisor_phone: "",
+      coapplicant_work_phone: "",
+      coapplicant_previous_city: "",
+      coapplicant_previous_state: "",
+      coapplicant_previous_zip_code: "",
       coapplicant_dob: "",
       coapplicant_ssn: "",
       coapplicant_birth_place: "",
@@ -253,6 +265,7 @@ export function useClientForm(client?: Tables<"clients"> | null) {
         entry_date: safeDate(client.entry_date),
         applicant_contact: safeString(client.applicant_contact),
         applicant_email: safeString(client.applicant_email),
+        applicant_cell_phone: safeString(client.applicant_cell_phone),
         coapplicant_contact: safeString(client.coapplicant_contact),
         coapplicant_email: safeString(client.coapplicant_email),
         co_applicant_total_debt: safeNumber(client.co_applicant_total_debt),
@@ -272,6 +285,7 @@ export function useClientForm(client?: Tables<"clients"> | null) {
         applicant_previous_address: safeString(client.applicant_previous_address),
         applicant_previous_address_time: safeString(client.applicant_previous_address_time),
         applicant_home_phone: safeString(client.applicant_home_phone),
+        applicant_work_phone: safeString(client.applicant_work_phone),
         applicant_other_phone: safeString(client.applicant_other_phone),
         applicant_fax: safeString(client.applicant_fax),
         applicant_employment_status: safeString(client.applicant_employment_status),
@@ -315,10 +329,14 @@ export function useClientForm(client?: Tables<"clients"> | null) {
         coapplicant_county: safeString(client.coapplicant_county),
         coapplicant_state: safeString(client.coapplicant_state),
         coapplicant_zip_code: safeString(client.coapplicant_zip_code),
-        coapplicant_time_at_address: safeString(client.coapplicant_time_at_address),
+        coapplicant_current_address_years: safeString(client.coapplicant_current_address_years) || "0",
+        coapplicant_current_address_months: safeString(client.coapplicant_current_address_months) || "0",
         coapplicant_previous_address: safeString(client.coapplicant_previous_address),
-        coapplicant_previous_address_time: safeString(client.coapplicant_previous_address_time),
+        coapplicant_previous_address_years: safeString(client.coapplicant_previous_address_years) || "0",
+        coapplicant_previous_address_months: safeString(client.coapplicant_previous_address_months) || "0",
         coapplicant_home_phone: safeString(client.coapplicant_home_phone),
+        coapplicant_work_phone: safeString(client.coapplicant_work_phone),
+        coapplicant_cell_phone: safeString(client.coapplicant_cell_phone),
         coapplicant_other_phone: safeString(client.coapplicant_other_phone),
         coapplicant_fax: safeString(client.coapplicant_fax),
         coapplicant_employment_status: safeString(client.coapplicant_employment_status),

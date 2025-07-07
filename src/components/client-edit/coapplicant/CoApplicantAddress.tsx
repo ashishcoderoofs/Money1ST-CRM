@@ -4,13 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
-import { Tables } from "@/integrations/supabase/types";
-import { useUpdateCoApplicantAddress } from "@/hooks/clients/useApplicantMutations";
+import { MongoClient } from "@/types/mongodb-client";
+import { useUpdateCoApplicantAddress } from "@/hooks/clients/useCoApplicantMutations";
 import { toast } from "sonner";
 
 interface CoApplicantAddressProps {
   form: any;
-  client: Tables<"clients">;
+  client: MongoClient;
 }
 
 export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
@@ -26,19 +26,25 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
           street: formData.coapplicant_address,
           city: formData.coapplicant_city,
           state: formData.coapplicant_state,
-          zipCode: formData.coapplicant_zip,
+          zipCode: formData.coapplicant_zip_code,
           county: formData.coapplicant_county,
-          howLongYears: parseInt(formData.coapplicant_years_at_address) || 0,
-          howLongMonths: parseInt(formData.coapplicant_months_at_address) || 0
+          howLongYears: parseInt(formData.coapplicant_current_address_years) || 0,
+          howLongMonths: parseInt(formData.coapplicant_current_address_months) || 0
         },
         previousAddress: {
           street: formData.coapplicant_previous_address,
           city: formData.coapplicant_previous_city,
           state: formData.coapplicant_previous_state,
-          zipCode: formData.coapplicant_previous_zip,
-          howLongYears: parseInt(formData.coapplicant_previous_years) || 0,
-          howLongMonths: parseInt(formData.coapplicant_previous_months) || 0
-        }
+          zipCode: formData.coapplicant_previous_zip_code,
+          howLongYears: parseInt(formData.coapplicant_previous_address_years) || 0,
+          howLongMonths: parseInt(formData.coapplicant_previous_address_months) || 0
+        },
+        // Include phone and contact fields
+        homePhone: formData.coapplicant_home_phone,
+        cellPhone: formData.coapplicant_cell_phone,
+        otherPhone: formData.coapplicant_other_phone,
+        email: formData.coapplicant_email,
+        fax: formData.coapplicant_fax
       };
 
       await updateCoApplicantAddress.mutateAsync({
@@ -65,7 +71,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>Address</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter street address" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter street address" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -79,7 +85,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>City</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter city" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter city" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -93,7 +99,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>State</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter state" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter state" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -107,7 +113,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>Zip Code</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter zip code" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter zip code" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,7 +127,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>County</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter county" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter county" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -135,7 +141,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>Home Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter Home Phone" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter Home Phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -163,21 +169,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>Cell Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter cell Phone" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="coapplicant_other_phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Other Phone</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Enter other Phone" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter cell phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -191,7 +183,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" {...field} placeholder="email@example.com" />
+                  <Input type="email" {...field} value={field.value || ''} placeholder="email@example.com" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -205,7 +197,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>Fax</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter Fax" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter Fax" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -274,7 +266,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>Address</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter address" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter address" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -288,7 +280,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>City</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter city" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter city" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -302,7 +294,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>State</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter state" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter state" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -316,7 +308,7 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
               <FormItem>
                 <FormLabel>Zip Code</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter zip code" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter zip code" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -5,7 +5,7 @@ import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ApplicantTab } from "./ApplicantTab";
-import { CoApplicantTab } from "./CoApplicantTab";
+import { CoApplicantUnified } from "./coapplicant/CoApplicantUnified";
 import { LiabilitiesTab } from "./LiabilitiesTab";
 import { MortgagesTab } from "./MortgagesTab";
 import { UnderwritingTab } from "./UnderwritingTab";
@@ -158,7 +158,7 @@ export function ClientEditTabs({ client, form, isSubmitting, isEditMode = false 
           <ApplicantTab client={client} form={form} />
         </TabsContent>
         <TabsContent value="coapplicant" className="space-y-4 mt-6">
-          <CoApplicantTab client={client} form={form} />
+          <CoApplicantUnified client={client} form={form} />
         </TabsContent>
         <TabsContent value="liabilities" className="space-y-4 mt-6">
           <LiabilitiesTab form={form} />

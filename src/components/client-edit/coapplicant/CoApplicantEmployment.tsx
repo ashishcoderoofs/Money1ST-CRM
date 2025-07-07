@@ -95,7 +95,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                   name="coapplicant_employment_status"
                   render={({ field }) => (
                     <FormItem>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select status" />
@@ -358,7 +358,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
             render={({ field }) => (
               <FormItem>
                 <FormLabel>State</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select state" />

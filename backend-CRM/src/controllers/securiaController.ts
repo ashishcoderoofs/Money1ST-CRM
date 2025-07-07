@@ -698,7 +698,7 @@ export const createClient = async (req: AuthRequest, res: Response): Promise<Res
       
       // Contact Info
       homePhone: clientData.applicant_home_phone,
-      workPhone: clientData.applicant_other_phone,
+      workPhone: clientData.applicant_work_phone,
       cellPhone: clientData.applicant_cell_phone,
       fax: clientData.applicant_fax,
       email: clientData.applicant_email,
@@ -786,7 +786,7 @@ export const createClient = async (req: AuthRequest, res: Response): Promise<Res
         
         // Contact Info
         homePhone: clientData.coapplicant_home_phone,
-        workPhone: clientData.coapplicant_other_phone,
+        workPhone: clientData.coapplicant_work_phone,
         cellPhone: clientData.coapplicant_cell_phone,
         fax: clientData.coapplicant_fax,
         email: clientData.coapplicant_email,
@@ -1028,7 +1028,7 @@ export const getClientById = async (req: AuthRequest, res: Response): Promise<vo
         
         // Contact Info - handle legacy field names
         applicant_home_phone: applicant.homePhone || '',
-        applicant_other_phone: applicant.workPhone || (applicant as any).otherPhone || '',
+        applicant_work_phone: applicant.workPhone || (applicant as any).otherPhone || '',
         applicant_cell_phone: applicant.cellPhone || (applicant as any).mobilePhone || '',
         applicant_fax: applicant.fax || '',
         applicant_email: applicant.email || '',
@@ -1083,7 +1083,7 @@ export const getClientById = async (req: AuthRequest, res: Response): Promise<vo
           
           // Contact Info - handle legacy field names
           coapplicant_home_phone: coApplicant.homePhone || '',
-          coapplicant_other_phone: coApplicant.workPhone || (coApplicant as any).otherPhone || '',
+          coapplicant_work_phone: coApplicant.workPhone || (coApplicant as any).otherPhone || '',
           coapplicant_cell_phone: coApplicant.cellPhone || (coApplicant as any).mobilePhone || '',
           coapplicant_fax: coApplicant.fax || '',
           coapplicant_email: coApplicant.email || '',
@@ -1215,7 +1215,7 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<Res
         
         // Contact Info
         homePhone: updateData.applicant_home_phone || applicant.homePhone,
-        workPhone: updateData.applicant_other_phone || applicant.workPhone,
+        workPhone: updateData.applicant_work_phone || applicant.workPhone,
         cellPhone: updateData.applicant_cell_phone || applicant.cellPhone,
         fax: updateData.applicant_fax || applicant.fax,
         email: updateData.applicant_email || applicant.email,
@@ -1305,7 +1305,7 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<Res
           
           // Contact Info
           homePhone: updateData.coapplicant_home_phone,
-          workPhone: updateData.coapplicant_other_phone,
+          workPhone: updateData.coapplicant_work_phone,
           cellPhone: updateData.coapplicant_cell_phone,
           fax: updateData.coapplicant_fax,
           email: updateData.coapplicant_email,
@@ -2199,7 +2199,7 @@ export const updateCoApplicantBasicInfo = async (req: AuthRequest, res: Response
 export const updateCoApplicantAddress = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { clientId } = req.params;
-    const { currentAddress, previousAddress } = req.body;
+    const { currentAddress, previousAddress, homePhone, cellPhone, otherPhone, email, fax } = req.body;
     
     const client = await SecuriaClient.findById(clientId);
     if (!client) {
@@ -2222,6 +2222,23 @@ export const updateCoApplicantAddress = async (req: AuthRequest, res: Response):
       client.coApplicant.previousAddress = previousAddress;
     }
 
+    // Update phone and contact fields if provided
+    if (homePhone !== undefined) {
+      client.coApplicant.homePhone = homePhone;
+    }
+    if (cellPhone !== undefined) {
+      client.coApplicant.cellPhone = cellPhone;
+    }
+    if (otherPhone !== undefined) {
+      client.coApplicant.otherPhone = otherPhone;
+    }
+    if (email !== undefined) {
+      client.coApplicant.email = email;
+    }
+    if (fax !== undefined) {
+      client.coApplicant.fax = fax;
+    }
+
     client.lastModifiedBy = req.user!._id.toString();
     client.completionPercentage = calculateCompletionPercentage(client);
     
@@ -2234,7 +2251,12 @@ export const updateCoApplicantAddress = async (req: AuthRequest, res: Response):
       message: 'Co-applicant address information updated successfully',
       data: {
         currentAddress: client.coApplicant.currentAddress,
-        previousAddress: client.coApplicant.previousAddress
+        previousAddress: client.coApplicant.previousAddress,
+        homePhone: client.coApplicant.homePhone,
+        cellPhone: client.coApplicant.cellPhone,
+        otherPhone: client.coApplicant.otherPhone,
+        email: client.coApplicant.email,
+        fax: client.coApplicant.fax
       }
     });
   } catch (error) {

@@ -116,7 +116,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
@@ -139,7 +139,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Consultant</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={consultantsLoading}>
+                <Select onValueChange={field.onChange} value={field.value || ""} disabled={consultantsLoading}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder={
@@ -207,17 +207,18 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Title</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select title" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Mr">Mr</SelectItem>
-                    <SelectItem value="Mrs">Mrs</SelectItem>
-                    <SelectItem value="Ms">Ms</SelectItem>
-                    <SelectItem value="Dr">Dr</SelectItem>
+                    <SelectItem value="Mr.">Mr.</SelectItem>
+                    <SelectItem value="Mrs.">Mrs.</SelectItem>
+                    <SelectItem value="Ms.">Ms.</SelectItem>
+                    <SelectItem value="Dr.">Dr.</SelectItem>
+                    <SelectItem value="Prof.">Prof.</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -273,18 +274,21 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Suffix</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select suffix" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Jr">Jr</SelectItem>
-                    <SelectItem value="Sr">Sr</SelectItem>
+                    <SelectItem value="Jr.">Jr.</SelectItem>
+                    <SelectItem value="Sr.">Sr.</SelectItem>
                     <SelectItem value="II">II</SelectItem>
                     <SelectItem value="III">III</SelectItem>
                     <SelectItem value="IV">IV</SelectItem>
+                    <SelectItem value="V">V</SelectItem>
+                    <SelectItem value="MD">MD</SelectItem>
+                    <SelectItem value="PhD">PhD</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -364,7 +368,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>State</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select state" />
@@ -436,7 +440,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Zip Code</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ''} placeholder="12345" maxLength={5} />
+                  <Input {...field} value={field.value || ''} type="text" placeholder="12345" maxLength={5} pattern="[0-9]{5}" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -464,7 +468,21 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Home Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ''} placeholder="Enter home phone" />
+                  <Input {...field} value={field.value || ''} type="tel" placeholder="(555) 123-4567" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="applicant_work_phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Work Phone</FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value || ''} type="tel" placeholder="(555) 123-4567" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -478,7 +496,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Other Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ''} placeholder="Enter other phone" />
+                  <Input {...field} value={field.value || ''} type="tel" placeholder="(555) 123-4567" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -492,21 +510,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Cell Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ''} placeholder="Enter cell phone" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="applicant_other_phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Other Phone</FormLabel>
-                <FormControl>
-                  <Input {...field} value={field.value || ''} placeholder="Enter other phone" />
+                  <Input {...field} value={field.value || ''} type="tel" placeholder="(555) 123-4567" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -598,7 +602,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <FormField
             control={form.control}
-            name="previous_address"
+            name="applicant_previous_address"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Address</FormLabel>
@@ -630,7 +634,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>State</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select state" />
@@ -702,7 +706,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Zip Code</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ''} placeholder="12345" maxLength={5} />
+                  <Input {...field} value={field.value || ''} type="text" placeholder="12345" maxLength={5} pattern="[0-9]{5}" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -789,10 +793,10 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <div className="space-y-2 mt-3">
                 <FormField
                   control={form.control}
-                  name="employment_status"
+                  name="applicant_employment_status"
                   render={({ field }) => (
                     <FormItem>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select status" />
@@ -1128,7 +1132,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <FormField
             control={form.control}
-            name="birth_place"
+            name="applicant_birth_place"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Birth Place</FormLabel>
@@ -1142,7 +1146,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
           
           <FormField
             control={form.control}
-            name="applicant_date_of_birth"
+            name="applicant_dob"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
@@ -1153,14 +1157,28 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="applicant_ssn"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>SSN</FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value || ''} placeholder="XXX-XX-XXXX" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
           <FormField
             control={form.control}
-            name="race"
+            name="applicant_race"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Race</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select race" />
@@ -1184,11 +1202,11 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
           
           <FormField
             control={form.control}
-            name="marital_status"
+            name="applicant_marital_status"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Marital Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
@@ -1208,12 +1226,12 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
           
           <FormField
             control={form.control}
-            name="anniversary"
+            name="applicant_anniversary"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Anniversary</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type="date" {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

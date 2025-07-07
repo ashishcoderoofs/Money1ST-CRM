@@ -2,11 +2,14 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Tables } from "@/integrations/supabase/types";
+import { Save } from "lucide-react";
+import { toast } from "sonner";
+import { useUpdateCoApplicantDemographics } from "@/hooks/clients/useCoApplicantMutations";
+import { MongoClient } from "@/types/mongodb-client";
 
 interface CoApplicantDemographicsProps {
   form: any;
-  client: Tables<"clients">;
+  client: MongoClient;
 }
 
 export function CoApplicantDemographics({ form, client }: CoApplicantDemographicsProps) {
@@ -19,10 +22,10 @@ export function CoApplicantDemographics({ form, client }: CoApplicantDemographic
       // Prepare data for backend API
       const demographicsData = {
         birthPlace: formData.coapplicant_birth_place,
-        dateOfBirth: formData.coapplicant_date_of_birth ? new Date(formData.coapplicant_date_of_birth) : undefined,
+        dateOfBirth: formData.coapplicant_dob ? formData.coapplicant_dob : undefined,
         race: formData.coapplicant_race,
         maritalStatus: formData.coapplicant_marital_status,
-        anniversary: formData.coapplicant_anniversary ? new Date(formData.coapplicant_anniversary) : undefined,
+        anniversary: formData.coapplicant_anniversary ? formData.coapplicant_anniversary : undefined,
         spouseName: formData.coapplicant_spouse_name,
         spouseOccupation: formData.coapplicant_spouse_occupation,
         numberOfDependents: parseInt(formData.coapplicant_number_of_dependents) || 0
@@ -53,7 +56,7 @@ export function CoApplicantDemographics({ form, client }: CoApplicantDemographic
             <FormItem>
               <FormLabel>Birth Place</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter birth place" />
+                <Input {...field} value={field.value || ''} placeholder="Enter birth place" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -67,7 +70,7 @@ export function CoApplicantDemographics({ form, client }: CoApplicantDemographic
             <FormItem>
               <FormLabel>Date of Birth</FormLabel>
               <FormControl>
-                <Input {...field} type="date" placeholder="dd-mm-yyyy" />
+                <Input {...field} value={field.value || ''} type="date" placeholder="dd-mm-yyyy" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -80,7 +83,7 @@ export function CoApplicantDemographics({ form, client }: CoApplicantDemographic
           render={({ field }) => (
             <FormItem>
               <FormLabel>Race</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select race" />
@@ -110,7 +113,7 @@ export function CoApplicantDemographics({ form, client }: CoApplicantDemographic
           render={({ field }) => (
             <FormItem>
               <FormLabel>Marital Status</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select marital status" />
@@ -136,7 +139,7 @@ export function CoApplicantDemographics({ form, client }: CoApplicantDemographic
             <FormItem>
               <FormLabel>Anniversary</FormLabel>
               <FormControl>
-                <Input {...field} type="date" placeholder="dd-mm-yyyy" />
+                <Input {...field} value={field.value || ''} type="date" placeholder="dd-mm-yyyy" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -150,7 +153,7 @@ export function CoApplicantDemographics({ form, client }: CoApplicantDemographic
             <FormItem>
               <FormLabel>Spouse Name</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter spouse name" />
+                <Input {...field} value={field.value || ''} placeholder="Enter spouse name" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -166,7 +169,7 @@ export function CoApplicantDemographics({ form, client }: CoApplicantDemographic
             <FormItem>
               <FormLabel>Spouse Occupation</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter spouse occupation" />
+                <Input {...field} value={field.value || ''} placeholder="Enter spouse occupation" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -180,7 +183,7 @@ export function CoApplicantDemographics({ form, client }: CoApplicantDemographic
             <FormItem>
               <FormLabel>Number of Dependents</FormLabel>
               <FormControl>
-                <Input {...field} type="number" placeholder="0" min="0" />
+                <Input {...field} value={field.value || ''} type="number" placeholder="0" min="0" />
               </FormControl>
               <FormMessage />
             </FormItem>

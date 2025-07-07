@@ -56,7 +56,7 @@ export function CoApplicantBasicInfo({ form, client }: CoApplicantBasicInfoProps
           render={({ field }) => (
             <FormItem>
               <FormLabel>Title</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select title" />
@@ -123,7 +123,7 @@ export function CoApplicantBasicInfo({ form, client }: CoApplicantBasicInfoProps
           render={({ field }) => (
             <FormItem>
               <FormLabel>Suffix</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select suffix" />
