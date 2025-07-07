@@ -25,7 +25,7 @@ export function CaseInformationCard({ client, form }: CaseInformationCardProps) 
               <FormItem>
                 <FormLabel>Entry Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type="date" {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

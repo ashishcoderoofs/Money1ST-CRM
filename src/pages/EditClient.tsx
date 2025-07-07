@@ -1,13 +1,12 @@
 
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { useClientByIdQuery } from "@/hooks/clients/useClientByIdQuery";
 import { useClientForm } from "@/hooks/clients/useClientForm";
 import { useLiabilitiesQuery } from "@/hooks/clients/useLiabilitiesQuery";
 import { toast } from "sonner";
-import { Loader2, Save, X, Eye } from "lucide-react";
+import { Loader2, Eye } from "lucide-react";
 import { ClientEditTabs } from "@/components/client-edit/ClientEditTabs";
 import { useEffect } from "react";
 
@@ -17,7 +16,7 @@ export default function EditClient() {
   const { data: liabilities = [] } = useLiabilitiesQuery(clientId);
   const navigate = useNavigate();
 
-  const { form, mutation } = useClientForm(client);
+  const { form, mutation } = useClientForm(client as any);
 
   // Update form with liabilities when they are loaded
   useEffect(() => {
@@ -64,30 +63,43 @@ export default function EditClient() {
       return;
     }
     
-    console.log("=== STARTING FORM VALIDATION ===");
-    
-    try {
-      // Trigger form validation
-      const isValid = await form.trigger();
-      console.log("Form validation result:", isValid);
+      console.log("=== STARTING FORM VALIDATION ===");
+      console.log("Form state before validation:", {
+        isValid: form.formState.isValid,
+        isDirty: form.formState.isDirty,
+        isSubmitting: form.formState.isSubmitting,
+        errorCount: Object.keys(form.formState.errors).length
+      });
       
-      if (!isValid) {
-        const errors = form.formState.errors;
-        console.log("=== FORM VALIDATION FAILED ===");
-        console.log("Form errors:", errors);
+      try {
+        // Trigger form validation
+        const isValid = await form.trigger();
+        console.log("Form validation result:", isValid);
+        console.log("All form errors:", form.formState.errors);
         
-        // Find first error for user feedback
-        const errorFields = Object.keys(errors);
-        if (errorFields.length > 0) {
-          const firstError = errors[errorFields[0]];
-          const errorMessage = firstError?.message || `Please check the ${errorFields[0]} field`;
-          console.log("First validation error:", errorMessage);
-          toast.error(`Validation failed: ${errorMessage}`);
-        } else {
-          toast.error("Please check all required fields and try again");
+        if (!isValid) {
+          const errors = form.formState.errors;
+          console.log("=== FORM VALIDATION FAILED ===");
+          console.log("Detailed form errors:", JSON.stringify(errors, null, 2));
+          
+          // Find first error for user feedback
+          const errorFields = Object.keys(errors);
+          if (errorFields.length > 0) {
+            const firstError = errors[errorFields[0]];
+            const errorMessage = firstError?.message || `Please check the ${errorFields[0]} field`;
+            console.log("First validation error:", errorMessage);
+            toast.error(`Validation failed: ${errorMessage}`);
+            
+            // Log all validation errors for debugging
+            errorFields.forEach(field => {
+              const error = errors[field];
+              console.log(`❌ Field '${field}':`, error?.message || error);
+            });
+          } else {
+            toast.error("Please check all required fields and try again");
+          }
+          return;
         }
-        return;
-      }
       
       console.log("=== FORM VALIDATION PASSED ===");
       console.log("=== PREPARING MUTATION DATA ===");
@@ -109,7 +121,8 @@ export default function EditClient() {
           console.log("=== MUTATION SUCCESS CALLBACK ===");
           console.log("Success data:", data);
           toast.success("Client updated successfully!");
-          navigate(`/securia/clients/${client._id}`);
+          // Optional: Navigate back to view mode after successful update
+          // navigate(`/securia/clients/${client._id}`);
         },
         onError: (error: any) => {
           console.log("=== MUTATION ERROR CALLBACK ===");
@@ -186,36 +199,12 @@ export default function EditClient() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <ClientEditTabs client={client} form={form} />
-          
-          {/* Action Buttons */}
-          <div className="flex gap-3 justify-center py-6">
-            <Button 
-              type="submit" 
-              disabled={mutation.isPending} 
-              className="bg-gray-800 hover:bg-gray-900 px-8"
-              onClick={(e) => {
-                console.log("=== UPDATE BUTTON CLICKED ===");
-                console.log("Button click event:", e);
-                console.log("Form valid:", form.formState.isValid);
-                console.log("Form errors:", form.formState.errors);
-                console.log("Mutation pending:", mutation.isPending);
-              }}
-            >
-              <Save className="w-4 h-4 mr-1" />
-              {mutation.isPending ? "Updating..." : "Update Client"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(`/securia/clients/${client._id}`)}
-              disabled={mutation.isPending}
-              className="px-8"
-            >
-              <X className="w-4 h-4 mr-1" />
-              Cancel
-            </Button>
-          </div>
+          <ClientEditTabs 
+            client={client as any} 
+            form={form} 
+            isEditMode={true} 
+            isSubmitting={form.formState.isSubmitting || mutation.isPending}
+          />
         </form>
       </Form>
     </div>

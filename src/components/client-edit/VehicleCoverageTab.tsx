@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,7 +27,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>Carrier</FormLabel>
                   <FormControl>
-                    <Input placeholder="Insurance carrier" {...field} />
+                    <Input placeholder="Insurance carrier" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -41,7 +40,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>6 Month Premium</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    <Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -54,7 +53,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>Expiration Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -67,7 +66,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>Annual Premium</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    <Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -91,7 +90,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>6 Month Premium (Proposed)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    <Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -104,7 +103,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>Savings</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    <Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -128,7 +127,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>App Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -164,7 +163,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>Status Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -177,7 +176,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>Issue Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -190,7 +189,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>Disburse Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,7 +202,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>DFT</FormLabel>
                   <FormControl>
-                    <Input placeholder="DFT" {...field} />
+                    <Input placeholder="DFT" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -216,7 +215,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem>
                   <FormLabel>DFT Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="DFT Number" {...field} />
+                    <Input placeholder="DFT Number" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -229,7 +228,7 @@ export function VehicleCoverageTab({ client, form }: VehicleCoverageTabProps) {
                 <FormItem className="flex items-center space-x-2">
                   <FormControl>
                     <Checkbox 
-                      checked={field.value} 
+                      checked={field.value || false} 
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>

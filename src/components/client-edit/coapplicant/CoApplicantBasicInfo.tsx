@@ -82,7 +82,7 @@ export function CoApplicantBasicInfo({ form, client }: CoApplicantBasicInfoProps
             <FormItem>
               <FormLabel>First Name</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter first name" required />
+                <Input {...field} value={field.value || ''} placeholder="Enter first name" required />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -96,7 +96,7 @@ export function CoApplicantBasicInfo({ form, client }: CoApplicantBasicInfoProps
             <FormItem>
               <FormLabel>Middle Initial</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="M" maxLength={1} />
+                <Input {...field} value={field.value || ''} placeholder="M" maxLength={1} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -110,7 +110,7 @@ export function CoApplicantBasicInfo({ form, client }: CoApplicantBasicInfoProps
             <FormItem>
               <FormLabel>Last Name</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter last name" required />
+                <Input {...field} value={field.value || ''} placeholder="Enter last name" required />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -154,7 +154,7 @@ export function CoApplicantBasicInfo({ form, client }: CoApplicantBasicInfoProps
             <FormItem>
               <FormLabel>Maiden Name</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter maiden name" />
+                <Input {...field} value={field.value || ''} placeholder="Enter maiden name" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -168,7 +168,7 @@ export function CoApplicantBasicInfo({ form, client }: CoApplicantBasicInfoProps
             <FormItem className="flex flex-row items-center space-x-3 space-y-0 mt-6">
               <FormControl>
                 <Checkbox 
-                  checked={field.value} 
+                  checked={field.value || false} 
                   onCheckedChange={field.onChange}
                 />
               </FormControl>

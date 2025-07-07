@@ -39,9 +39,22 @@ export const useUpdateClient = () => {
           body: JSON.stringify(processedValues),
         });
 
+        console.log("API Response status:", response.status);
+        console.log("API Response ok:", response.ok);
+
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Failed to update client');
+          const errorText = await response.text();
+          console.log("API Error response text:", errorText);
+          
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch {
+            errorData = { message: errorText || 'Unknown error occurred' };
+          }
+          
+          console.log("API Error data:", errorData);
+          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
         }
 
         const result = await response.json();

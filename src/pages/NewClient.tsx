@@ -17,16 +17,22 @@ export default function NewClient() {
     console.log("Form validation state:", form.formState);
     console.log("Form errors:", form.formState.errors);
     
-    // Compute the applicant field from first and last name
-    const computedValues = {
+    // Transform boolean business_owner fields to strings for API compatibility
+    const transformedValues = {
       ...values,
       applicant: `${values.applicant_first_name || ''} ${values.applicant_last_name || ''}`.trim() || '',
       co_applicant: `${values.coapplicant_first_name || ''} ${values.coapplicant_last_name || ''}`.trim() || '',
+      applicant_business_owner: typeof values.applicant_business_owner === 'boolean' 
+        ? (values.applicant_business_owner ? 'yes' : 'no') 
+        : values.applicant_business_owner,
+      coapplicant_business_owner: typeof values.coapplicant_business_owner === 'boolean' 
+        ? (values.coapplicant_business_owner ? 'yes' : 'no') 
+        : values.coapplicant_business_owner,
     };
     
-    console.log("Computed values with applicant names:", computedValues);
+    console.log("Transformed values for API:", transformedValues);
     
-    createMutation.mutate(computedValues, {
+    createMutation.mutate(transformedValues, {
       onSuccess: (data) => {
         console.log("✅ Form submission onSuccess:", data);
         toast.success("Client created successfully.");

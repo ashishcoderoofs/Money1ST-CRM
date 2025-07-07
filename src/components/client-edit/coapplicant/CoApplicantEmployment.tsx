@@ -4,6 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
+import { toast } from "sonner";
+import { useUpdateCoApplicantEmployment } from "@/hooks/clients/useUpdateCoApplicantEmployment";
 
 interface CoApplicantEmploymentProps {
   form: any;
@@ -21,7 +23,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
       const employmentData = {
         employment: {
           employmentStatus: formData.coapplicant_employment_status,
-          isBusinessOwner: formData.coapplicant_is_business_owner || false,
+          isBusinessOwner: formData.coapplicant_business_owner || false,
           occupation: formData.coapplicant_occupation,
           employerName: formData.coapplicant_employer_name,
           employerAddress: formData.coapplicant_employer_address,
@@ -72,12 +74,12 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <div className="space-y-2">
                   <FormField
                     control={form.control}
-                    name="coapplicant_is_business_owner"
+                    name="coapplicant_business_owner"
                     render={({ field }) => (
                       <FormItem className="flex items-center space-x-2">
                         <FormControl>
                           <Checkbox
-                            checked={field.value}
+                            checked={field.value || false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -124,7 +126,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem className="w-[400px]">
                   <FormLabel>Occupation</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter occupation" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter occupation" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -140,7 +142,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>Employer Name</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter employer name" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter employer name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -154,7 +156,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>Employer Address</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter employer address" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter employer address" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -168,7 +170,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>City</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter city" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter city" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -182,7 +184,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>State</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter state" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter state" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -196,7 +198,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>Zip Code</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter zip code" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter zip code" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -210,7 +212,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>Gross Monthly Salary</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="$0.00" />
+                    <Input {...field} value={field.value || ''} placeholder="$0.00" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -224,7 +226,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>Start Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -238,7 +240,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>End Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -252,7 +254,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>Supervisor</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter supervisor name" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter supervisor name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -266,7 +268,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>Supervisor Phone</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter supervisor phone" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter supervisor phone" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -280,7 +282,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>Additional Income</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="$0.00" />
+                    <Input {...field} value={field.value || ''} placeholder="$0.00" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -294,7 +296,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
                 <FormItem>
                   <FormLabel>Source</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter source" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter source" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -315,7 +317,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
               <FormItem>
                 <FormLabel>Employer Name</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter employer name" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter employer name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -329,7 +331,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
               <FormItem>
                 <FormLabel>Employer Address</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter employer address" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter employer address" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -343,7 +345,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
               <FormItem>
                 <FormLabel>City</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter city" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter city" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -428,7 +430,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
               <FormItem>
                 <FormLabel>Zip Code</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter zip code" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter zip code" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -442,7 +444,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
               <FormItem>
                 <FormLabel>Occupation</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter occupation" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter occupation" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -456,7 +458,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
               <FormItem>
                 <FormLabel>From Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type="date" {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -470,7 +472,7 @@ export function CoApplicantEmployment({ form, client }: CoApplicantEmploymentPro
               <FormItem>
                 <FormLabel>To Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type="date" {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -44,7 +44,7 @@ const mapClientToConsultantData = (clientData: any): ConsultantData => {
     zipCode: clientData.applicant_zip_code || '',
     homePhone: clientData.applicant_home_phone || '',
     mobile: clientData.applicant_mobile_phone || clientData.applicant_cell_phone || '',
-    workPhone: clientData.applicant_work_phone || '',
+    workPhone: clientData.applicant_other_phone || '',
 
     // Personal Information
     dateOfBirth: clientData.applicant_date_of_birth || clientData.applicant_dob || '',

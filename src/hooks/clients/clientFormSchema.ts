@@ -89,16 +89,23 @@ export const clientFormSchema = z.object({
   processor_name: z.string().optional(),
   total_debt: z.union([z.number(), z.string().transform((val) => val === "" ? 0 : Number(val))]).default(0),
   payoff_amount: z.union([z.number(), z.string().transform((val) => val === "" ? undefined : Number(val))]).optional(),
-  status: z.enum(["draft", "submitted", "active", "inactive"]).default("draft"),
+  status: z.enum(["Active", "Inactive", "Pending"], {
+    required_error: "Status is required",
+    invalid_type_error: "Status must be Active, Inactive, or Pending"
+  }),
   entry_date: z.string().optional(),
   
   // Contact information
   applicant_contact: z.string().optional(),
   applicant_email: z.string().optional(),
   applicant_cell_phone: z.string().optional(),
+  applicant_home_phone: z.string().optional(),
+  applicant_other_phone: z.string().optional(),
   coapplicant_contact: z.string().optional(),
   coapplicant_email: z.string().optional(),
   coapplicant_cell_phone: z.string().optional(),
+  coapplicant_home_phone: z.string().optional(),
+  coapplicant_other_phone: z.string().optional(),
   co_applicant_total_debt: z.union([z.number(), z.string().transform((val) => val === "" ? 0 : Number(val))]).optional(),
 
   // Form state control
@@ -126,14 +133,12 @@ export const clientFormSchema = z.object({
   applicant_previous_address: z.string().optional(),
   applicant_previous_address_time: z.string().optional(),
   
-  // Contact fields
-  applicant_home_phone: z.string().optional(),
-  applicant_other_phone: z.string().optional(),
+  // Contact fields - these were duplicated earlier, removing duplicates
   applicant_fax: z.string().optional(),
   
   // Employment fields
   applicant_employment_status: z.string().optional(),
-  applicant_business_owner: z.string().optional(),
+  applicant_business_owner: z.union([z.string(), z.boolean()]).optional(),
   applicant_employer_name: z.string().optional(),
   applicant_employer_address: z.string().optional(),
   applicant_employer_city: z.string().optional(),
@@ -186,14 +191,12 @@ export const clientFormSchema = z.object({
   coapplicant_previous_address: z.string().optional(),
   coapplicant_previous_address_time: z.string().optional(),
   
-  // Contact fields
-  coapplicant_home_phone: z.string().optional(),
-  coapplicant_other_phone: z.string().optional(),
+  // Contact fields - these were duplicated earlier, removing duplicates
   coapplicant_fax: z.string().optional(),
   
   // Employment fields
   coapplicant_employment_status: z.string().optional(),
-  coapplicant_business_owner: z.string().optional(),
+  coapplicant_business_owner: z.union([z.string(), z.boolean()]).optional(),
   coapplicant_employer_name: z.string().optional(),
   coapplicant_employer_address: z.string().optional(),
   coapplicant_employer_city: z.string().optional(),

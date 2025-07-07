@@ -31,7 +31,7 @@ export function ApplicantBasicInfo({ form, client }: ApplicantBasicInfoProps) {
         maidenName: formData.applicant_maiden_name,
         isConsultant: formData.applicant_is_consultant || false,
         homePhone: formData.applicant_home_phone,
-        workPhone: formData.applicant_work_phone,
+        workPhone: formData.applicant_other_phone,
         cellPhone: formData.applicant_cell_phone,
         otherPhone: formData.applicant_other_phone,
         fax: formData.applicant_fax,
@@ -175,7 +175,7 @@ export function ApplicantBasicInfo({ form, client }: ApplicantBasicInfoProps) {
             <FormItem className="flex flex-row items-center space-x-3 space-y-0 mt-6">
               <FormControl>
                 <Checkbox 
-                  checked={field.value} 
+                  checked={field.value || false} 
                   onCheckedChange={field.onChange}
                 />
               </FormControl>

@@ -103,7 +103,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Payoff Amount</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="$0.00" />
+                  <Input {...field} value={field.value || ''} placeholder="$0.00" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -115,8 +115,8 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || "Active"}>
+                <FormLabel>Status *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
@@ -124,8 +124,8 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
                     <SelectItem value="Inactive">Inactive</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -241,7 +241,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
           
           <FormField
             control={form.control}
-            name="applicant_middle_initial"
+            name="applicant_mi"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Middle Initial</FormLabel>
@@ -308,12 +308,12 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
           
           <FormField
             control={form.control}
-            name="is_consultant"
+            name="applicant_is_consultant"
             render={({ field }) => (
               <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                 <FormControl>
                   <Checkbox
-                    checked={field.value}
+                    checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
@@ -436,7 +436,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Zip Code</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="12345" maxLength={5} />
+                  <Input {...field} value={field.value || ''} placeholder="12345" maxLength={5} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -450,7 +450,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>County</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter county" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter county" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -464,7 +464,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Home Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter home phone" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter home phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -473,12 +473,12 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
           
           <FormField
             control={form.control}
-            name="applicant_work_phone"
+            name="applicant_other_phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Work Phone</FormLabel>
+                <FormLabel>Other Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter work phone" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter other phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -506,7 +506,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Other Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter other phone" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter other phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -534,7 +534,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Fax</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter fax number" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter fax number" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -603,7 +603,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Address</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter address" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter address" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -617,7 +617,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>City</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter city" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter city" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -702,7 +702,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
               <FormItem>
                 <FormLabel>Zip Code</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="12345" maxLength={5} />
+                  <Input {...field} value={field.value || ''} placeholder="12345" maxLength={5} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -771,12 +771,12 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
                 <div className="space-y-2">
                   <FormField
                     control={form.control}
-                    name="is_business_owner"
+                    name="applicant_business_owner"
                     render={({ field }) => (
                       <FormItem className="flex items-center space-x-2">
                         <FormControl>
                           <Checkbox
-                            checked={field.value}
+                            checked={field.value || false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -823,7 +823,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
                 <FormItem className="w-[400px]">
                   <FormLabel>Occupation</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter occupation" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter occupation" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -839,7 +839,7 @@ export function ApplicantTab({ client, form }: ApplicantTabProps) {
                 <FormItem>
                   <FormLabel>Employer Name</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter employer name" />
+                    <Input {...field} value={field.value || ''} placeholder="Enter employer name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

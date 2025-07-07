@@ -15,7 +15,7 @@ export function useClientForm(client?: Tables<"clients"> | null) {
       processor_name: "",
       total_debt: 0,
       payoff_amount: 0,
-      status: "active" as const,
+      status: "Active" as const,
       entry_date: new Date().toISOString().split('T')[0],
       applicant_contact: "",
       applicant_email: "",
@@ -222,6 +222,25 @@ export function useClientForm(client?: Tables<"clients"> | null) {
         }
       };
 
+      const safeStatus = (value: any): "Active" | "Inactive" | "Pending" => {
+        if (!value) return "Active";
+        const statusValue = String(value).toLowerCase();
+        
+        // Map legacy status values to new enum values
+        switch (statusValue) {
+          case "active":
+            return "Active";
+          case "inactive":
+            return "Inactive";
+          case "pending":
+          case "draft":
+          case "submitted":
+            return "Pending";
+          default:
+            return "Active"; // Default fallback
+        }
+      };
+
       const formData = {
         // ... keep existing code (all basic, applicant, and coapplicant fields)
         applicant: safeString(client.applicant),
@@ -230,7 +249,7 @@ export function useClientForm(client?: Tables<"clients"> | null) {
         processor_name: safeString(client.processor_name),
         total_debt: safeNumber(client.total_debt),
         payoff_amount: safeNumber(client.payoff_amount),
-        status: "active" as const,
+        status: safeStatus(client.status),
         entry_date: safeDate(client.entry_date),
         applicant_contact: safeString(client.applicant_contact),
         applicant_email: safeString(client.applicant_email),
@@ -373,7 +392,7 @@ export function useClientForm(client?: Tables<"clients"> | null) {
       };
 
       console.log("Form data being set:", formData);
-      form.reset(formData);
+      form.reset(formData as any);
     }
   }, [client, form]);
 

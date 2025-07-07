@@ -126,7 +126,7 @@ function mapApplicantData(applicant: NestedApplicant | undefined, prefix: 'appli
     // Employment
     [`${prefix}_employer_name`]: applicant.employment?.employerName || '',
     [`${prefix}_occupation`]: applicant.employment?.position || '',
-    [`${prefix}_work_phone`]: applicant.employment?.workPhone || '',
+    [`${prefix}_other_phone`]: applicant.employment?.workPhone || '',
     [`${prefix}_years_at_job`]: applicant.employment?.yearsAtJob || 0,
     [`${prefix}_monthly_salary`]: applicant.employment?.monthlyIncome || 0,
     [`${prefix}_annual_income`]: applicant.employment?.annualIncome || 0,

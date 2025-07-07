@@ -144,12 +144,12 @@ export function CoApplicantAddress({ form, client }: CoApplicantAddressProps) {
           
           <FormField
             control={form.control}
-            name="coapplicant_work_phone"
+            name="coapplicant_other_phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Work Phone</FormLabel>
+                <FormLabel>Other Phone</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter Work Phone" />
+                  <Input {...field} value={field.value || ''} placeholder="Enter other phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

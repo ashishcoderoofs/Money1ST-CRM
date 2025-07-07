@@ -21,12 +21,20 @@ export default function CaseSummaryCard({ client }: { client: any }) {
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-gray-700">Client ID:</span>
-            <span className="text-base">{client.client_number ?? "-"}</span>
+            <span className="text-base">{client.client_number ?? client._id?.slice(-6).toUpperCase() ?? "-"}</span>
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-gray-700">Status:</span>
-            <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded border border-green-400 mt-1">
-              {client.status === "Open" ? "Open" : client.status}
+            <span className={`inline-block text-xs font-semibold px-2 py-1 rounded border mt-1 ${
+              client.status === "Active" 
+                ? "bg-green-100 text-green-800 border-green-400"
+                : client.status === "Inactive"
+                ? "bg-red-100 text-red-800 border-red-400"
+                : client.status === "Pending"
+                ? "bg-yellow-100 text-yellow-800 border-yellow-400"
+                : "bg-gray-100 text-gray-800 border-gray-400"
+            }`}>
+              {client.status || "N/A"}
             </span>
           </div>
           <div className="flex flex-col">
@@ -61,11 +69,7 @@ export default function CaseSummaryCard({ client }: { client: any }) {
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-gray-700">Payoff Amount:</span>
-            <span className="text-base">$0.00</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-gray-700">Monthly Payment:</span>
-            <span className="text-base">$0.00</span>
+            <span className="text-base">${Number(client.payoff_amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
       </div>

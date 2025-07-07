@@ -22,9 +22,10 @@ interface ClientEditTabsProps {
   client: Tables<"clients">;
   form: UseFormReturn<any>;
   isSubmitting?: boolean;
+  isEditMode?: boolean;
 }
 
-export function ClientEditTabs({ client, form, isSubmitting }: ClientEditTabsProps) {
+export function ClientEditTabs({ client, form, isSubmitting, isEditMode = false }: ClientEditTabsProps) {
   const navigate = useNavigate();
   
   return (
@@ -36,7 +37,7 @@ export function ClientEditTabs({ client, form, isSubmitting }: ClientEditTabsPro
               <path d="M5 12h14"></path>
               <path d="M12 5v14"></path>
             </svg>
-            New Client Information
+            {isEditMode ? "Edit Client Information" : "New Client Information"}
           </span>
           <div className="flex space-x-2">
             <Button
@@ -53,12 +54,13 @@ export function ClientEditTabs({ client, form, isSubmitting }: ClientEditTabsPro
               disabled={isSubmitting} 
               className="h-10 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
               onClick={() => {
-                console.log("🔘 CREATE BUTTON CLICKED");
+                console.log("🔘 SUBMIT BUTTON CLICKED");
                 console.log("Form is submitting:", isSubmitting);
                 console.log("Button disabled state:", isSubmitting);
+                console.log("Is edit mode:", isEditMode);
               }}
             >
-              {isSubmitting ? "Creating..." : "Create Client"}
+              {isSubmitting ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Client" : "Create Client")}
             </Button>
           </div>
         </div>
