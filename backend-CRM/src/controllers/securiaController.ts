@@ -14,7 +14,7 @@ import logger from '../../utils/logger';
 const securiaSessionStore = new Map<string, { userId: string, timestamp: number }>();
 
 // Session timeout: 8 hours
-const SECURIA_SESSION_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+const SECURIA_SESSION_TIMEOUT = 7 * 60 * 1000; // 7 minutes in milliseconds
 
 // Helper function to clean expired sessions
 const cleanExpiredSessions = () => {
@@ -533,59 +533,106 @@ export const getClients = async (req: AuthRequest, res: Response): Promise<void>
     const limitNum = parseInt(limit as string);
     const sortOrder = order === 'asc' ? 1 : -1;
 
-    let filter: any = {};
+    // Build filters for both model types
+    let applicantFilter: any = {};
+    let securiaClientFilter: any = {};
     
-    if (status !== 'all') {
-      filter.status = status;
+    if (status !== 'all' && status !== 'active') {
+      // Only apply status filter to SecuriaClient since Applicants don't have status
+      securiaClientFilter.status = status;
     }
     
     if (consultantId) {
-      filter.consultantId = consultantId;
+      securiaClientFilter.consultantId = consultantId;
+      // Applicants don't have consultantId yet, so we skip them for consultant-specific queries
     }
     
     if (search) {
-      filter.$or = [
+      const searchFilter = [
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } }
       ];
+      applicantFilter.$or = searchFilter;
+      securiaClientFilter.$or = searchFilter;
     }
 
-    // Query both SecuriaClient (old structure) and Applicant (new structure) collections
+    // Query both collections
     const [securiaClients, applicants] = await Promise.all([
-      SecuriaClient.find(filter)
+      SecuriaClient.find(securiaClientFilter)
         .populate('consultantId', 'firstName lastName email')
         .sort({ [sort as string]: sortOrder })
         .lean(),
-      Applicant.find(filter)
+      Applicant.find(applicantFilter)
         .sort({ [sort as string]: sortOrder })
         .lean()
     ]);
 
-    // Transform Applicant data to match SecuriaClient format
+    // Transform both types to consistent structured format
+    const transformedSecuriaClients = securiaClients.map(client => ({
+      _id: client._id,
+      clientId: client.clientId || `CLI${client._id.toString().slice(-6).toUpperCase()}`,
+      type: 'SecuriaClient',
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email,
+      phone: client.phone,
+      status: client.status,
+      consultantId: client.consultantId,
+      address: client.address,
+      createdAt: client.createdAt,
+      updatedAt: client.updatedAt,
+      // Include basic legacy structure for compatibility
+      financialInfo: client.financialInfo
+    }));
+
     const transformedApplicants = applicants.map(applicant => ({
       _id: applicant._id,
       clientId: applicant.clientId,
+      type: 'Applicant',
       firstName: applicant.firstName,
       lastName: applicant.lastName,
       email: applicant.email,
       phone: applicant.cellPhone || applicant.homePhone || '',
-      status: 'active', // Default status for applicants
-      consultantId: null, // Applicants don't have consultant assignments yet
-      address: {
-        street: applicant.currentAddress?.street || '',
-        city: applicant.currentAddress?.city || '',
-        state: applicant.currentAddress?.state || '',
-        zipCode: applicant.currentAddress?.zipCode || '',
+      status: 'active', // Applicants are considered active by default
+      consultantId: null, // Applicants don't have consultant assignments
+      address: applicant.currentAddress ? {
+        street: applicant.currentAddress.street,
+        city: applicant.currentAddress.city,
+        state: applicant.currentAddress.state,
+        zipCode: applicant.currentAddress.zipCode,
         country: 'US'
-      },
+      } : null,
       createdAt: applicant.createdAt,
-      updatedAt: applicant.updatedAt
+      updatedAt: applicant.updatedAt,
+      // Include structured applicant data
+      applicantData: {
+        currentAddress: applicant.currentAddress,
+        employment: applicant.employment,
+        demographics: applicant.demographics
+      }
     }));
 
     // Combine and sort all clients
-    const allClients = [...securiaClients, ...transformedApplicants];
-    allClients.sort((a, b) => {
+    const allClients = [...transformedSecuriaClients, ...transformedApplicants];
+    
+    // Apply additional filtering based on status for combined results
+    let filteredClients = allClients;
+    if (status === 'active') {
+      filteredClients = allClients.filter(client => client.status === 'active');
+    } else if (status !== 'all') {
+      filteredClients = allClients.filter(client => client.status === status);
+    }
+    
+    // Apply consultant filter if specified
+    if (consultantId) {
+      filteredClients = filteredClients.filter(client => 
+        client.consultantId && client.consultantId.toString() === consultantId
+      );
+    }
+    
+    // Sort combined results
+    filteredClients.sort((a, b) => {
       const aValue = a[sort as keyof typeof a];
       const bValue = b[sort as keyof typeof b];
       
@@ -597,9 +644,9 @@ export const getClients = async (req: AuthRequest, res: Response): Promise<void>
     // Apply pagination
     const startIndex = (pageNum - 1) * limitNum;
     const endIndex = startIndex + limitNum;
-    const paginatedClients = allClients.slice(startIndex, endIndex);
+    const paginatedClients = filteredClients.slice(startIndex, endIndex);
 
-    const total = allClients.length;
+    const total = filteredClients.length;
 
     await logAuditEvent(req, 'CLIENTS_VIEWED', 'client', undefined, { page: pageNum, limit: limitNum, search, status, consultantId });
 
@@ -859,26 +906,101 @@ export const getClientById = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const id = req.params.id;
     
-    // First, try to find an Applicant record (new structure)
-    
-    const applicant = await Applicant.findById(id);
+    // First, try to find an Applicant record (new structure) - use .lean() to get all fields
+    const applicant = await Applicant.findById(id).lean();
     
     if (applicant) {
-      console.log('📋 Found Applicant record, converting to client format...');
+      console.log('📋 Found Applicant record, returning structured data...');
+      console.log('🔍 Applicant fields available:', Object.keys(applicant));
+      console.log('🔍 Sample legacy fields - address:', (applicant as any).address, 'city:', (applicant as any).city, 'employmentStatus:', (applicant as any).employmentStatus);
       
-      // Find associated co-applicant if exists
-      const coApplicant = await CoApplicant.findOne({ applicantId: applicant._id });
+      // Find associated co-applicant if exists - also use .lean() to get all fields
+      const coApplicant = await CoApplicant.findOne({ applicantId: applicant._id }).lean();
       
-      // Transform Applicant data to SecuriaClient format for frontend compatibility
+      if (coApplicant) {
+        console.log('🔍 CoApplicant fields available:', Object.keys(coApplicant));
+        console.log('🔍 CoApplicant sample legacy fields - address:', (coApplicant as any).address, 'city:', (coApplicant as any).city);
+      }
+      
+      // Return clean, structured data for frontend
       const clientData = {
         _id: applicant._id,
         clientId: applicant.clientId,
         client_number: applicant.clientId || `CLI${applicant._id.toString().slice(-6).toUpperCase()}`,
+        status: 'active',
+        type: 'Applicant', // Indicate this is the new model structure
+        
+        // Main applicant data (structured)
+        applicant: {
+          id: applicant._id,
+          firstName: applicant.firstName,
+          lastName: applicant.lastName,
+          title: applicant.title,
+          mi: applicant.mi,
+          suffix: applicant.suffix,
+          maidenName: applicant.maidenName,
+          isConsultant: applicant.isConsultant,
+          
+          // Contact information
+          homePhone: applicant.homePhone,
+          workPhone: applicant.workPhone,
+          cellPhone: applicant.cellPhone,
+          fax: applicant.fax,
+          email: applicant.email,
+          
+          // Address information
+          currentAddress: applicant.currentAddress,
+          previousAddress: applicant.previousAddress,
+          
+          // Employment information
+          employment: applicant.employment,
+          
+          // Demographics
+          demographics: applicant.demographics,
+          
+          // Additional fields
+          householdMembers: applicant.householdMembers || []
+        },
+        
+        // Co-applicant data (structured) - only if exists
+        coApplicant: coApplicant ? {
+          id: coApplicant._id,
+          firstName: coApplicant.firstName,
+          lastName: coApplicant.lastName,
+          title: coApplicant.title,
+          mi: coApplicant.mi,
+          suffix: coApplicant.suffix,
+          maidenName: coApplicant.maidenName,
+          isConsultant: coApplicant.isConsultant,
+          
+          // Contact information
+          homePhone: coApplicant.homePhone,
+          workPhone: coApplicant.workPhone,
+          cellPhone: coApplicant.cellPhone,
+          fax: coApplicant.fax,
+          email: coApplicant.email,
+          
+          // Address information
+          currentAddress: coApplicant.currentAddress,
+          previousAddress: coApplicant.previousAddress,
+          
+          // Employment information
+          employment: coApplicant.employment,
+          
+          // Demographics
+          demographics: coApplicant.demographics,
+          
+          // Additional fields
+          householdMembers: coApplicant.householdMembers || []
+        } : null,
+        
+        // Legacy compatibility fields for basic info
         firstName: applicant.firstName,
         lastName: applicant.lastName,
         email: applicant.email,
         phone: applicant.cellPhone || applicant.homePhone,
-        status: 'active',
+        
+        // Basic address for legacy compatibility
         address: applicant.currentAddress ? {
           street: applicant.currentAddress.street,
           city: applicant.currentAddress.city,
@@ -886,130 +1008,125 @@ export const getClientById = async (req: AuthRequest, res: Response): Promise<vo
           zipCode: applicant.currentAddress.zipCode,
           country: 'US'
         } : undefined,
+        
+        // Basic financial info for legacy compatibility
         financialInfo: {
           annualIncome: applicant.employment?.monthlySalary ? (applicant.employment.monthlySalary * 12) : 0,
           netWorth: 0,
           investmentGoals: '',
           riskTolerance: 'medium'
         },
-        emergencyContact: {
-          name: '',
-          relationship: '',
-          phone: ''
-        },
-        createdAt: applicant.createdAt,
-        updatedAt: applicant.updatedAt,
         
-        // Map Applicant fields to flat frontend form structure
+        // Flat field mappings for frontend compatibility - handle legacy field names
         applicant_title: applicant.title || '',
         applicant_first_name: applicant.firstName || '',
-        applicant_mi: applicant.mi || '',
+        applicant_mi: applicant.mi || (applicant as any).middleInitial || '',
         applicant_last_name: applicant.lastName || '',
         applicant_suffix: applicant.suffix || '',
         applicant_maiden_name: applicant.maidenName || '',
         applicant_is_consultant: applicant.isConsultant || false,
         
-        // Contact Info
+        // Contact Info - handle legacy field names
         applicant_home_phone: applicant.homePhone || '',
-        applicant_other_phone: applicant.workPhone || '',
-        applicant_cell_phone: applicant.cellPhone || '',
+        applicant_other_phone: applicant.workPhone || (applicant as any).otherPhone || '',
+        applicant_cell_phone: applicant.cellPhone || (applicant as any).mobilePhone || '',
         applicant_fax: applicant.fax || '',
         applicant_email: applicant.email || '',
         
-        // Address Info
-        applicant_address: applicant.currentAddress?.street || '',
-        applicant_city: applicant.currentAddress?.city || '',
-        applicant_state: applicant.currentAddress?.state || '',
-        applicant_zip_code: applicant.currentAddress?.zipCode || '',
-        applicant_county: applicant.currentAddress?.county || '',
-        applicant_time_at_address: '', // Not stored in current model
-        applicant_previous_address: applicant.previousAddress?.street || '',
-        applicant_previous_address_time: '', // Not stored in current model
+        // Address Info - check nested object first, then fall back to legacy flat fields
+        applicant_address: (applicant.currentAddress && applicant.currentAddress.street) ? applicant.currentAddress.street : (applicant as any).address || '',
+        applicant_city: (applicant.currentAddress && applicant.currentAddress.city) ? applicant.currentAddress.city : (applicant as any).city || '',
+        applicant_state: (applicant.currentAddress && applicant.currentAddress.state) ? applicant.currentAddress.state : (applicant as any).state || '',
+        applicant_zip_code: (applicant.currentAddress && applicant.currentAddress.zipCode) ? applicant.currentAddress.zipCode : (applicant as any).zipCode || '',
+        applicant_county: (applicant.currentAddress && applicant.currentAddress.county) ? applicant.currentAddress.county : (applicant as any).county || '',
+        applicant_time_at_address: (applicant as any).timeAtAddress || '',
+        applicant_previous_address: (applicant.previousAddress && applicant.previousAddress.street) ? applicant.previousAddress.street : (applicant as any).previousAddress || '',
+        applicant_previous_address_time: (applicant as any).previousAddressTime || '',
         
-        // Employment Info
-        applicant_employment_status: applicant.employment?.status || '',
-        applicant_business_owner: applicant.employment?.isBusinessOwner ? 'Yes' : 'No',
-        applicant_employer_name: applicant.employment?.employerName || '',
-        applicant_employer_address: applicant.employment?.employerAddress?.street || '',
-        applicant_employer_city: applicant.employment?.employerAddress?.city || '',
-        applicant_employer_state: applicant.employment?.employerAddress?.state || '',
-        applicant_employer_zip: applicant.employment?.employerAddress?.zipCode || '',
-        applicant_occupation: applicant.employment?.occupation || '',
-        applicant_monthly_salary: applicant.employment?.monthlySalary || 0,
-        applicant_employer_phone: applicant.employment?.employerPhone || '',
-        applicant_start_date: applicant.employment?.startDate ? new Date(applicant.employment.startDate).toISOString().split('T')[0] : '',
-        applicant_end_date: applicant.employment?.endDate ? new Date(applicant.employment.endDate).toISOString().split('T')[0] : '',
-        applicant_additional_income: applicant.employment?.additionalIncome || 0,
-        applicant_additional_income_source: applicant.employment?.additionalIncomeSource || '',
-        applicant_supervisor: applicant.employment?.supervisor || '',
+        // Employment Info - check nested object first, then fall back to legacy flat fields
+        applicant_employment_status: (applicant.employment && applicant.employment.status) ? applicant.employment.status : (applicant as any).employmentStatus || '',
+        applicant_business_owner: (applicant.employment && applicant.employment.isBusinessOwner) ? 'Yes' : (applicant as any).businessOwner === 'Yes' ? 'Yes' : 'No',
+        applicant_employer_name: (applicant.employment && applicant.employment.employerName) ? applicant.employment.employerName : (applicant as any).employerName || '',
+        applicant_employer_address: (applicant.employment && applicant.employment.employerAddress && applicant.employment.employerAddress.street) ? applicant.employment.employerAddress.street : (applicant as any).employerAddress || '',
+        applicant_employer_city: (applicant.employment && applicant.employment.employerAddress && applicant.employment.employerAddress.city) ? applicant.employment.employerAddress.city : (applicant as any).employerCity || '',
+        applicant_employer_state: (applicant.employment && applicant.employment.employerAddress && applicant.employment.employerAddress.state) ? applicant.employment.employerAddress.state : (applicant as any).employerState || '',
+        applicant_employer_zip: (applicant.employment && applicant.employment.employerAddress && applicant.employment.employerAddress.zipCode) ? applicant.employment.employerAddress.zipCode : (applicant as any).employerZip || '',
+        applicant_occupation: (applicant.employment && applicant.employment.occupation) ? applicant.employment.occupation : (applicant as any).occupation || '',
+        applicant_monthly_salary: (applicant.employment && applicant.employment.monthlySalary) ? applicant.employment.monthlySalary : (applicant as any).monthlySalary || 0,
+        applicant_employer_phone: (applicant.employment && applicant.employment.employerPhone) ? applicant.employment.employerPhone : (applicant as any).employerPhone || '',
+        applicant_start_date: (applicant.employment && applicant.employment.startDate) ? new Date(applicant.employment.startDate).toISOString().split('T')[0] : (applicant as any).startDate ? new Date((applicant as any).startDate).toISOString().split('T')[0] : '',
+        applicant_end_date: (applicant.employment && applicant.employment.endDate) ? new Date(applicant.employment.endDate).toISOString().split('T')[0] : (applicant as any).endDate ? new Date((applicant as any).endDate).toISOString().split('T')[0] : '',
+        applicant_additional_income: (applicant.employment && applicant.employment.additionalIncome) ? applicant.employment.additionalIncome : (applicant as any).additionalIncome || 0,
+        applicant_additional_income_source: (applicant.employment && applicant.employment.additionalIncomeSource) ? applicant.employment.additionalIncomeSource : (applicant as any).additionalIncomeSource || '',
+        applicant_supervisor: (applicant.employment && applicant.employment.supervisor) ? applicant.employment.supervisor : (applicant as any).supervisor || '',
         
-        // Demographics
-        applicant_dob: applicant.demographics?.dateOfBirth ? new Date(applicant.demographics.dateOfBirth).toISOString().split('T')[0] : '',
-        applicant_ssn: applicant.demographics?.ssn || '',
-        applicant_birth_place: applicant.demographics?.birthPlace || '',
-        applicant_race: applicant.demographics?.race || '',
-        applicant_marital_status: applicant.demographics?.maritalStatus || '',
-        applicant_anniversary: applicant.demographics?.anniversary ? new Date(applicant.demographics.anniversary).toISOString().split('T')[0] : '',
-        applicant_spouse_name: applicant.demographics?.spouseName || '',
-        applicant_spouse_occupation: applicant.demographics?.spouseOccupation || '',
-        applicant_dependents_count: applicant.demographics?.numberOfDependents || 0,
+        // Demographics - check nested object first, then fall back to legacy flat fields
+        applicant_dob: (applicant.demographics && applicant.demographics.dateOfBirth) ? new Date(applicant.demographics.dateOfBirth).toISOString().split('T')[0] : (applicant as any).dateOfBirth ? new Date((applicant as any).dateOfBirth).toISOString().split('T')[0] : '',
+        applicant_ssn: (applicant.demographics && applicant.demographics.ssn) ? applicant.demographics.ssn : (applicant as any).ssn || '',
+        applicant_birth_place: (applicant.demographics && applicant.demographics.birthPlace) ? applicant.demographics.birthPlace : (applicant as any).birthPlace || '',
+        applicant_race: (applicant.demographics && applicant.demographics.race) ? applicant.demographics.race : (applicant as any).race || '',
+        applicant_marital_status: (applicant.demographics && applicant.demographics.maritalStatus) ? applicant.demographics.maritalStatus : (applicant as any).maritalStatus || '',
+        applicant_anniversary: (applicant.demographics && applicant.demographics.anniversary) ? new Date(applicant.demographics.anniversary).toISOString().split('T')[0] : (applicant as any).anniversary ? new Date((applicant as any).anniversary).toISOString().split('T')[0] : '',
+        applicant_spouse_name: (applicant.demographics && applicant.demographics.spouseName) ? applicant.demographics.spouseName : (applicant as any).spouseName || '',
+        applicant_spouse_occupation: (applicant.demographics && applicant.demographics.spouseOccupation) ? applicant.demographics.spouseOccupation : (applicant as any).spouseOccupation || '',
+        applicant_dependents_count: (applicant.demographics && applicant.demographics.numberOfDependents) ? applicant.demographics.numberOfDependents : (applicant as any).dependentsCount || 0,
         
-        // Map Co-Applicant fields to flat frontend form structure if co-applicant exists
+        // Co-Applicant flat field mappings (if co-applicant exists) - handle legacy field names
         ...(coApplicant && {
           coapplicant_title: coApplicant.title || '',
           coapplicant_first_name: coApplicant.firstName || '',
-          coapplicant_mi: coApplicant.mi || '',
+          coapplicant_mi: coApplicant.mi || (coApplicant as any).middleInitial || '',
           coapplicant_last_name: coApplicant.lastName || '',
           coapplicant_suffix: coApplicant.suffix || '',
           coapplicant_maiden_name: coApplicant.maidenName || '',
           coapplicant_is_consultant: coApplicant.isConsultant || false,
           
-          // Contact Info
+          // Contact Info - handle legacy field names
           coapplicant_home_phone: coApplicant.homePhone || '',
-          coapplicant_other_phone: coApplicant.workPhone || '',
-          coapplicant_cell_phone: coApplicant.cellPhone || '',
+          coapplicant_other_phone: coApplicant.workPhone || (coApplicant as any).otherPhone || '',
+          coapplicant_cell_phone: coApplicant.cellPhone || (coApplicant as any).mobilePhone || '',
           coapplicant_fax: coApplicant.fax || '',
           coapplicant_email: coApplicant.email || '',
           
-          // Address Info
-          coapplicant_address: coApplicant.currentAddress?.street || '',
-          coapplicant_city: coApplicant.currentAddress?.city || '',
-          coapplicant_state: coApplicant.currentAddress?.state || '',
-          coapplicant_zip_code: coApplicant.currentAddress?.zipCode || '',
-          coapplicant_county: coApplicant.currentAddress?.county || '',
-          coapplicant_time_at_address: '', // Not stored in current model
-          coapplicant_previous_address: coApplicant.previousAddress?.street || '',
-          coapplicant_previous_address_time: '', // Not stored in current model
+          // Address Info - check nested object first, then fall back to legacy flat fields
+          coapplicant_address: (coApplicant.currentAddress && coApplicant.currentAddress.street) ? coApplicant.currentAddress.street : (coApplicant as any).address || '',
+          coapplicant_city: (coApplicant.currentAddress && coApplicant.currentAddress.city) ? coApplicant.currentAddress.city : (coApplicant as any).city || '',
+          coapplicant_state: (coApplicant.currentAddress && coApplicant.currentAddress.state) ? coApplicant.currentAddress.state : (coApplicant as any).state || '',
+          coapplicant_zip_code: (coApplicant.currentAddress && coApplicant.currentAddress.zipCode) ? coApplicant.currentAddress.zipCode : (coApplicant as any).zipCode || '',
+          coapplicant_county: (coApplicant.currentAddress && coApplicant.currentAddress.county) ? coApplicant.currentAddress.county : (coApplicant as any).county || '',
+          coapplicant_time_at_address: (coApplicant as any).timeAtAddress || '',
+          coapplicant_previous_address: (coApplicant.previousAddress && coApplicant.previousAddress.street) ? coApplicant.previousAddress.street : (coApplicant as any).previousAddress || '',
+          coapplicant_previous_address_time: (coApplicant as any).previousAddressTime || '',
           
-          // Employment Info
-          coapplicant_employment_status: coApplicant.employment?.status || '',
-          coapplicant_business_owner: coApplicant.employment?.isBusinessOwner ? 'Yes' : 'No',
-          coapplicant_employer_name: coApplicant.employment?.employerName || '',
-          coapplicant_employer_address: coApplicant.employment?.employerAddress?.street || '',
-          coapplicant_employer_city: coApplicant.employment?.employerAddress?.city || '',
-          coapplicant_employer_state: coApplicant.employment?.employerAddress?.state || '',
-          coapplicant_employer_zip: coApplicant.employment?.employerAddress?.zipCode || '',
-          coapplicant_occupation: coApplicant.employment?.occupation || '',
-          coapplicant_monthly_salary: coApplicant.employment?.monthlySalary || 0,
-          coapplicant_employer_phone: coApplicant.employment?.employerPhone || '',
-          coapplicant_start_date: coApplicant.employment?.startDate ? new Date(coApplicant.employment.startDate).toISOString().split('T')[0] : '',
-          coapplicant_end_date: coApplicant.employment?.endDate ? new Date(coApplicant.employment.endDate).toISOString().split('T')[0] : '',
-          coapplicant_additional_income: coApplicant.employment?.additionalIncome || 0,
-          coapplicant_additional_income_source: coApplicant.employment?.additionalIncomeSource || '',
+          // Employment Info - check nested object first, then fall back to legacy flat fields
+          coapplicant_employment_status: (coApplicant.employment && coApplicant.employment.status) ? coApplicant.employment.status : (coApplicant as any).employmentStatus || '',
+          coapplicant_business_owner: (coApplicant.employment && coApplicant.employment.isBusinessOwner) ? 'Yes' : (coApplicant as any).businessOwner === 'Yes' ? 'Yes' : 'No',
+          coapplicant_employer_name: (coApplicant.employment && coApplicant.employment.employerName) ? coApplicant.employment.employerName : (coApplicant as any).employerName || '',
+          coapplicant_employer_address: (coApplicant.employment && coApplicant.employment.employerAddress && coApplicant.employment.employerAddress.street) ? coApplicant.employment.employerAddress.street : (coApplicant as any).employerAddress || '',
+          coapplicant_employer_city: (coApplicant.employment && coApplicant.employment.employerAddress && coApplicant.employment.employerAddress.city) ? coApplicant.employment.employerAddress.city : (coApplicant as any).employerCity || '',
+          coapplicant_employer_state: (coApplicant.employment && coApplicant.employment.employerAddress && coApplicant.employment.employerAddress.state) ? coApplicant.employment.employerAddress.state : (coApplicant as any).employerState || '',
+          coapplicant_employer_zip: (coApplicant.employment && coApplicant.employment.employerAddress && coApplicant.employment.employerAddress.zipCode) ? coApplicant.employment.employerAddress.zipCode : (coApplicant as any).employerZip || '',
+          coapplicant_occupation: (coApplicant.employment && coApplicant.employment.occupation) ? coApplicant.employment.occupation : (coApplicant as any).occupation || '',
+          coapplicant_monthly_salary: (coApplicant.employment && coApplicant.employment.monthlySalary) ? coApplicant.employment.monthlySalary : (coApplicant as any).monthlySalary || 0,
+          coapplicant_employer_phone: (coApplicant.employment && coApplicant.employment.employerPhone) ? coApplicant.employment.employerPhone : (coApplicant as any).employerPhone || '',
+          coapplicant_start_date: (coApplicant.employment && coApplicant.employment.startDate) ? new Date(coApplicant.employment.startDate).toISOString().split('T')[0] : (coApplicant as any).startDate ? new Date((coApplicant as any).startDate).toISOString().split('T')[0] : '',
+          coapplicant_end_date: (coApplicant.employment && coApplicant.employment.endDate) ? new Date(coApplicant.employment.endDate).toISOString().split('T')[0] : (coApplicant as any).endDate ? new Date((coApplicant as any).endDate).toISOString().split('T')[0] : '',
+          coapplicant_additional_income: (coApplicant.employment && coApplicant.employment.additionalIncome) ? coApplicant.employment.additionalIncome : (coApplicant as any).additionalIncome || 0,
+          coapplicant_additional_income_source: (coApplicant.employment && coApplicant.employment.additionalIncomeSource) ? coApplicant.employment.additionalIncomeSource : (coApplicant as any).additionalIncomeSource || '',
           
-          // Demographics
-          coapplicant_dob: coApplicant.demographics?.dateOfBirth ? new Date(coApplicant.demographics.dateOfBirth).toISOString().split('T')[0] : '',
-          coapplicant_ssn: coApplicant.demographics?.ssn || '',
-          coapplicant_birth_place: coApplicant.demographics?.birthPlace || '',
-          coapplicant_race: coApplicant.demographics?.race || '',
-          coapplicant_marital_status: coApplicant.demographics?.maritalStatus || '',
-          coapplicant_anniversary: coApplicant.demographics?.anniversary ? new Date(coApplicant.demographics.anniversary).toISOString().split('T')[0] : '',
-          coapplicant_spouse_name: coApplicant.demographics?.spouseName || '',
-          coapplicant_spouse_occupation: coApplicant.demographics?.spouseOccupation || '',
-          coapplicant_dependents_count: coApplicant.demographics?.numberOfDependents || 0,
+          // Demographics - check nested object first, then fall back to legacy flat fields
+          coapplicant_dob: (coApplicant.demographics && coApplicant.demographics.dateOfBirth) ? new Date(coApplicant.demographics.dateOfBirth).toISOString().split('T')[0] : (coApplicant as any).dateOfBirth ? new Date((coApplicant as any).dateOfBirth).toISOString().split('T')[0] : '',
+          coapplicant_ssn: (coApplicant.demographics && coApplicant.demographics.ssn) ? coApplicant.demographics.ssn : (coApplicant as any).ssn || '',
+          coapplicant_birth_place: (coApplicant.demographics && coApplicant.demographics.birthPlace) ? coApplicant.demographics.birthPlace : (coApplicant as any).birthPlace || '',
+          coapplicant_race: (coApplicant.demographics && coApplicant.demographics.race) ? coApplicant.demographics.race : (coApplicant as any).race || '',
+          coapplicant_marital_status: (coApplicant.demographics && coApplicant.demographics.maritalStatus) ? coApplicant.demographics.maritalStatus : (coApplicant as any).maritalStatus || '',
+          coapplicant_anniversary: (coApplicant.demographics && coApplicant.demographics.anniversary) ? new Date(coApplicant.demographics.anniversary).toISOString().split('T')[0] : (coApplicant as any).anniversary ? new Date((coApplicant as any).anniversary).toISOString().split('T')[0] : '',
+          coapplicant_spouse_name: (coApplicant.demographics && coApplicant.demographics.spouseName) ? coApplicant.demographics.spouseName : (coApplicant as any).spouseName || '',
+          coapplicant_spouse_occupation: (coApplicant.demographics && coApplicant.demographics.spouseOccupation) ? coApplicant.demographics.spouseOccupation : (coApplicant as any).spouseOccupation || '',
+          coapplicant_dependents_count: (coApplicant.demographics && coApplicant.demographics.numberOfDependents) ? coApplicant.demographics.numberOfDependents : (coApplicant as any).dependentsCount || 0,
         }),
         
-        // Initialize other form fields with defaults
+        // Initialize other form fields with defaults for frontend compatibility
         total_debt: 0,
         payoff_amount: 0,
         entry_date: new Date().toISOString().split('T')[0],
@@ -1020,43 +1137,9 @@ export const getClientById = async (req: AuthRequest, res: Response): Promise<vo
         coapplicant_household_members: coApplicant?.householdMembers || [],
         liabilities: [], // Will be populated separately
         
-        // Include original nested structure for backward compatibility (using different names to avoid conflicts)
-        applicantData: {
-          firstName: applicant.firstName,
-          lastName: applicant.lastName,
-          title: applicant.title,
-          mi: applicant.mi,
-          suffix: applicant.suffix,
-          maidenName: applicant.maidenName,
-          isConsultant: applicant.isConsultant,
-          homePhone: applicant.homePhone,
-          cellPhone: applicant.cellPhone,
-          email: applicant.email,
-          currentAddress: applicant.currentAddress,
-          previousAddress: applicant.previousAddress,
-          employment: applicant.employment,
-          demographics: applicant.demographics
-        },
-        
-        // Include co-applicant nested structure if exists
-        ...(coApplicant && {
-          coApplicantData: {
-            firstName: coApplicant.firstName,
-            lastName: coApplicant.lastName,
-            title: coApplicant.title,
-            mi: coApplicant.mi,
-            suffix: coApplicant.suffix,
-            maidenName: coApplicant.maidenName,
-            isConsultant: coApplicant.isConsultant,
-            homePhone: coApplicant.homePhone,
-            cellPhone: coApplicant.cellPhone,
-            email: coApplicant.email,
-            currentAddress: coApplicant.currentAddress,
-            previousAddress: coApplicant.previousAddress,
-            employment: coApplicant.employment,
-            demographics: coApplicant.demographics
-          }
-        })
+        // Metadata
+        createdAt: applicant.createdAt,
+        updatedAt: applicant.updatedAt
       };
 
       await logAuditEvent(req, 'CLIENT_VIEWED', 'applicant', applicant._id.toString());
@@ -1082,9 +1165,15 @@ export const getClientById = async (req: AuthRequest, res: Response): Promise<vo
 
     await logAuditEvent(req, 'CLIENT_VIEWED', 'client', client._id.toString());
 
+    // Add type indicator for legacy clients
+    const clientData = {
+      ...client.toObject(),
+      type: 'SecuriaClient' // Indicate this is the old model structure
+    };
+
     res.json({
       success: true,
-      data: client
+      data: clientData
     });
   } catch (error) {
     logger.error('Get client error:', error);
@@ -1465,8 +1554,15 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
   try {
     const totalConsultants = await Consultant.countDocuments();
     const activeConsultants = await Consultant.countDocuments({ status: 'Active' });
-    const totalClients = await SecuriaClient.countDocuments();
-    const activeClients = await SecuriaClient.countDocuments({ status: 'active' });
+    
+    // Count clients from both models
+    const securiaClients = await SecuriaClient.countDocuments();
+    const applicantClients = await Applicant.countDocuments();
+    const totalClients = securiaClients + applicantClients;
+    
+    const activeSecuriaClients = await SecuriaClient.countDocuments({ status: 'active' });
+    // All applicants are considered active by default
+    const activeClients = activeSecuriaClients + applicantClients;
 
     // Calculate mock revenue (in a real app, this would come from a transactions collection)
     const totalRevenue = totalClients * 2500; // Mock calculation
@@ -1540,20 +1636,49 @@ export const getChartData = async (req: AuthRequest, res: Response): Promise<voi
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]);
 
-    // Client growth
-    const clientGrowth = await SecuriaClient.aggregate([
-      { $match: { createdAt: { $gte: dateRange } } },
-      { 
-        $group: {
-          _id: { 
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' }
-          },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    // Client growth - combine both SecuriaClient and Applicant collections
+    const [securiaClientGrowth, applicantGrowth] = await Promise.all([
+      SecuriaClient.aggregate([
+        { $match: { createdAt: { $gte: dateRange } } },
+        { 
+          $group: {
+            _id: { 
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' }
+            },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } }
+      ]),
+      Applicant.aggregate([
+        { $match: { createdAt: { $gte: dateRange } } },
+        { 
+          $group: {
+            _id: { 
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' }
+            },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } }
+      ])
     ]);
+
+    // Combine client growth data from both collections
+    const combinedClientGrowth = new Map();
+    
+    [...securiaClientGrowth, ...applicantGrowth].forEach(item => {
+      const key = `${item._id.month}/${item._id.year}`;
+      const existing = combinedClientGrowth.get(key) || 0;
+      combinedClientGrowth.set(key, existing + item.count);
+    });
+
+    const clientGrowth = Array.from(combinedClientGrowth.entries()).map(([period, count]) => ({
+      period,
+      count
+    }));
 
     // Revenue by consultant (mock data)
     const consultants = await Consultant.find({ status: 'Active' }).limit(10);
@@ -1581,10 +1706,7 @@ export const getChartData = async (req: AuthRequest, res: Response): Promise<voi
           period: `${item._id.month}/${item._id.year}`,
           count: item.count
         })),
-        clientGrowth: clientGrowth.map(item => ({
-          period: `${item._id.month}/${item._id.year}`,
-          count: item.count
-        })),
+        clientGrowth,
         revenueByConsultant,
         clientsByRiskTolerance: clientsByRiskTolerance.map(item => ({
           riskLevel: item._id,

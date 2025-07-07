@@ -85,9 +85,13 @@ interface ModernClientStructure {
  * Determines if the client data is in the modern flat format
  */
 function isModernFormat(data: any): data is ModernClientStructure {
+  // Check if we have flat fields that indicate the new backend format
   return data.applicant_first_name !== undefined || 
          data.coapplicant_first_name !== undefined ||
-         (data.applicant === undefined && data.coApplicant === undefined);
+         data.applicant_address !== undefined ||
+         data.coapplicant_address !== undefined ||
+         // Also check if it's already been processed by the new backend
+         (data.type === 'Applicant' || data.type === 'SecuriaClient');
 }
 
 /**
@@ -145,8 +149,13 @@ function mapApplicantData(applicant: NestedApplicant | undefined, prefix: 'appli
 export function mapMongoClientToFlatStructure(mongoClient: any) {
   if (!mongoClient) return null;
 
-  // Handle modern flat format - just enhance with missing fields
+  console.log('[Mapper] Processing client data with type:', mongoClient.type);
+  console.log('[Mapper] Has applicant_first_name:', !!mongoClient.applicant_first_name);
+  console.log('[Mapper] Has nested applicant:', !!mongoClient.applicant);
+
+  // Handle modern flat format - the new backend already provides flat data
   if (isModernFormat(mongoClient)) {
+    console.log('[Mapper] Detected modern format, using data as-is');
     return {
       ...mongoClient,
       // Ensure both id and _id are available for backward compatibility
@@ -155,10 +164,12 @@ export function mapMongoClientToFlatStructure(mongoClient: any) {
       // Add client_number if not present
       client_number: mongoClient.client_number || 
                     mongoClient.clientId || 
-                    `CLI${mongoClient._id.slice(-6).toUpperCase()}`,
+                    `CLI${mongoClient._id.toString().slice(-6).toUpperCase()}`,
     };
   }
 
+  console.log('[Mapper] Detected legacy format, mapping nested structure');
+  
   // Handle legacy nested format
   const { applicant, coApplicant, liabilities, ...rest } = mongoClient as LegacyClientStructure;
 
