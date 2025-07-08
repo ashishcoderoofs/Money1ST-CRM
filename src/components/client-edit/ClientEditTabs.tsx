@@ -17,12 +17,27 @@ import { RetirementTab } from "./RetirementTab";
 import { LineageTab } from "./LineageTab";
 import type { Client } from "../../types/mongodb-client";
 
-interface ClientEditTabsProps {
-  client: Client;
-  setClient: (client: Client) => void;
+// Accept both Client and SecuriaClient types for compatibility
+type SecuriaClient = {
+  _id?: string;
+  clientId?: string;
+  entryDate?: string;
+  payoffAmount?: number;
+  status?: string;
+  consultant?: string;
+  processor?: string;
+  applicant?: any;
+  coApplicant?: any;
+  householdMembers?: any[];
+  [key: string]: any;
+};
+
+type ClientEditTabsProps = {
+  client: Client | SecuriaClient;
+  setClient: (client: Client | SecuriaClient) => void;
   isSubmitting?: boolean;
   isEditMode?: boolean;
-}
+};
 
 export function ClientEditTabs({ client, setClient, isSubmitting, isEditMode = false }: ClientEditTabsProps) {
   const navigate = useNavigate();

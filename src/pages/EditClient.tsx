@@ -2,32 +2,22 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ClientEditTabs } from "@/components/client-edit/ClientEditTabs";
 import { Loader2, Eye } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
-import type { Client } from "../types/mongodb-client";
-
-// Dummy fetch function (replace with your real API call)
-async function fetchClientById(clientId: string): Promise<Client | null> {
-  // TODO: Replace with actual API call
-  return null;
-}
+import { useSecuriaClient, useUpdateSecuriaClient } from "@/hooks/useSecuriaClients";
 
 export default function EditClient() {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
-  const [client, setClient] = useState<Client | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading, error } = useSecuriaClient(clientId || "");
+  const [client, setClient] = useState(data?.data || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const updateClientMutation = useUpdateSecuriaClient();
 
-  useEffect(() => {
-    if (!clientId) return;
-    setIsLoading(true);
-    fetchClientById(clientId)
-      .then((data) => {
-        setClient(data);
-      })
-      .finally(() => setIsLoading(false));
-  }, [clientId]);
+  // Update local state when data loads
+  React.useEffect(() => {
+    if (data?.data) setClient(data.data);
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -37,7 +27,7 @@ export default function EditClient() {
     );
   }
 
-  if (!client) {
+  if (error || !client) {
     return <div className="p-6">Client not found.</div>;
   }
 
@@ -45,11 +35,12 @@ export default function EditClient() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // TODO: Replace with actual API call to update client
-      // await api.updateClient(client._id, client);
+      if (!client || !client._id) throw new Error("Missing client ID");
+      // Remove fields that should not be updated
+      const { _id, createdAt, updatedAt, ...update } = client;
+      await updateClientMutation.mutateAsync({ id: client._id, update });
       toast.success("Client updated successfully!");
-      // Optionally navigate back to view mode
-      // navigate(`/securia/clients/${client._id}`);
+      navigate(`/securia/clients/${client._id}`);
     } catch (err: any) {
       toast.error("Failed to update client: " + (err?.message || "Unknown error"));
     } finally {

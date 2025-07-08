@@ -15,35 +15,18 @@ import { DriversViewTable } from "@/components/client-details/DriversViewTable";
 import PlaceholderTab from "@/components/client-details/PlaceholderTab";
 import ClientDetailsSkeleton from "@/components/client-details/ClientDetailsSkeleton";
 import { Edit, ArrowLeft } from "lucide-react";
-import { useEffect, useState } from "react";
-import type { Client } from "../types/mongodb-client";
-
-// Dummy fetch function (replace with your real API call)
-async function fetchClientById(clientId: string): Promise<Client | null> {
-  // TODO: Replace with actual API call
-  return null;
-}
+import { useSecuriaClient } from "@/hooks/useSecuriaClients";
 
 export default function ClientDetails() {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
-  const [client, setClient] = useState<Client | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!clientId) return;
-    setIsLoading(true);
-    fetchClientById(clientId)
-      .then((data) => {
-        setClient(data);
-      })
-      .finally(() => setIsLoading(false));
-  }, [clientId]);
+  const { data, isLoading, error } = useSecuriaClient(clientId || "");
+  const client = data?.data;
 
   if (isLoading) {
     return <ClientDetailsSkeleton />;
   }
-  if (!client) {
+  if (error || !client) {
     return <div className="p-8">Client not found.</div>;
   }
 
