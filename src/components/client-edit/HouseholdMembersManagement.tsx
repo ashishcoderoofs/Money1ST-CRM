@@ -5,6 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { useFieldArray } from "react-hook-form";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 interface HouseholdMembersManagementProps {
   form: any;
@@ -182,15 +193,32 @@ export function HouseholdMembersManagement({ form, role }: HouseholdMembersManag
                     </Select>
                   </td>
                   <td className="border border-gray-300 px-2 py-2 text-center">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      className="w-7 h-7 p-0 bg-red-600 hover:bg-red-700"
-                      onClick={() => remove(index)}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          className="w-7 h-7 p-0 bg-red-600 hover:bg-red-700"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remove Household Member?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to remove this household member? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => remove(index)}>
+                            Remove
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </td>
                 </tr>
               ))

@@ -5,6 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { useFieldArray } from "react-hook-form";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 interface HouseholdMember {
   first_name: string;
@@ -144,15 +155,51 @@ export function ApplicantHouseholdMembersForm({ form }: ApplicantHouseholdMember
                     </Select>
                   </td>
                   <td className="border border-gray-300 px-2 py-2">
-                    <Button 
-                      size="sm" 
-                      type="button"
-                      variant="destructive" 
-                      className="w-8 h-8 p-0"
-                      onClick={() => remove(index)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {(() => {
+                      const member = form.getValues(`household_members.${index}`);
+                      const hasData = Object.values(member).some((v) => v && v !== "");
+                      if (!hasData) {
+                        return (
+                          <Button 
+                            size="sm" 
+                            type="button"
+                            variant="destructive" 
+                            className="w-8 h-8 p-0"
+                            onClick={() => remove(index)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        );
+                      }
+                      return (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              type="button"
+                              variant="destructive" 
+                              className="w-8 h-8 p-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remove Household Member?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This row contains data. Are you sure you want to remove this household member? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => remove(index)}>
+                                Remove
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}

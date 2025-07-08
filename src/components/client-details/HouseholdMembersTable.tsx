@@ -13,17 +13,8 @@ export default function HouseholdMembersTable({
   // Parse household members from client data if available
   let householdMembers = members;
   
-  if (client) {
-    try {
-      if (role === "coapplicant" && client.coapplicant_household_members_json) {
-        householdMembers = JSON.parse(client.coapplicant_household_members_json);
-      } else if (role === "applicant" && client.household_members_json) {
-        householdMembers = JSON.parse(client.household_members_json);
-      }
-    } catch (error) {
-      console.error("Error parsing household members:", error);
-      householdMembers = [];
-    }
+  if (client && Array.isArray(client.householdMembers)) {
+    householdMembers = client.householdMembers;
   }
 
   const title = role === "coapplicant" ? "Co-Applicant Household Members" : "Household Members";
@@ -64,37 +55,29 @@ export default function HouseholdMembersTable({
               <thead className="bg-gray-100">
                 <tr>
                   <th className="border border-gray-300 px-3 py-2 text-left font-medium">First Name</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left font-medium">MI</th>
                   <th className="border border-gray-300 px-3 py-2 text-left font-medium">Last Name</th>
                   <th className="border border-gray-300 px-3 py-2 text-left font-medium">Relationship</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left font-medium">Date of Birth</th>
                   <th className="border border-gray-300 px-3 py-2 text-left font-medium">Age</th>
                   <th className="border border-gray-300 px-3 py-2 text-left font-medium">Sex</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left font-medium">Date of Birth</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left font-medium">Monthly Income</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left font-medium">Tobacco User</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left font-medium">Student</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left font-medium">Marital Status</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left font-medium">SSN</th>
                 </tr>
               </thead>
               <tbody>
                 {householdMembers && householdMembers.length > 0 ? (
                   householdMembers.map((member: any, idx: number) => (
                     <tr key={idx}>
-                      <td className="border border-gray-300 px-3 py-2">{member.first_name || ""}</td>
-                      <td className="border border-gray-300 px-3 py-2">{member.last_name || ""}</td>
+                      <td className="border border-gray-300 px-3 py-2">{member.firstName || ""}</td>
+                      <td className="border border-gray-300 px-3 py-2">{member.middleInitial || ""}</td>
+                      <td className="border border-gray-300 px-3 py-2">{member.lastName || ""}</td>
                       <td className="border border-gray-300 px-3 py-2">{member.relationship || ""}</td>
+                      <td className="border border-gray-300 px-3 py-2">{member.dateOfBirth || ""}</td>
                       <td className="border border-gray-300 px-3 py-2">{member.age || ""}</td>
                       <td className="border border-gray-300 px-3 py-2">{member.sex || ""}</td>
-                      <td className="border border-gray-300 px-3 py-2">{member.date_of_birth || ""}</td>
-                      <td className="border border-gray-300 px-3 py-2">
-                        {member.monthly_income ? `$${parseFloat(member.monthly_income).toFixed(2)}` : "$0.00"}
-                      </td>
-                      <td className="border border-gray-300 px-3 py-2 text-center">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          member.tobacco_user === "Yes" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                        }`}>
-                          {member.tobacco_user || "No"}
-                        </span>
-                      </td>
-                      <td className="border border-gray-300 px-3 py-2">{member.student || "No"}</td>
+                      <td className="border border-gray-300 px-3 py-2">{member.maritalStatus || ""}</td>
+                      <td className="border border-gray-300 px-3 py-2">{member.ssn || ""}</td>
                     </tr>
                   ))
                 ) : (

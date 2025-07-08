@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Client } from "@/types/mongodb-client";
 
 interface CoApplicantTabProps {
@@ -35,6 +35,16 @@ export function CoApplicantTab({ client, setClient }: CoApplicantTabProps) {
   };
 
   const include = client.coApplicant?.includeCoApplicant ?? true;
+
+  // Remove coApplicant data if includeCoApplicant is unchecked
+  useEffect(() => {
+    if (client.coApplicant && client.coApplicant.includeCoApplicant === false) {
+      setClient({
+        ...client,
+        coApplicant: { includeCoApplicant: false },
+      });
+    }
+  }, [client.coApplicant?.includeCoApplicant]);
 
   return (
     <div className="bg-blue-50 p-4 rounded-lg relative">

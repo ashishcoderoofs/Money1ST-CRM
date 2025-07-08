@@ -49,34 +49,9 @@ export default function EditClient() {
   }
 
   return (
-    <div className="w-full px-6 py-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Edit Client: {client.clientId || client._id}</h1>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/securia/clients/${client._id}`)}
-          >
-            <Eye className="w-4 h-4 mr-1" />
-            View Mode
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/securia/clients")}
-          >
-            Back to Clients
-          </Button>
-        </div>
-      </div>
-      <form onSubmit={onSubmit} className="space-y-6">
-        <ClientEditTabs
-          client={client}
-          setClient={setClient}
-          isSubmitting={isSubmitting}
-          isEditMode={true}
-        />
-        <div className="flex justify-end">
+    <div className="flex-1 p-6 bg-gray-50">
+      <form onSubmit={onSubmit} className="space-y-6 relative">
+        <div className="sticky top-0 z-20 flex justify-end bg-gray-50 pt-2 pb-2" style={{ right: 0 }}>
           <button
             type="submit"
             className="h-10 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
@@ -85,6 +60,30 @@ export default function EditClient() {
             {isSubmitting ? "Updating..." : "Update Client"}
           </button>
         </div>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Edit Client: {client.clientId || client._id}</h1>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/securia/clients/${client._id}`)}
+            >
+              <Eye className="w-4 h-4 mr-1" />
+              View Mode
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/securia/clients")}
+            >
+              Back to Clients
+            </Button>
+          </div>
+        </div>
+        <ClientEditTabs
+          client={client}
+          setClient={setClient}
+          isSubmitting={isSubmitting}
+          isEditMode={true}
+        />
       </form>
     </div>
   );
