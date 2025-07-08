@@ -271,7 +271,7 @@ export const validateSecuriaClientCreation = (req: Request, res: Response, next:
     }).optional(),
 
     // System Fields (Optional - will be set by backend)
-    status: Joi.string().valid('draft', 'submitted', 'in-review', 'approved', 'active', 'inactive', 'closed').optional(),
+    status: Joi.string().valid("inactive", "active","pending").optional(),
     completionStatus: Joi.object({
       applicant: Joi.boolean().optional(),
       coApplicant: Joi.boolean().optional(),

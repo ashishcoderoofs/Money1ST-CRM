@@ -17,8 +17,7 @@ const initialClient: Client = {
 function mapStatus(status: string | undefined) {
   if (!status) return "active";
   const s = status.toLowerCase();
-  if (["active", "inactive", "draft", "submitted"].includes(s)) return s;
-  if (s === "pending") return "draft";
+  if (["active", "inactive", "pending"].includes(s)) return s;
   return "active";
 }
 
@@ -38,10 +37,17 @@ export default function NewClient() {
         setIsSubmitting(false);
         return;
       }
+      // Build the payload with correct nesting
       const payload = {
-        ...client,
-        status: mapStatus(client.status),
+        applicant: client.applicant,
         coApplicant: client.coApplicant?.includeCoApplicant ? client.coApplicant : undefined,
+        consultant: client.consultant,
+        entryDate: client.entryDate,
+        householdMembers: client.householdMembers,
+        payoffAmount: client.payoffAmount,
+        processor: client.processor,
+        status: mapStatus(client.status),
+        // Add any other root-level fields your backend expects
       };
       const result = await createClientMutation.mutateAsync(payload as any);
       if (result?.data?._id) {

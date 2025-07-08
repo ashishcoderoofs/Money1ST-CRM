@@ -141,7 +141,7 @@ export function ClientEditTabs({ client, setClient, isSubmitting, isEditMode = f
             <CoApplicantTab client={client} setClient={setClient} />
           </TabsContent>
           <TabsContent value="liabilities" className="space-y-4 mt-6">
-            <LiabilitiesTab client={client} />
+            <LiabilitiesTab client={client} setClient={setClient} />
           </TabsContent>
           <TabsContent value="mortgages" className="space-y-4 mt-6">
             <MortgagesTab client={client} />

@@ -39,8 +39,8 @@ function ClientsTable({ onAdd }: any) {
     }
   };
 
-  const getFullName = (firstName: string, lastName: string) => {
-    return [firstName, lastName].filter(Boolean).join(" ");
+  const getFullName = (client: any) => {
+    return [client.applicant?.firstName, client.applicant?.lastName].filter(Boolean).join(" ") || "N/A";
   };
 
   const getBadgeVariant = (status: string | undefined) => {
@@ -116,10 +116,10 @@ function ClientsTable({ onAdd }: any) {
                     {client.clientId || `CLI${client._id.substring(client._id.length - 6)}`}
                   </TableCell>
                   <TableCell className="font-medium">
-                    {getFullName(client.firstName, client.lastName)}
+                    {getFullName(client)}
                   </TableCell>
-                  <TableCell>{client.email}</TableCell>
-                  <TableCell>{client.phone}</TableCell>
+                  <TableCell>{client.applicant?.email || 'N/A'}</TableCell>
+                  <TableCell>{client.applicant?.cellPhone || client.applicant?.homePhone || client.applicant?.workPhone || 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={getBadgeVariant(client.status)}>
                       {client.status || 'N/A'}
@@ -128,7 +128,7 @@ function ClientsTable({ onAdd }: any) {
                   <TableCell className="capitalize">
                     {client.financialInfo?.riskTolerance || 'N/A'}
                   </TableCell>
-                  <TableCell>{new Date(client.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>{client.entryDate ? new Date(client.entryDate).toLocaleDateString() : 'N/A'}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button
                       size="sm"
@@ -154,13 +154,13 @@ function ClientsTable({ onAdd }: any) {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action will permanently delete the client "{getFullName(client.firstName, client.lastName)}" and all their associated data. This action cannot be undone.
+                            This action will permanently delete the client "{getFullName(client)}" and all their associated data. This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDelete(client._id, getFullName(client.firstName, client.lastName))}
+                            onClick={() => handleDelete(client._id, getFullName(client))}
                             className="bg-destructive hover:bg-destructive/90"
                             disabled={deleteClientMutation.isPending}
                           >

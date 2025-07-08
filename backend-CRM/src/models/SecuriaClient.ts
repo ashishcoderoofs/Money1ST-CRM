@@ -8,9 +8,14 @@ export interface ISecuriaClient extends Document {
   // Auto-generated fields
   clientId?: string;
   completionPercentage?: number;
-  status?: 'draft' | 'submitted' | 'active' | 'inactive';
+  status?: 'active' | 'pending' | 'inactive';
   createdBy?: string;
   lastModifiedBy?: string;
+  email?: string; // Added email field
+  entryDate?: Date;
+  payoffAmount?: number;
+  consultant?: string;
+  processor?: string;
   
   // 1. Applicant Information (Primary)
   applicant?: {
@@ -392,55 +397,18 @@ export interface ISecuriaClient extends Document {
   // Methods
   encryptSSN(ssn: string): string;
   decryptSSN(): string;
+  householdMembers?: Array<{
+    firstName?: string;
+    middleInitial?: string;
+    lastName?: string;
+    relationship?: string;
+    dateOfBirth?: Date;
+    age?: number;
+    sex?: string;
+    maritalStatus?: string;
+    ssn?: string;
+  }>;
 }
-
-const AddressSchema = new Schema({
-  street: {
-    type: String,
-    trim: true,
-    maxlength: [200, 'Street address cannot exceed 200 characters']
-  },
-  city: {
-    type: String,
-    trim: true,
-    maxlength: [100, 'City cannot exceed 100 characters']
-  },
-  state: {
-    type: String,
-    trim: true,
-    maxlength: [50, 'State cannot exceed 50 characters']
-  },
-  zipCode: {
-    type: String,
-    trim: true,
-    match: [/^\d{5}(-\d{4})?$/, 'Please enter a valid zip code']
-  },
-  country: {
-    type: String,
-    trim: true,
-    maxlength: [50, 'Country cannot exceed 50 characters'],
-    default: 'USA'
-  }
-}, { _id: false });
-
-const FinancialInfoSchema = new Schema({
-  annualIncome: {
-    type: Number,
-    min: [0, 'Annual income cannot be negative']
-  },
-  netWorth: {
-    type: Number
-  },
-  investmentGoals: {
-    type: String,
-    trim: true,
-    maxlength: [1000, 'Investment goals cannot exceed 1000 characters']
-  },
-  riskTolerance: {
-    type: String,
-    enum: ['low', 'medium', 'high']
-  }
-}, { _id: false });
 
 const SecuriaClientSchema = new Schema<ISecuriaClient>({
   // Auto-generated fields
@@ -457,8 +425,8 @@ const SecuriaClientSchema = new Schema<ISecuriaClient>({
   },
   status: {
     type: String,
-    enum: ['draft', 'submitted', 'active', 'inactive'],
-    default: 'draft'
+    enum: ['active', 'pending', 'inactive'],
+    required: true
   },
   createdBy: {
     type: String
@@ -466,176 +434,168 @@ const SecuriaClientSchema = new Schema<ISecuriaClient>({
   lastModifiedBy: {
     type: String
   },
-  
-  // 1. Applicant Information
+  email: { type: String, unique: true, sparse: true, trim: true }, // required at root for uniqueness
+  entryDate: { type: Date, required: true }, // required
+  payoffAmount: { type: Number },
+  consultant: { type: String },
+  processor: { type: String },
   applicant: {
-    // Basic Info
-    title: { type: String, enum: ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'] },
-    firstName: { type: String, trim: true, maxlength: 50 },
-    mi: { type: String, trim: true, maxlength: 1 },
-    lastName: { type: String, trim: true, maxlength: 50 },
-    suffix: { type: String, enum: ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD'] },
-    maidenName: { type: String, trim: true, maxlength: 50 },
-    isConsultant: { type: Boolean, default: false },
-    
-    // Contact Info
-    homePhone: { type: String, trim: true },
-    workPhone: { type: String, trim: true },
-    cellPhone: { type: String, trim: true },
-    otherPhone: { type: String, trim: true },
-    fax: { type: String, trim: true },
-    email: { type: String, trim: true, lowercase: true },
-    
-    // Current Address
+    title: { type: String, enum: ['Mr.', 'Mrs.', 'Ms.', 'Dr.'] },
+    firstName: { type: String, required: true }, // required
+    middleInitial: { type: String },
+    lastName: { type: String, required: true }, // required
+    suffix: { type: String, enum: ['Jr.', 'Sr.', 'II', 'III', 'IV'] },
+    maidenName: { type: String },
+    isConsultant: { type: Boolean },
+    // Contact & Address
     currentAddress: {
-      street: { type: String, trim: true },
-      city: { type: String, trim: true },
-      state: { type: String, trim: true },
-      zipCode: { type: String, trim: true },
-      county: { type: String, trim: true },
-      howLongYears: { type: Number, min: 0 },
-      howLongMonths: { type: Number, min: 0 }
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zipCode: { type: String },
+      county: { type: String },
+      howLongYears: { type: Number },
+      howLongMonths: { type: Number }
     },
-    
-    // Previous Address (if less than 2 years at current)
+    homePhone: { type: String },
+    workPhone: { type: String },
+    cellPhone: { type: String },
+    otherPhone: { type: String },
+    email: { type: String, required: true }, // required
+    fax: { type: String },
     previousAddress: {
-      street: { type: String, trim: true },
-      city: { type: String, trim: true },
-      state: { type: String, trim: true },
-      zipCode: { type: String, trim: true },
-      howLongYears: { type: Number, min: 0 },
-      howLongMonths: { type: Number, min: 0 }
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zipCode: { type: String },
+      howLongYears: { type: Number },
+      howLongMonths: { type: Number }
     },
-    
-    // Current Employment Information
+    // Employment
     employment: {
       employmentStatus: { type: String, enum: ['Employed', 'Full-time', 'Self-Employed', 'Unemployed', 'Retired', 'Student', 'Part-Time', 'Contract'] },
-      isBusinessOwner: { type: Boolean, default: false },
-      occupation: { type: String, trim: true },
-      employerName: { type: String, trim: true },
-      employerAddress: { type: String, trim: true },
-      employerCity: { type: String, trim: true },
-      employerState: { type: String, trim: true },
-      employerZipCode: { type: String, trim: true },
-      monthlyGrossSalary: { type: Number, min: 0 },
+      isBusinessOwner: { type: Boolean },
+      occupation: { type: String },
+      employerName: { type: String },
+      employerAddress: { type: String },
+      employerCity: { type: String },
+      employerState: { type: String },
+      employerZipCode: { type: String },
+      monthlyGrossSalary: { type: Number },
       startDate: { type: Date },
       endDate: { type: Date },
-      supervisor: { type: String, trim: true },
-      supervisorPhone: { type: String, trim: true },
-      additionalIncome: { type: Number, min: 0 },
-      source: { type: String, trim: true }
+      supervisor: { type: String },
+      supervisorPhone: { type: String },
+      additionalIncome: { type: Number },
+      source: { type: String }
     },
-    
-    // Previous Employment
     previousEmployment: {
-      employerName: { type: String, trim: true },
-      employerAddress: { type: String, trim: true },
-      city: { type: String, trim: true },
-      state: { type: String, trim: true },
-      zipCode: { type: String, trim: true },
-      occupation: { type: String, trim: true },
+      employerName: { type: String },
+      employerAddress: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zipCode: { type: String },
+      occupation: { type: String },
       fromDate: { type: Date },
       toDate: { type: Date }
     },
-    
     // Demographics
     demographics: {
-      birthPlace: { type: String, trim: true },
+      birthPlace: { type: String },
       dateOfBirth: { type: Date },
-      ssn: { type: String, trim: true },
-      race: { type: String, enum: ['American Indian', 'Asian', 'Black/African American', 'Hispanic/Latino', 'Native Hawaiian', 'White', 'Other', 'Decline to Answer'] },
+      ssn: { type: String },
+      race: { type: String, enum: ['American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'Native Hawaiian or Other Pacific Islander', 'White', 'Two or More Races', 'Other'] },
       maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] },
       anniversary: { type: Date },
-      spouseName: { type: String, trim: true },
-      spouseOccupation: { type: String, trim: true },
-      numberOfDependents: { type: Number, min: 0 }
+      spouseName: { type: String },
+      spouseOccupation: { type: String },
+      numberOfDependents: { type: Number }
     }
   },
-  
-  // 2. Co-Applicant Information
   coApplicant: {
-    includeCoApplicant: { type: Boolean, default: false },
+    includeCoApplicant: { type: Boolean },
     title: { type: String, enum: ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'] },
-    firstName: { type: String, trim: true, maxlength: 50 },
-    mi: { type: String, trim: true, maxlength: 1 },
-    lastName: { type: String, trim: true, maxlength: 50 },
-    suffix: { type: String, enum: ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD'] },
-    maidenName: { type: String, trim: true, maxlength: 50 },
-    isConsultant: { type: Boolean, default: false },
-    
-    // Contact Info
-    homePhone: { type: String, trim: true },
-    workPhone: { type: String, trim: true },
-    cellPhone: { type: String, trim: true },
-    otherPhone: { type: String, trim: true },
-    fax: { type: String, trim: true },
-    email: { type: String, trim: true, lowercase: true },
-    
-    // Current Address
+    firstName: { type: String },
+    middleInitial: { type: String },
+    lastName: { type: String },
+    suffix: { type: String, enum: ['Jr.', 'Sr.', 'II', 'III', 'IV'] },
+    maidenName: { type: String },
+    isConsultant: { type: Boolean },
     currentAddress: {
-      street: { type: String, trim: true },
-      city: { type: String, trim: true },
-      state: { type: String, trim: true },
-      zipCode: { type: String, trim: true },
-      county: { type: String, trim: true },
-      howLongYears: { type: Number, min: 0 },
-      howLongMonths: { type: Number, min: 0 }
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zipCode: { type: String },
+      county: { type: String },
+      howLongYears: { type: Number },
+      howLongMonths: { type: Number }
     },
-    
-    // Previous Address (if less than 2 years at current)
+    homePhone: { type: String },
+    workPhone: { type: String },
+    cellPhone: { type: String },
+    otherPhone: { type: String },
+    email: { type: String },
+    fax: { type: String },
     previousAddress: {
-      street: { type: String, trim: true },
-      city: { type: String, trim: true },
-      state: { type: String, trim: true },
-      zipCode: { type: String, trim: true },
-      howLongYears: { type: Number, min: 0 },
-      howLongMonths: { type: Number, min: 0 }
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zipCode: { type: String },
+      howLongYears: { type: Number },
+      howLongMonths: { type: Number }
     },
-    
-    // Current Employment Information
     employment: {
       employmentStatus: { type: String, enum: ['Employed', 'Full-time', 'Self-Employed', 'Unemployed', 'Retired', 'Student', 'Part-Time', 'Contract'] },
-      isBusinessOwner: { type: Boolean, default: false },
-      occupation: { type: String, trim: true },
-      employerName: { type: String, trim: true },
-      employerAddress: { type: String, trim: true },
-      employerCity: { type: String, trim: true },
-      employerState: { type: String, trim: true },
-      employerZipCode: { type: String, trim: true },
-      monthlyGrossSalary: { type: Number, min: 0 },
+      isBusinessOwner: { type: Boolean },
+      occupation: { type: String },
+      employerName: { type: String },
+      employerAddress: { type: String },
+      employerCity: { type: String },
+      employerState: { type: String },
+      employerZipCode: { type: String },
+      monthlyGrossSalary: { type: Number },
       startDate: { type: Date },
       endDate: { type: Date },
-      supervisor: { type: String, trim: true },
-      supervisorPhone: { type: String, trim: true },
-      additionalIncome: { type: Number, min: 0 },
-      source: { type: String, trim: true }
+      supervisor: { type: String },
+      supervisorPhone: { type: String },
+      additionalIncome: { type: Number },
+      source: { type: String }
     },
-    
-    // Previous Employment
     previousEmployment: {
-      employerName: { type: String, trim: true },
-      employerAddress: { type: String, trim: true },
-      city: { type: String, trim: true },
-      state: { type: String, trim: true },
-      zipCode: { type: String, trim: true },
-      occupation: { type: String, trim: true },
+      employerName: { type: String },
+      employerAddress: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zipCode: { type: String },
+      occupation: { type: String },
       fromDate: { type: Date },
       toDate: { type: Date }
     },
-    
-    // Demographics
     demographics: {
-      birthPlace: { type: String, trim: true },
+      birthPlace: { type: String },
       dateOfBirth: { type: Date },
-      ssn: { type: String, trim: true },
-      race: { type: String, enum: ['American Indian', 'Asian', 'Black/African American', 'Hispanic/Latino', 'Native Hawaiian', 'White', 'Other', 'Decline to Answer'] },
+      ssn: { type: String },
+      race: { type: String, enum: ['American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'Native Hawaiian or Other Pacific Islander', 'White', 'Two or More Races', 'Other'] },
       maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] },
       anniversary: { type: Date },
-      spouseName: { type: String, trim: true },
-      spouseOccupation: { type: String, trim: true },
-      numberOfDependents: { type: Number, min: 0 }
+      spouseName: { type: String },
+      spouseOccupation: { type: String },
+      numberOfDependents: { type: Number }
     }
   },
+  householdMembers: [
+    {
+      firstName: { type: String },
+      middleInitial: { type: String },
+      lastName: { type: String },
+      relationship: { type: String, enum: ['Applicant', 'Co-Applicant', 'Spouse', 'Partner', 'Son', 'Daughter', 'Parent', 'Sibling', 'Other'] },
+      dateOfBirth: { type: Date },
+      age: { type: Number },
+      sex: { type: String, enum: ['Male', 'Female'] },
+      maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] },
+      ssn: { type: String }
+    }
+  ],
   
   // 3. Liabilities
   liabilities: [{
@@ -911,7 +871,7 @@ SecuriaClientSchema.methods.decryptSSN = function(): string {
 
 // Create indexes
 SecuriaClientSchema.index({ email: 1 });
-SecuriaClientSchema.index({ consultantId: 1 });
+SecuriaClientSchema.index({ consultant: 1 });
 SecuriaClientSchema.index({ status: 1 });
 SecuriaClientSchema.index({ firstName: 1, lastName: 1 });
 SecuriaClientSchema.index({ 'financialInfo.riskTolerance': 1 });

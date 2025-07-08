@@ -4,32 +4,30 @@ import { useAuth } from "./useAuth";
 export interface SecuriaClient {
   _id: string;
   clientId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
+  applicant: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    cellPhone?: string;
+    homePhone?: string;
+    workPhone?: string;
+    otherPhone?: string;
+    // Add other applicant fields as needed
+  };
   status: "active" | "inactive" | "pending";
-  consultantId: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  financialInfo: {
-    annualIncome: number;
-    netWorth: number;
-    investmentGoals: string;
-    riskTolerance: "low" | "medium" | "high";
-  };
-  emergencyContact: {
-    name: string;
-    relationship: string;
-    phone: string;
+  consultant?: string;
+  entryDate?: string;
+  payoffAmount?: number;
+  processor?: string;
+  financialInfo?: {
+    annualIncome?: number;
+    netWorth?: number;
+    investmentGoals?: string;
+    riskTolerance?: "low" | "medium" | "high";
   };
   createdAt: string;
   updatedAt: string;
+  // Add other fields as needed
 }
 
 interface ClientsResponse {

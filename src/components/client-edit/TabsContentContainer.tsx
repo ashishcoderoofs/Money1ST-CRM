@@ -1,6 +1,6 @@
 
 import { TabsContent } from "@/components/ui/tabs";
-import { Tables } from "@/integrations/supabase/types";
+import type { Client } from "@/types/mongodb-client";
 import { ApplicantTab } from "./ApplicantTab";
 import { CoApplicantTab } from "./CoApplicantTab";
 import { HouseholdMembersTab } from "./HouseholdMembersTab";
@@ -18,27 +18,27 @@ import { RetirementTab } from "./RetirementTab";
 import { LineageTab } from "./LineageTab";
 
 interface TabsContentContainerProps {
-  client: Tables<"clients">;
-  form: any;
+  client: Client;
+  setClient: (client: Client) => void;
 }
 
-export function TabsContentContainer({ client, form }: TabsContentContainerProps) {
+export function TabsContentContainer({ client, setClient }: TabsContentContainerProps) {
   return (
     <div className="bg-white border border-gray-200 rounded-b-lg mt-2">
       <TabsContent value="applicant" className="p-6 m-0">
-        <ApplicantTab client={client} form={form} />
+        <ApplicantTab client={client} setClient={setClient} />
       </TabsContent>
       
       <TabsContent value="co-applicant" className="p-6 m-0">
-        <CoApplicantTab client={client} form={form} />
+        <CoApplicantTab client={client} setClient={setClient} />
       </TabsContent>
       
       <TabsContent value="household-members" className="p-6 m-0">
-        <HouseholdMembersTab client={client} form={form} />
+        <HouseholdMembersTab client={client} setClient={setClient} />
       </TabsContent>
       
       <TabsContent value="liabilities" className="p-6 m-0">
-        <LiabilitiesTab form={form} />
+        <LiabilitiesTab client={client} setClient={setClient} />
       </TabsContent>
       
       <TabsContent value="mortgages" className="p-6 m-0">
@@ -46,7 +46,7 @@ export function TabsContentContainer({ client, form }: TabsContentContainerProps
       </TabsContent>
       
       <TabsContent value="underwriting" className="p-6 m-0">
-        <UnderwritingTab client={client} form={form} />
+        <UnderwritingTab client={client} />
       </TabsContent>
       
       <TabsContent value="loanstatus" className="p-6 m-0">
@@ -58,7 +58,7 @@ export function TabsContentContainer({ client, form }: TabsContentContainerProps
       </TabsContent>
       
       <TabsContent value="vehiclecoverage" className="p-6 m-0">
-        <VehicleCoverageTab client={client} form={form} />
+        <VehicleCoverageTab client={client} setClient={setClient} />
       </TabsContent>
       
       <TabsContent value="homeowners" className="p-6 m-0">

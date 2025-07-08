@@ -372,6 +372,61 @@ export function ApplicantTab({ client, setClient }: ApplicantTabProps) {
           </div>
         </div>
       </div>
+      {/* Contact Information */}
+      <div className="mb-6">
+        <h4 className="font-medium text-green-700 mb-3">Contact Information</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Home Phone</label>
+            <Input
+              value={client.applicant?.homePhone || ""}
+              onChange={e => updateApplicant("homePhone", e.target.value)}
+              placeholder="Enter home phone"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Work Phone</label>
+            <Input
+              value={client.applicant?.workPhone || ""}
+              onChange={e => updateApplicant("workPhone", e.target.value)}
+              placeholder="Enter work phone"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Cell Phone</label>
+            <Input
+              value={client.applicant?.cellPhone || ""}
+              onChange={e => updateApplicant("cellPhone", e.target.value)}
+              placeholder="Enter cell phone"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Other Phone</label>
+            <Input
+              value={client.applicant?.otherPhone || ""}
+              onChange={e => updateApplicant("otherPhone", e.target.value)}
+              placeholder="Enter other phone"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Email</label>
+            <Input
+              type="email"
+              value={client.applicant?.email || ""}
+              onChange={e => updateApplicant("email", e.target.value)}
+              placeholder="Enter email address"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Fax</label>
+            <Input
+              value={client.applicant?.fax || ""}
+              onChange={e => updateApplicant("fax", e.target.value)}
+              placeholder="Enter fax number"
+            />
+          </div>
+        </div>
+      </div>
       {/* Current Address */}
       <div className="mb-6">
         <h4 className="font-medium text-green-700 mb-3">Current Address</h4>

@@ -914,7 +914,7 @@ export function ConsultantFormApi({
                   name="employmentStatus"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Employment Status</FormLabel>
+                      {/* <FormLabel>Employment Status</FormLabel> */}
                       <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>

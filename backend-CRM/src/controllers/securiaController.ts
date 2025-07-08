@@ -2,8 +2,6 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import Consultant from '../models/Consultant';
-import { Applicant } from '../models/Applicant';
-import { CoApplicant } from '../models/CoApplicant';
 import SecuriaAuditLog from '../models/SecuriaAuditLog';
 import { AuthRequest } from '../types/types';
 import { Response } from 'express';
@@ -520,25 +518,9 @@ export const toggleConsultantStatus = async (req: AuthRequest, res: Response): P
 // Client Management Endpoints
 export const getClients = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
-    const { page = '1', limit = '10', search = '', sort = 'createdAt', order = 'desc' } = req.query;
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
-    const sortOrder = order === 'asc' ? 1 : -1;
-    let filter: any = {};
-    if (search) {
-      filter.$or = [
-        { 'applicant.basicInfo.firstName': { $regex: search, $options: 'i' } },
-        { 'applicant.basicInfo.lastName': { $regex: search, $options: 'i' } },
-        { 'applicant.contact.email': { $regex: search, $options: 'i' } },
-      ];
-    }
-    const applicants = await Applicant.find(filter)
-      .sort({ [sort as string]: sortOrder })
-      .skip((pageNum - 1) * limitNum)
-      .limit(limitNum)
-      .lean();
-    const total = await Applicant.countDocuments(filter);
-    return res.json({ success: true, data: applicants, total });
+    // Use the SecuriaClientService to get clients from the SecuriaClient collection
+    const result = await SecuriaClientService.getClients(req);
+    return res.json(result);
   } catch (err) {
     logger.error('Error fetching clients', err);
     return res.status(500).json({ success: false, error: 'Internal server error' });
@@ -601,7 +583,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
     
     // Count clients from both models
     const securiaClients = await SecuriaClient.countDocuments();
-    const applicantClients = await Applicant.countDocuments();
+    const applicantClients = await SecuriaClient.countDocuments({ type: 'Applicant' }); // Assuming Applicant clients are also SecuriaClients
     const totalClients = securiaClients + applicantClients;
     
     const activeSecuriaClients = await SecuriaClient.countDocuments({ status: 'active' });
