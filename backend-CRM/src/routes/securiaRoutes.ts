@@ -25,6 +25,7 @@ import {
   getDashboardStats,
   getAuditLogs
 } from '../controllers/securiaController';
+import { requireSecuriaSession, validateAdminStatus } from '../middleware/enhancedAuth';
 
 const router = express.Router();
 
@@ -262,8 +263,16 @@ const router = express.Router();
  *           type: boolean
  */
 
-// Add authentication middleware for all Securia routes
-router.use(authenticate);
+// Apply authenticate and validateAdminStatus to all Securia routes
+router.use(authenticate, validateAdminStatus);
+
+// Auth endpoints (do NOT require Securia session)
+router.post('/reauth', reauthSecuria);
+router.get('/status', checkSecuriaSession);
+router.post('/logout', logoutSecuria);
+
+// All other Securia routes require Securia session
+router.use(requireSecuriaSession);
 
 // Middleware to check Admin role for all Securia routes
 router.use((req: AuthRequest, res, next) => {

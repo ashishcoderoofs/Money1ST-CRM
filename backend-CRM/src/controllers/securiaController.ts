@@ -12,19 +12,6 @@ import { SecuriaClientService } from '../services/SecuriaClientService';
 // In-memory store for Securia sessions (in production, use Redis or database)
 const securiaSessionStore = new Map<string, { userId: string, timestamp: number }>();
 
-// Session timeout: 8 hours
-const SECURIA_SESSION_TIMEOUT = 7 * 60 * 1000; // 7 minutes in milliseconds
-
-// Helper function to clean expired sessions
-const cleanExpiredSessions = () => {
-  const now = Date.now();
-  for (const [sessionId, session] of securiaSessionStore.entries()) {
-    if (now - session.timestamp > SECURIA_SESSION_TIMEOUT) {
-      securiaSessionStore.delete(sessionId);
-    }
-  }
-};
-
 // Helper function to generate session ID
 const generateSessionId = (userId: string): string => {
   return `securia_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -32,10 +19,9 @@ const generateSessionId = (userId: string): string => {
 
 // Helper function to check if user has valid Securia session
 export const hasValidSecuriaSession = (userId: string, jwtIssuedAt?: number): boolean => {
-  cleanExpiredSessions();
+  // Only check if a Securia session exists for this user and was created after the JWT was issued
   for (const [sessionId, session] of securiaSessionStore.entries()) {
-    if (session.userId === userId && (Date.now() - session.timestamp) < SECURIA_SESSION_TIMEOUT) {
-      // If JWT issued time is provided, check if Securia session was created after JWT
+    if (session.userId === userId) {
       if (jwtIssuedAt) {
         const jwtIssuedTimestamp = jwtIssuedAt * 1000; // Convert to milliseconds
         // Session is only valid if it was created after the current JWT token
@@ -49,7 +35,6 @@ export const hasValidSecuriaSession = (userId: string, jwtIssuedAt?: number): bo
 
 // Helper function to create Securia session
 const createSecuriaSession = (userId: string): string => {
-  cleanExpiredSessions();
   const sessionId = generateSessionId(userId);
   securiaSessionStore.set(sessionId, { userId, timestamp: Date.now() });
   return sessionId;
@@ -66,7 +51,6 @@ export const invalidateUserSecuriaSessions = (userId: string): void => {
 
 // Helper function to get session info for a user
 const getSessionInfo = (userId: string): { active: boolean; count: number; lastActivity?: number } => {
-  cleanExpiredSessions();
   let activeSessions = 0;
   let lastActivity: number | undefined;
 
@@ -704,7 +688,6 @@ export const debugSecuriaSession = async (req: AuthRequest, res: Response): Prom
     
     // Get all sessions for debugging
     const allSessions: any[] = [];
-    cleanExpiredSessions();
     
     for (const [sessionId, session] of securiaSessionStore.entries()) {
       allSessions.push({
@@ -712,7 +695,7 @@ export const debugSecuriaSession = async (req: AuthRequest, res: Response): Prom
         userId: session.userId,
         timestamp: session.timestamp,
         age: Date.now() - session.timestamp,
-        isExpired: (Date.now() - session.timestamp) > SECURIA_SESSION_TIMEOUT
+        isExpired: false // No explicit expiration check here, rely on JWT validity
       });
     }
     
@@ -722,7 +705,7 @@ export const debugSecuriaSession = async (req: AuthRequest, res: Response): Prom
         currentUserId: userId,
         currentUserSessions: sessionInfo,
         allActiveSessions: allSessions,
-        sessionTimeout: SECURIA_SESSION_TIMEOUT,
+        sessionTimeout: 0, // No explicit timeout in this version
         currentTime: Date.now()
       }
     });

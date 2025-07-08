@@ -3,6 +3,7 @@ import User from '../models/User';
 import { AuthRequest } from '../types/types';
 import { validateUserStatus, getUserStatusInfo } from '../utils/userStatusValidator';
 import logger from '../../utils/logger';
+import { hasValidSecuriaSession } from '../controllers/securiaController';
 
 /**
  * Enhanced authentication middleware with real-time status validation
@@ -96,20 +97,25 @@ export const validateAdminStatus = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    logger.info('validateAdminStatus - req.user:', req.user);
     if (!req.user || req.user.role !== 'Admin') {
+      logger.warn('validateAdminStatus - Not admin or no user:', req.user);
       res.status(403).json({ error: 'Admin access required' });
       return;
     }
 
     // Fresh lookup for admin user
     const freshAdmin = await User.findById(req.user._id).select('-password');
+    logger.info('validateAdminStatus - freshAdmin:', freshAdmin);
     
     if (!freshAdmin) {
+      logger.warn('validateAdminStatus - Admin not found:', req.user._id);
       res.status(401).json({ error: 'Admin account not found' });
       return;
     }
 
     const statusCheck = validateUserStatus(freshAdmin);
+    logger.info('validateAdminStatus - statusCheck:', statusCheck);
     if (!statusCheck.isValid) {
       logger.error(`Admin access denied for ${freshAdmin.email}: ${statusCheck.reason}`);
       res.status(401).json({ error: `Admin access denied. ${statusCheck.reason}` });
@@ -123,3 +129,15 @@ export const validateAdminStatus = async (
     res.status(500).json({ error: 'Admin status validation failed' });
   }
 };
+
+/**
+ * Middleware for Securia admin session
+ * Requires: (1) user is admin, (2) Securia session exists in store
+ * Use after authenticate/validateAdminStatus
+ */
+export function requireSecuriaSession(req: AuthRequest, res: Response, next: NextFunction): void {
+  if (req.user && req.user.role === 'Admin' && hasValidSecuriaSession(req.user._id.toString())) {
+    return next();
+  }
+  res.status(401).json({ error: 'Securia authentication required' });
+}

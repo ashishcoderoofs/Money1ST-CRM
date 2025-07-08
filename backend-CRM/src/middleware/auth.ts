@@ -16,22 +16,37 @@ export const authenticate = async (
 ): Promise<void> => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+    logger.info('Auth header:', req.header('Authorization'));
+    logger.info('Extracted token:', token);
+
     if (!token) {
+      logger.warn('No token provided');
       res.status(401).json({ error: 'Access denied. No token provided.' });
       return;
     }
 
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
+      logger.error('JWT secret not configured');
       res.status(500).json({ error: 'JWT secret not configured' });
       return;
     }
 
-    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+    let decoded;
+    try {
+      decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+      logger.info('Decoded JWT:', decoded);
+    } catch (err) {
+      logger.warn('JWT verification failed:', err);
+      res.status(401).json({ error: 'Invalid token.' });
+      return;
+    }
+
     const user = await User.findById(decoded.id).select('-password');
-    
+    logger.info('User found:', user);
+
     if (!user) {
+      logger.warn('User not found for id:', decoded.id);
       res.status(401).json({ error: 'Invalid token. User not found.' });
       return;
     }
@@ -47,6 +62,7 @@ export const authenticate = async (
     req.user = user;
     next();
   } catch (error) {
+    logger.error('Unexpected error in authenticate:', error);
     res.status(401).json({ error: 'Invalid token.' });
   }
 };

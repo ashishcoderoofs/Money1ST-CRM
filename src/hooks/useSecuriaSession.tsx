@@ -36,16 +36,13 @@ export function SecuriaSessionProvider({ children }: { children: React.ReactNode
     try {
       if (!skipLoadingState) setLoading(true);
       const response = await apiCall('/api/securia/status');
-      
       if (response.ok) {
         const data = await response.json();
         const hasAccess = data.hasSecuriaAccess || false;
         setIsSecuriaAuthenticated(hasAccess);
-        
         if (!hasAccess) {
           clearSecuriaSession();
         }
-        
         return hasAccess;
       } else {
         clearSecuriaSession();
@@ -103,25 +100,23 @@ export function SecuriaSessionProvider({ children }: { children: React.ReactNode
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
-
-      const data = await response.json();
-
+      let data: any = {};
+      if (!response.bodyUsed) {
+        data = await response.json();
+      }
       if (response.ok && data.success) {
         setIsSecuriaAuthenticated(true);
-        
-        // Store session ID if provided
         if (data.sessionId) {
           setSecuriaSessionId(data.sessionId);
           localStorage.setItem('securia_session_id', data.sessionId);
         }
-        
         return { success: true };
-      } else {
-        return { 
-          success: false, 
-          message: data.message || 'Authentication failed' 
-        };
       }
+      // If not ok, use the same data for error
+      return {
+        success: false,
+        message: data.message || 'Authentication failed'
+      };
     } catch (error) {
       console.error('Securia authentication error:', error);
       return { 

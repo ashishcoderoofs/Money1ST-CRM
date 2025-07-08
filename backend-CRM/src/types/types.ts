@@ -51,10 +51,12 @@ export interface IUser extends Document {
   // Methods
   comparePassword(candidatePassword: string): Promise<boolean>;
   hasPermission(requiredRole: UserRole): boolean;
+  securiaAuthenticated?: boolean; // For JWT-based Securia session flag
 }
 
 export interface AuthRequest extends Request {
   user?: IUser;
+  session?: any; // For session-based Securia session flag
 }
 
 export interface LoginRequest {
