@@ -389,30 +389,6 @@ export interface ISecuriaClient extends Document {
     consultantNotes?: string;
   };
   
-  // Legacy flat structure for backward compatibility
-  firstName?: string;
-  lastName?: string;
-  email?: string;  
-  phone?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    country?: string;
-  };
-  dateOfBirth?: Date;
-  ssn?: string;
-  consultantId?: mongoose.Types.ObjectId;
-  financialInfo?: {
-    annualIncome?: number;
-    netWorth?: number;
-    investmentGoals?: string;
-    riskTolerance?: 'low' | 'medium' | 'high';
-  };
-  createdAt?: Date;
-  updatedAt?: Date;
-  
   // Methods
   encryptSSN(ssn: string): string;
   decryptSSN(): string;
@@ -868,15 +844,28 @@ const SecuriaClientSchema = new Schema<ISecuriaClient>({
   },
   
   // Legacy flat structure for backward compatibility
-  firstName: { type: String, trim: true, maxlength: 50 },
-  lastName: { type: String, trim: true, maxlength: 50 },
-  email: { type: String, lowercase: true, trim: true },
-  phone: { type: String, trim: true },
-  address: { type: AddressSchema },
-  dateOfBirth: { type: Date },
-  ssn: { type: String },
-  consultantId: { type: Schema.Types.ObjectId, ref: 'Consultant' },
-  financialInfo: { type: FinancialInfoSchema }
+  // firstName?: string;
+  // lastName?: string;
+  // email?: string;  
+  // phone?: string;
+  // address?: {
+  //   street?: string;
+  //   city?: string;
+  //   state?: string;
+  //   zipCode?: string;
+  //   country?: string;
+  // };
+  // dateOfBirth?: Date;
+  // ssn?: string;
+  // consultantId?: mongoose.Types.ObjectId;
+  // financialInfo?: {
+  //   annualIncome?: number;
+  //   netWorth?: number;
+  //   investmentGoals?: string;
+  //   riskTolerance?: 'low' | 'medium' | 'high';
+  // };
+  // createdAt?: Date;
+  // updatedAt?: Date;
 }, {
   timestamps: true,
   collection: 'securia_clients'

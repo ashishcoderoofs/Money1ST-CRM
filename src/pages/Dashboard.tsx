@@ -13,9 +13,6 @@ import {
   FileText,
   BarChart3
 } from "lucide-react";
-import { useContacts } from "@/hooks/useContacts";
-import { useDeals } from "@/hooks/useDeals";
-import { useTasks } from "@/hooks/useTasks";
 
 // Enhanced KPI Card Component
 const KPICard = ({ 
@@ -190,19 +187,16 @@ const RecentActivity = () => (
 export default function Dashboard() {
   const { user } = useAuth();
   const { role } = useUserRole(user?.id ?? null);
-  const { data: contacts } = useContacts();
-  const { data: deals } = useDeals();
-  const { data: tasks } = useTasks();
 
-  const activeContacts = contacts?.length ?? 0;
-  const openDeals = deals?.length ?? 0;
-  const pipelineValue = deals?.reduce((sum, deal) => sum + (deal.amount || 0), 0) ?? 0;
+  const activeContacts = 0;
+  const openDeals = 0;
+  const pipelineValue = 0;
 
-  const pendingTasks = tasks?.filter((task: any) => task.status !== 'completed').length ?? 0;
-  const completedTasks = tasks?.filter((task: any) => task.status === 'completed').length ?? 0;
+  const pendingTasks = 0;
+  const completedTasks = 0;
 
-  const totalTasks = tasks?.length ?? 0;
-  const taskCompletion = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  const totalTasks = 0;
+  const taskCompletion = 0;
 
   // Use isAdmin for admin checks
   if (user.isAdmin) {

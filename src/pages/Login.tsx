@@ -2,13 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserCount } from "@/hooks/useUserCount";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const { signIn, user } = useAuth();
-  const { userCount, loading: userCountLoading } = useUserCount();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,14 +39,6 @@ const Login = () => {
       setLoading(false);
     }
   };
-
-  if (userCountLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-lg font-semibold text-gray-600">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-4">

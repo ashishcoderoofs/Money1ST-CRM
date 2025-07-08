@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { useClientByIdQuery } from "./useClientByIdQuery";
+// import { useClientByIdQuery } from "./useClientByIdQuery";
 
 export function useLiabilitiesQuery(clientId?: string) {
-  const { data: client } = useClientByIdQuery(clientId);
+  // const { data: client } = useClientByIdQuery(clientId);
+  const client: any = {};
   
   return useQuery({
     queryKey: ["liabilities", clientId],

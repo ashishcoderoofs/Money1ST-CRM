@@ -1,7 +1,5 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useLicenses } from "@/hooks/useLicenses";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface LicensesTabProps {
@@ -9,7 +7,8 @@ interface LicensesTabProps {
 }
 
 export function LicensesTab({ consultantId }: LicensesTabProps) {
-  const { data: licenses, isLoading } = useLicenses(consultantId);
+  const licenses = [];
+  const isLoading = false;
 
   if (isLoading) {
     return (

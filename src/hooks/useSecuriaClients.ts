@@ -203,3 +203,32 @@ export const useDeleteClient = () => {
     },
   });
 };
+
+// Hook to update a client
+export const useUpdateSecuriaClient = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, update }: { id: string; update: Partial<SecuriaClient> }) => {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/securia/clients/${id}`, {
+        method: 'PUT',
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(update),
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to update client: ${response.status} ${response.statusText}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["securia-clients"] });
+      queryClient.invalidateQueries({ queryKey: ["securia-client"] });
+      queryClient.invalidateQueries({ queryKey: ["securia-dashboard-stats"] });
+    },
+  });
+};

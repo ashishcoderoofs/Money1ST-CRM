@@ -1,17 +1,7 @@
 import express from 'express';
 import {  validateMinimumClientFields, validateClientUpdate } from '../middleware/clientValidation';
 import { 
-  validateMultiStageClient, 
-  validateSectionUpdate, 
-  validateBulkUpdate,
-  validateRequiredApplicantBasicInfo,
-  validateRequiredApplicantAddress,
-  validateOptionalApplicantEmployment,
-  validateOptionalApplicantDemographics,
-  validateRequiredCoApplicantBasicInfo,
-  validateRequiredCoApplicantAddress,
-  validateOptionalCoApplicantEmployment,
-  validateOptionalCoApplicantDemographics
+  validateMultiStageClient
 } from '../middleware/multiStageClientValidation';
 import { authenticate } from '../middleware/auth';
 import { AuthRequest } from '../types/types';
@@ -32,20 +22,8 @@ import {
   getClientById,
   updateClient,
   deleteClient,
-  toggleClientStatus,
   getDashboardStats,
-  getChartData,
-  getAuditLogs,
-  createMultiStageClient,
-  updateClientSection,
-  updateApplicantBasicInfo,
-  updateApplicantAddress,
-  updateApplicantEmployment,
-  updateApplicantDemographics,
-  updateCoApplicantBasicInfo,
-  updateCoApplicantAddress,
-  updateCoApplicantEmployment,
-  updateCoApplicantDemographics
+  getAuditLogs
 } from '../controllers/securiaController';
 
 const router = express.Router();
@@ -1090,114 +1068,6 @@ router.get('/clients/:id', getClientById);
 router.put('/clients/:id', validateClientUpdate, updateClient);
 router.delete('/clients/:id', deleteClient);
 
-/**
- * @swagger
- * /api/securia/clients/{id}/status:
- *   patch:
- *     summary: Toggle client status (active/inactive)
- *     tags: [Securia]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Client ID
- *     responses:
- *       200:
- *         description: Client status updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     status:
- *                       type: string
- *       404:
- *         description: Client not found
- *       500:
- *         description: Failed to update client status
- */
-router.patch('/clients/:id/status', toggleClientStatus);
-
-/**
- * @swagger
- * /api/securia/clients/partial:
- *   post:
- *     summary: Create partial client (for multi-stage forms)
- *     tags: [Securia]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - basicInfo
- *               - contactInfo
- *             properties:
- *               basicInfo:
- *                 type: object
- *                 properties:
- *                   firstName:
- *                     type: string
- *                     example: Jane
- *                   lastName:
- *                     type: string
- *                     example: Smith
- *               contactInfo:
- *                 type: object
- *                 properties:
- *                   email:
- *                     type: string
- *                     format: email
- *                     example: jane.smith@example.com
- *                   homePhone:
- *                     type: string
- *                     example: +1-555-0456
- *     responses:
- *       201:
- *         description: Partial client created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     clientId:
- *                       type: string
- *                     completionPercentage:
- *                       type: number
- *                     status:
- *                       type: string
- *       400:
- *         description: Validation failed
- *       500:
- *         description: Failed to create partial client
- */
-router.post('/clients/partial', validateMinimumClientFields, createClient);
-
 // Multi-Stage Client Form API Routes
 
 /**
@@ -1264,7 +1134,7 @@ router.post('/clients/partial', validateMinimumClientFields, createClient);
  *       500:
  *         description: Failed to create client
  */
-router.post('/clients/multistage', validateMultiStageClient, createMultiStageClient);
+// router.post('/clients/multistage', validateMultiStageClient, createMultiStageClient);
 
 /**
  * @swagger
@@ -1339,7 +1209,7 @@ router.post('/clients/multistage', validateMultiStageClient, createMultiStageCli
  *       500:
  *         description: Failed to get section data
  */
-router.put('/clients/:id/section/:section', validateSectionUpdate, updateClientSection);
+// router.put('/clients/:id/section/:section', validateSectionUpdate, updateClientSection);
 // Get client section route temporarily disabled - function not implemented
 // router.get('/clients/:id/section/:section', getClientSection);
 
@@ -1493,7 +1363,7 @@ router.put('/clients/:id/section/:section', validateSectionUpdate, updateClientS
  *       500:
  *         description: Failed to update applicant basic info
  */
-router.put('/clients/:id/applicant/basic-info', validateRequiredApplicantBasicInfo, updateApplicantBasicInfo);
+// router.put('/clients/:id/applicant/basic-info', validateRequiredApplicantBasicInfo, updateApplicantBasicInfo);
 
 /**
  * @swagger
@@ -1529,7 +1399,7 @@ router.put('/clients/:id/applicant/basic-info', validateRequiredApplicantBasicIn
  *       500:
  *         description: Failed to update applicant address
  */
-router.put('/clients/:id/applicant/address', validateRequiredApplicantAddress, updateApplicantAddress);
+// router.put('/clients/:id/applicant/address', validateRequiredApplicantAddress, updateApplicantAddress);
 
 /**
  * @swagger
@@ -1565,7 +1435,7 @@ router.put('/clients/:id/applicant/address', validateRequiredApplicantAddress, u
  *       500:
  *         description: Failed to update applicant employment
  */
-router.put('/clients/:id/applicant/employment', validateOptionalApplicantEmployment, updateApplicantEmployment);
+// router.put('/clients/:id/applicant/employment', validateOptionalApplicantEmployment, updateApplicantEmployment);
 
 /**
  * @swagger
@@ -1617,7 +1487,7 @@ router.put('/clients/:id/applicant/employment', validateOptionalApplicantEmploym
  *       500:
  *         description: Failed to update applicant demographics
  */
-router.put('/clients/:id/applicant/demographics', validateOptionalApplicantDemographics, updateApplicantDemographics);
+// router.put('/clients/:id/applicant/demographics', validateOptionalApplicantDemographics, updateApplicantDemographics);
 
 /**
  * @swagger
@@ -1678,7 +1548,7 @@ router.put('/clients/:id/applicant/demographics', validateOptionalApplicantDemog
  *       500:
  *         description: Failed to update co-applicant basic info
  */
-router.put('/clients/:id/co-applicant/basic-info', validateRequiredCoApplicantBasicInfo, updateCoApplicantBasicInfo);
+// router.put('/clients/:id/co-applicant/basic-info', validateRequiredCoApplicantBasicInfo, updateCoApplicantBasicInfo);
 
 /**
  * @swagger
@@ -1714,7 +1584,7 @@ router.put('/clients/:id/co-applicant/basic-info', validateRequiredCoApplicantBa
  *       500:
  *         description: Failed to update co-applicant address
  */
-router.put('/clients/:id/co-applicant/address', validateRequiredCoApplicantAddress, updateCoApplicantAddress);
+// router.put('/clients/:id/co-applicant/address', validateRequiredCoApplicantAddress, updateCoApplicantAddress);
 
 /**
  * @swagger
@@ -1750,7 +1620,7 @@ router.put('/clients/:id/co-applicant/address', validateRequiredCoApplicantAddre
  *       500:
  *         description: Failed to update co-applicant employment
  */
-router.put('/clients/:id/co-applicant/employment', validateOptionalCoApplicantEmployment, updateCoApplicantEmployment);
+// router.put('/clients/:id/co-applicant/employment', validateOptionalCoApplicantEmployment, updateCoApplicantEmployment);
 
 /**
  * @swagger
@@ -1800,7 +1670,7 @@ router.put('/clients/:id/co-applicant/employment', validateOptionalCoApplicantEm
  *       500:
  *         description: Failed to update co-applicant demographics
  */
-router.put('/clients/:id/co-applicant/demographics', validateOptionalCoApplicantDemographics, updateCoApplicantDemographics);
+// router.put('/clients/:id/co-applicant/demographics', validateOptionalCoApplicantDemographics, updateCoApplicantDemographics);
 
 /**
  * @swagger
@@ -1826,78 +1696,6 @@ router.put('/clients/:id/co-applicant/demographics', validateOptionalCoApplicant
  *         description: Failed to get dashboard stats
  */
 router.get('/dashboard/stats', getDashboardStats);
-
-/**
- * @swagger
- * /api/securia/dashboard/charts:
- *   get:
- *     summary: Get chart data for dashboard
- *     tags: [Securia]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: timeframe
- *         schema:
- *           type: string
- *           enum: [week, month, quarter, year]
- *           default: month
- *         description: Time period for chart data
- *     responses:
- *       200:
- *         description: Chart data retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *                   properties:
- *                     consultantGrowth:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           period:
- *                             type: string
- *                           count:
- *                             type: number
- *                     clientGrowth:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           period:
- *                             type: string
- *                           count:
- *                             type: number
- *                     revenueByConsultant:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           consultantName:
- *                             type: string
- *                           revenue:
- *                             type: number
- *                     clientsByRiskTolerance:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           riskLevel:
- *                             type: string
- *                           count:
- *                             type: number
- *       500:
- *         description: Failed to get chart data
- */
-router.get('/dashboard/charts', getChartData);
-
-// Security & Audit Endpoints
 
 /**
  * @swagger

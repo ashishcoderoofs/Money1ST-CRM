@@ -1,11 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Tables } from "@/integrations/supabase/types";
-import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ApplicantTab } from "./ApplicantTab";
-import { CoApplicantUnified } from "./coapplicant/CoApplicantUnified";
+import { CoApplicantTab } from "./CoApplicantTab";
 import { LiabilitiesTab } from "./LiabilitiesTab";
 import { MortgagesTab } from "./MortgagesTab";
 import { UnderwritingTab } from "./UnderwritingTab";
@@ -17,15 +15,16 @@ import { RentersTab } from "./RentersTab";
 import { IncomeProtectionTab } from "./IncomeProtectionTab";
 import { RetirementTab } from "./RetirementTab";
 import { LineageTab } from "./LineageTab";
+import type { Client } from "../../types/mongodb-client";
 
 interface ClientEditTabsProps {
-  client: Tables<"clients">;
-  form: UseFormReturn<any>;
+  client: Client;
+  setClient: (client: Client) => void;
   isSubmitting?: boolean;
   isEditMode?: boolean;
 }
 
-export function ClientEditTabs({ client, form, isSubmitting, isEditMode = false }: ClientEditTabsProps) {
+export function ClientEditTabs({ client, setClient, isSubmitting, isEditMode = false }: ClientEditTabsProps) {
   const navigate = useNavigate();
   
   return (
@@ -49,158 +48,128 @@ export function ClientEditTabs({ client, form, isSubmitting, isEditMode = false 
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting} 
-              className="h-10 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => {
-                console.log("🔘 SUBMIT BUTTON CLICKED");
-                console.log("Form is submitting:", isSubmitting);
-                console.log("Button disabled state:", isSubmitting);
-                console.log("Is edit mode:", isEditMode);
-              }}
-            >
-              {isSubmitting ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Client" : "Create Client")}
-            </Button>
           </div>
         </div>
       </div>
       <div className="p-6 pt-0">
         <Tabs defaultValue="applicant" className="w-full">
           <TabsList className="items-center rounded-md text-muted-foreground flex flex-wrap w-full gap-1 p-2 h-auto bg-muted/50 justify-start">
-          <TabsTrigger 
-            value="applicant" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Applicant
-          </TabsTrigger>
-          <TabsTrigger 
-            value="coapplicant" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Co-Applicant
-          </TabsTrigger>
-          <TabsTrigger 
-            value="liabilities" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Liabilities
-          </TabsTrigger>
-          <TabsTrigger 
-            value="mortgages" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Mortgages
-          </TabsTrigger>
-          <TabsTrigger 
-            value="underwriting" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Underwriting
-          </TabsTrigger>
-          <TabsTrigger 
-            value="loanstatus" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Loan Status
-          </TabsTrigger>
-          <TabsTrigger 
-            value="drivers" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Drivers
-          </TabsTrigger>
-          <TabsTrigger 
-            value="vehiclecoverage" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Vehicle Coverage
-          </TabsTrigger>
-          <TabsTrigger 
-            value="homeowners" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Homeowners
-          </TabsTrigger>
-          <TabsTrigger 
-            value="renters" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Renters
-          </TabsTrigger>
-          <TabsTrigger 
-            value="incomeprotection" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Income Protection
-          </TabsTrigger>
-          <TabsTrigger 
-            value="retirement" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Retirement
-          </TabsTrigger>
-          <TabsTrigger 
-            value="lineage" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Lineage
-          </TabsTrigger>
-          <TabsTrigger 
-            value="notes" 
-            className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
-          >
-            Notes
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="applicant" className="space-y-4 mt-6">
-          <ApplicantTab client={client} form={form} />
-        </TabsContent>
-        <TabsContent value="coapplicant" className="space-y-4 mt-6">
-          <CoApplicantUnified client={client} form={form} />
-        </TabsContent>
-        <TabsContent value="liabilities" className="space-y-4 mt-6">
-          <LiabilitiesTab form={form} />
-        </TabsContent>
-        <TabsContent value="mortgages" className="space-y-4 mt-6">
-          <MortgagesTab client={client} />
-        </TabsContent>
-        <TabsContent value="underwriting" className="space-y-4 mt-6">
-          <UnderwritingTab client={client} form={form} />
-        </TabsContent>
-        <TabsContent value="loanstatus" className="space-y-4 mt-6">
-          <LoanStatusTab client={client} />
-        </TabsContent>
-        <TabsContent value="drivers" className="space-y-4 mt-6">
-          <DriversTab client={client} />
-        </TabsContent>
-        <TabsContent value="vehiclecoverage" className="space-y-4 mt-6">
-          <VehicleCoverageTab client={client} form={form} />
-        </TabsContent>
-        <TabsContent value="homeowners" className="space-y-4 mt-6">
-          <HomeownersTab client={client} />
-        </TabsContent>
-        <TabsContent value="renters" className="space-y-4 mt-6">
-          <RentersTab client={client} />
-        </TabsContent>
-        <TabsContent value="incomeprotection" className="space-y-4 mt-6">
-          <IncomeProtectionTab client={client} />
-        </TabsContent>
-        <TabsContent value="retirement" className="space-y-4 mt-6">
-          <RetirementTab client={client} />
-        </TabsContent>
-        <TabsContent value="lineage" className="space-y-4 mt-6">
-          <LineageTab client={client} />
-        </TabsContent>
-        <TabsContent value="notes" className="space-y-4 mt-6">
-          <div className="space-y-4">
-            <textarea 
-              className="w-full h-32 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-              placeholder="Enter notes here..."
-            ></textarea>
-          </div>
-        </TabsContent>
+            <TabsTrigger 
+              value="applicant" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Applicant
+            </TabsTrigger>
+            <TabsTrigger 
+              value="coapplicant" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Co-Applicant
+            </TabsTrigger>
+            <TabsTrigger 
+              value="liabilities" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Liabilities
+            </TabsTrigger>
+            <TabsTrigger 
+              value="mortgages" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Mortgages
+            </TabsTrigger>
+            <TabsTrigger 
+              value="underwriting" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Underwriting
+            </TabsTrigger>
+            <TabsTrigger 
+              value="loanstatus" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Loan Status
+            </TabsTrigger>
+            <TabsTrigger 
+              value="drivers" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Drivers
+            </TabsTrigger>
+            <TabsTrigger 
+              value="vehiclecoverage" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Vehicle Coverage
+            </TabsTrigger>
+            <TabsTrigger 
+              value="homeowners" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Homeowners
+            </TabsTrigger>
+            <TabsTrigger 
+              value="renters" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Renters
+            </TabsTrigger>
+            <TabsTrigger 
+              value="incomeprotection" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Income Protection
+            </TabsTrigger>
+            <TabsTrigger 
+              value="retirement" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Retirement
+            </TabsTrigger>
+            <TabsTrigger 
+              value="lineage" 
+              className="flex-shrink-0 text-base px-4 py-3 whitespace-nowrap transition-all duration-300 hover:scale-105 hover:shadow-md data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-bold text-gray-800"
+            >
+              Lineage
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="applicant" className="space-y-4 mt-6">
+            <ApplicantTab client={client} setClient={setClient} />
+          </TabsContent>
+          <TabsContent value="coapplicant" className="space-y-4 mt-6">
+            <CoApplicantTab client={client} setClient={setClient} />
+          </TabsContent>
+          <TabsContent value="liabilities" className="space-y-4 mt-6">
+            <LiabilitiesTab client={client} />
+          </TabsContent>
+          <TabsContent value="mortgages" className="space-y-4 mt-6">
+            <MortgagesTab client={client} />
+          </TabsContent>
+          <TabsContent value="underwriting" className="space-y-4 mt-6">
+            <UnderwritingTab client={client} />
+          </TabsContent>
+          <TabsContent value="loanstatus" className="space-y-4 mt-6">
+            <LoanStatusTab client={client} />
+          </TabsContent>
+          <TabsContent value="drivers" className="space-y-4 mt-6">
+            <DriversTab client={client} />
+          </TabsContent>
+          <TabsContent value="homeowners" className="space-y-4 mt-6">
+            <HomeownersTab client={client} />
+          </TabsContent>
+          <TabsContent value="renters" className="space-y-4 mt-6">
+            <RentersTab client={client} />
+          </TabsContent>
+          <TabsContent value="incomeprotection" className="space-y-4 mt-6">
+            <IncomeProtectionTab client={client} />
+          </TabsContent>
+          <TabsContent value="retirement" className="space-y-4 mt-6">
+            <RetirementTab client={client} />
+          </TabsContent>
+          <TabsContent value="lineage" className="space-y-4 mt-6">
+            <LineageTab client={client} />
+          </TabsContent>
         </Tabs>
       </div>
     </div>

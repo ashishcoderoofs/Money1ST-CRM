@@ -1,40 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
-
-export interface SecuriaClient {
-  _id: string;
-  clientId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  status: "active" | "inactive" | "pending";
-  consultantId: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  financialInfo: {
-    annualIncome: number;
-    netWorth: number;
-    investmentGoals: string;
-    riskTolerance: "low" | "medium" | "high";
-  };
-  emergencyContact: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Client } from "../types/mongodb-client";
 
 interface ClientsResponse {
   success: boolean;
-  data: SecuriaClient[];
+  data: Client[];
   pagination: {
     page: number;
     pages: number;
@@ -60,7 +30,7 @@ export const useSecuriaClients = (params: ClientsParams = {}) => {
   return useQuery<ClientsResponse>({
     queryKey: ["securia-clients", params],
     queryFn: async () => {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const apiUrl = process.env.VITE_API_URL || "http://localhost:3000";
       const searchParams = new URLSearchParams();
       
       Object.entries(params).forEach(([key, value]) => {
@@ -92,10 +62,10 @@ export const useSecuriaClients = (params: ClientsParams = {}) => {
 export const useSecuriaClient = (id: string) => {
   const { token } = useAuth();
 
-  return useQuery<{ success: boolean; data: SecuriaClient }>({
+  return useQuery<{ success: boolean; data: Client }>({
     queryKey: ["securia-client", id],
     queryFn: async () => {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const apiUrl = process.env.VITE_API_URL || "http://localhost:3000";
       const response = await fetch(`${apiUrl}/api/securia/clients/${id}`, {
         headers: {
           "Authorization": `Bearer ${token}`,

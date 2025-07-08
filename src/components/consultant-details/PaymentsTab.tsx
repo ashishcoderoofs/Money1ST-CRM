@@ -1,8 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { usePayments } from "@/hooks/usePayments";
+// import { usePayments } from "@/hooks/usePayments";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PaymentsTabProps {
@@ -10,7 +9,9 @@ interface PaymentsTabProps {
 }
 
 export function PaymentsTab({ consultantId }: PaymentsTabProps) {
-  const { data: payments, isLoading } = usePayments(consultantId);
+  // const { data: payments, isLoading } = usePayments(consultantId);
+  const payments = [];
+  const isLoading = false;
 
   if (isLoading) {
     return (

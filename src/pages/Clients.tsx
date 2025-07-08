@@ -43,7 +43,8 @@ function ClientsTable({ onAdd }: any) {
     return [firstName, lastName].filter(Boolean).join(" ");
   };
 
-  const getBadgeVariant = (status: string) => {
+  const getBadgeVariant = (status: string | undefined) => {
+    if (!status) return 'secondary';
     switch (status.toLowerCase()) {
       case 'active':
         return 'default';
@@ -121,7 +122,7 @@ function ClientsTable({ onAdd }: any) {
                   <TableCell>{client.phone}</TableCell>
                   <TableCell>
                     <Badge variant={getBadgeVariant(client.status)}>
-                      {client.status}
+                      {client.status || 'N/A'}
                     </Badge>
                   </TableCell>
                   <TableCell className="capitalize">

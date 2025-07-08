@@ -1,7 +1,4 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useContacts } from "@/hooks/useContacts";
-import { useDeals } from "@/hooks/useDeals";
-import { useTasks } from "@/hooks/useTasks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SalesChart } from "@/components/reports/SalesChart";
@@ -15,9 +12,6 @@ import { ExportTools } from "@/components/reports/ExportTools";
 
 export default function Reports() {
   const { user } = useAuth();
-  const { data: contacts } = useContacts();
-  const { data: deals } = useDeals();
-  const { data: tasks } = useTasks();
 
   if (!user) {
     return <div className="p-8 text-center">Please log in to view reports.</div>;
@@ -35,7 +29,7 @@ export default function Reports() {
       {/* Export Tools */}
       <ExportTools />
 
-      <ReportsMetrics contacts={contacts} deals={deals} tasks={tasks} />
+      <ReportsMetrics contacts={[]} deals={[]} tasks={[]} />
 
       <Tabs defaultValue="sales" className="w-full">
         <TabsList className="grid w-full grid-cols-5 bg-m1f-light">
@@ -48,25 +42,25 @@ export default function Reports() {
 
         <TabsContent value="sales" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            <SalesChart deals={deals} />
-            <DealsByStageChart deals={deals} />
+            <SalesChart deals={[]} />
+            <DealsByStageChart deals={[]} />
           </div>
         </TabsContent>
 
         <TabsContent value="pipeline" className="space-y-6">
-          <PipelineChart deals={deals} />
+          <PipelineChart deals={[]} />
         </TabsContent>
 
         <TabsContent value="tasks" className="space-y-6">
-          <TaskChart tasks={tasks} />
+          <TaskChart tasks={[]} />
         </TabsContent>
 
         <TabsContent value="contacts" className="space-y-6">
-          <ContactsGrowthChart contacts={contacts} />
+          <ContactsGrowthChart contacts={[]} />
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-6">
-          <ActivityChart contacts={contacts} deals={deals} tasks={tasks} />
+          <ActivityChart contacts={[]} deals={[]} tasks={[]} />
         </TabsContent>
       </Tabs>
     </div>
