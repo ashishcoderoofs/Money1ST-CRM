@@ -39,7 +39,7 @@ export const useSecuriaClients = (params: ClientsParams = {}) => {
         }
       });
 
-      const response = await fetch(`${apiUrl}/api/securia/clients?${searchParams}`, {
+      const response = await fetch(`${apiUrl}/api/clients?${searchParams}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export const useSecuriaClient = (id: string) => {
     queryKey: ["securia-client", id],
     queryFn: async () => {
       const apiUrl = process.env.VITE_API_URL || "http://localhost:3000";
-      const response = await fetch(`${apiUrl}/api/securia/clients/${id}`, {
+      const response = await fetch(`${apiUrl}/api/clients/${id}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",

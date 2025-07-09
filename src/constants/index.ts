@@ -73,7 +73,9 @@ export const SUFFIX_OPTIONS = [
   'II',
   'III',
   'IV',
-  'V'
+  'V',
+  'MD',
+  'PhD'
 ] as const;
 
 /**

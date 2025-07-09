@@ -1,277 +1,192 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
+import { Schema, model, Types, Document } from 'mongoose';
 
-// Applicant Interface
-export interface IApplicant extends Document {
-  // Auto-generated fields
-  _id: Types.ObjectId;
-  clientId: string; // Unique identifier for the client case
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy?: string;
-  lastModifiedBy?: string;
-  
-  // Basic Info - Required fields
-  title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Dr.' | 'Prof.';
-  firstName: string; // Required
-  mi?: string;
-  lastName: string; // Required
-  suffix?: 'Jr.' | 'Sr.' | 'II' | 'III' | 'IV' | 'V' | 'MD' | 'PhD';
-  maidenName?: string;
-  isConsultant?: boolean;
-  
-  // Contact Info - Required fields
-  homePhone?: string;
-  workPhone?: string;
-  cellPhone: string; // Required
-  otherPhone?: string;
-  fax?: string;
-  email: string; // Required
-  
-  // Current Address - Required fields
-  currentAddress: {
-    street: string; // Required
-    city: string; // Required
-    state?: string;
-    zipCode?: string;
-    county?: string;
-    howLongYears?: number;
-    howLongMonths?: number;
-  };
-  
-  // Previous Address (if less than 2 years at current)
-  previousAddress?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    howLongYears?: number;
-    howLongMonths?: number;
-  };
-  
-  // Employment Information
-  employment?: {
-    status?: 'Employed' | 'Self-Employed' | 'Unemployed' | 'Retired' | 'Student';
-    isBusinessOwner?: boolean;
-    employerName?: string;
-    employerAddress?: {
-      street?: string;
-      city?: string;
-      state?: string;
-      zipCode?: string;
-    };
-    occupation?: string;
-    monthlySalary?: number;
-    employerPhone?: string;
-    startDate?: Date;
-    endDate?: Date;
-    additionalIncome?: number;
-    additionalIncomeSource?: string;
-    supervisor?: string;
-  };
-  
-  // Previous Employment
-  previousEmployment?: {
-    employerName?: string;
-    employerAddress?: string;
-    occupation?: string;
-    fromDate?: Date;
-    toDate?: Date;
-  };
-  
-  // Demographics
-  demographics?: {
-    dateOfBirth?: Date;
-    ssn?: string; // Encrypted
-    birthPlace?: string;
-    race?: string;
-    maritalStatus?: 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
-    anniversary?: Date;
-    spouseName?: string;
-    spouseOccupation?: string;
-    numberOfDependents?: number;
-  };
-  
-  // Household Members
-  householdMembers?: Array<{
-    firstName?: string;
-    mi?: string;
-    lastName?: string;
-    dateOfBirth?: Date;
-    age?: number;
-    ssn?: string;
-    relationship?: string;
-    sex?: 'Male' | 'Female' | 'Other';
-    monthlyIncome?: number;
-    tobaccoUser?: boolean;
-    student?: boolean;
-  }>;
+export type ApplicantTitle = 'Mr.' | 'Mrs.' | 'Ms.' | 'Dr.' | 'Prof.';
+export type ApplicantSuffix = 'Jr.' | 'Sr.' | 'II' | 'III' | 'IV' | 'V' | 'MD' | 'PhD';
+export type MaritalStatus = 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
+export type Race = 'White' | 'Black' | 'Asian' | 'Hispanic' | 'Other';
+export type EmploymentStatus = 'Employed' | 'Self-Employed' | 'Unemployed' | 'Retired' | 'Student';
+export type ClientStatus = 'Active' | 'Pending' | 'Inactive';
+
+export interface IHouseholdMember {
+  name: string;
+  dob: string;
+  relationship: string;
+  age: string;
 }
 
-// Applicant Schema
-const ApplicantSchema = new Schema<IApplicant>({
-  clientId: { 
-    type: String, 
-    required: true, 
-    unique: true,
-    index: true 
-  },
-  createdBy: { type: String },
-  lastModifiedBy: { type: String },
-  
-  // Basic Info
-  title: { 
-    type: String, 
-    enum: ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'] 
-  },
-  firstName: { 
-    type: String, 
-    required: true, 
-    trim: true,
-    maxlength: 50 
-  },
-  mi: { 
-    type: String, 
-    trim: true, 
-    maxlength: 5 
-  },
-  lastName: { 
-    type: String, 
-    required: true, 
-    trim: true,
-    maxlength: 50 
-  },
-  suffix: { 
-    type: String, 
-    enum: ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD'] 
-  },
-  maidenName: { 
-    type: String, 
-    trim: true, 
-    maxlength: 50 
-  },
-  isConsultant: { 
-    type: Boolean, 
-    default: false 
-  },
-  
-  // Contact Info
-  homePhone: { type: String, trim: true },
-  workPhone: { type: String, trim: true },
-  cellPhone: { 
-    type: String, 
-    required: true, 
-    trim: true 
-  },
-  otherPhone: { type: String, trim: true },
-  fax: { type: String, trim: true },
-  email: { 
-    type: String, 
-    required: true, 
-    trim: true, 
-    lowercase: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
-  },
-  
-  // Current Address
-  currentAddress: {
-    street: { 
-      type: String, 
-      required: true, 
-      trim: true 
-    },
-    city: { 
-      type: String, 
-      required: true, 
-      trim: true 
-    },
-    state: { type: String, trim: true },
-    zipCode: { type: String, trim: true },
-    county: { type: String, trim: true },
-    howLongYears: { type: Number, min: 0 },
-    howLongMonths: { type: Number, min: 0, max: 11 }
-  },
-  
-  // Previous Address
-  previousAddress: {
-    street: { type: String, trim: true },
-    city: { type: String, trim: true },
-    state: { type: String, trim: true },
-    zipCode: { type: String, trim: true },
-    howLongYears: { type: Number, min: 0 },
-    howLongMonths: { type: Number, min: 0, max: 11 }
-  },
-  
-  // Employment Information
-  employment: {
-    status: { 
-      type: String, 
-      enum: ['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student'] 
-    },
-    isBusinessOwner: { type: Boolean },
-    employerName: { type: String, trim: true },
-    employerAddress: {
-      street: { type: String, trim: true },
-      city: { type: String, trim: true },
-      state: { type: String, trim: true },
-      zipCode: { type: String, trim: true }
-    },
-    occupation: { type: String, trim: true },
-    monthlySalary: { type: Number, min: 0 },
-    employerPhone: { type: String, trim: true },
-    startDate: { type: Date },
-    endDate: { type: Date },
-    additionalIncome: { type: Number, min: 0 },
-    additionalIncomeSource: { type: String, trim: true },
-    supervisor: { type: String, trim: true }
-  },
-  
-  // Previous Employment
-  previousEmployment: {
-    employerName: { type: String, trim: true },
-    employerAddress: { type: String, trim: true },
-    occupation: { type: String, trim: true },
-    fromDate: { type: Date },
-    toDate: { type: Date }
-  },
-  
-  // Demographics
-  demographics: {
-    dateOfBirth: { type: Date },
-    ssn: { type: String, trim: true }, // Will be encrypted
-    birthPlace: { type: String, trim: true },
-    race: { type: String, trim: true },
-    maritalStatus: { 
-      type: String, 
-      enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] 
-    },
-    anniversary: { type: Date },
-    spouseName: { type: String, trim: true },
-    spouseOccupation: { type: String, trim: true },
-    numberOfDependents: { type: Number, min: 0 }
-  },
-  
-  // Household Members
-  householdMembers: [{
-    firstName: { type: String, trim: true },
-    mi: { type: String, trim: true },
-    lastName: { type: String, trim: true },
-    dateOfBirth: { type: Date },
-    age: { type: Number, min: 0 },
-    ssn: { type: String, trim: true },
-    relationship: { type: String, trim: true },
-    sex: { type: String, enum: ['Male', 'Female', 'Other'] },
-    monthlyIncome: { type: Number, min: 0 },
-    tobaccoUser: { type: Boolean },
-    student: { type: Boolean }
-  }]
-}, {
-  timestamps: true,
-  collection: 'applicants'
+export interface IApplicant extends Document {
+  title?: ApplicantTitle;
+  first_name: string;
+  middle_initial?: string;
+  last_name: string;
+  suffix?: ApplicantSuffix;
+  maiden_name?: string;
+  is_consultant?: boolean;
+  date_of_birth?: string;
+  marital_status?: MaritalStatus;
+  race?: Race;
+  birth_place?: string;
+  anniversary?: string;
+  spouse_name?: string;
+  spouse_occupation?: string;
+  number_of_dependents?: string;
+  fax?: string;
+  contact: {
+    address?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    county?: string;
+    home_phone?: string;
+    work_phone?: string;
+    cell_phone?: string;
+    other_phone?: string;
+    email?: string;
+  };
+  current_address?: {
+    months?: string;
+    years?: string;
+    how_long_at_current_address?: string;
+  };
+  previous_address?: {
+    address?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    months?: string;
+    years?: string;
+    duration?: string;
+  };
+  employment?: {
+    status?: EmploymentStatus;
+    is_business_owner?: string;
+    employer_name?: string;
+    employer_address?: string;
+    employer_city?: string;
+    employer_state?: string;
+    employer_zip_code?: string;
+    occupation?: string;
+    monthly_salary?: string;
+    other_income?: string;
+    start_date?: string;
+    end_date?: string;
+    supervisor?: string;
+    supervisor_phone?: string;
+    source?: string;
+  };
+  previous_employment?: {
+    employer_name?: string;
+    employer_address?: string;
+    employer_city?: string;
+    employer_state?: string;
+    employer_zip_code?: string;
+    from_date?: string;
+    to_date?: string;
+    occupation?: string;
+  };
+  credit_scores?: {
+    equifax?: string;
+    experian?: string;
+    transunion?: string;
+  };
+  household_members: IHouseholdMember[];
+  client_id: string;
+  entry_date: Date;
+  payoff_amount: number;
+  notes?: string;
+  created_at?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const HouseholdMemberSchema = new Schema<IHouseholdMember>({
+  name: { type: String },
+  dob: { type: String },
+  relationship: { type: String },
+  age: { type: String }
 });
 
-// Add indexes for better performance
-ApplicantSchema.index({ clientId: 1 });
-ApplicantSchema.index({ email: 1 });
-ApplicantSchema.index({ createdAt: -1 });
+const ApplicantSchema = new Schema<IApplicant>({
+  title: { type: String, enum: ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'] },
+  first_name: { type: String, required: true },
+  middle_initial: { type: String },
+  last_name: { type: String, required: true },
+  suffix: { type: String, enum: ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD'] },
+  maiden_name: { type: String },
+  is_consultant: { type: Boolean },
+  date_of_birth: { type: String },
+  marital_status: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] },
+  race: { type: String, enum: ['White', 'Black', 'Asian', 'Hispanic', 'Other'] },
+  birth_place: { type: String },
+  anniversary: { type: String },
+  spouse_name: { type: String },
+  spouse_occupation: { type: String },
+  number_of_dependents: { type: String },
+  fax: { type: String },
+  contact: {
+    address: { type: String },
+    city: { type: String },
+    state: { type: String },
+    zip_code: { type: String },
+    county: { type: String },
+    home_phone: { type: String },
+    work_phone: { type: String },
+    cell_phone: { type: String },
+    other_phone: { type: String },
+    email: { type: String, unique: true }
+  },
+  current_address: {
+    months: { type: String },
+    years: { type: String },
+    how_long_at_current_address: { type: String }
+  },
+  previous_address: {
+    address: { type: String },
+    city: { type: String },
+    state: { type: String },
+    zip_code: { type: String },
+    months: { type: String },
+    years: { type: String },
+    duration: { type: String }
+  },
+  employment: {
+    status: { type: String, enum: ['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student'] },
+    is_business_owner: { type: String },
+    employer_name: { type: String },
+    employer_address: { type: String },
+    employer_city: { type: String },
+    employer_state: { type: String },
+    employer_zip_code: { type: String },
+    occupation: { type: String },
+    monthly_salary: { type: String },
+    other_income: { type: String },
+    start_date: { type: String },
+    end_date: { type: String },
+    supervisor: { type: String },
+    supervisor_phone: { type: String },
+    source: { type: String }
+  },
+  previous_employment: {
+    employer_name: { type: String },
+    employer_address: { type: String },
+    employer_city: { type: String },
+    employer_state: { type: String },
+    employer_zip_code: { type: String },
+    from_date: { type: String },
+    to_date: { type: String },
+    occupation: { type: String }
+  },
+  credit_scores: {
+    equifax: { type: String },
+    experian: { type: String },
+    transunion: { type: String }
+  },
+  household_members: [HouseholdMemberSchema],
+  client_id: { type: String, index: true },
+  entry_date: { type: Date, default: Date.now },
+  payoff_amount: { type: Number },
+  notes: { type: String },
+  created_at: { type: Date, default: Date.now }
+}, { timestamps: true });
 
-export const Applicant = mongoose.model<IApplicant>('Applicant', ApplicantSchema);
+export default model<IApplicant>('Applicant', ApplicantSchema);

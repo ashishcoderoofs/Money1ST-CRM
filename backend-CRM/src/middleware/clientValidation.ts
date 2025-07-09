@@ -3,293 +3,101 @@ import { Request, Response, NextFunction } from 'express';
 
 // Complete Joi validation schema for Securia Client Creation
 export const validateSecuriaClientCreation = (req: Request, res: Response, next: NextFunction): Response | void => {
-  const schema = Joi.object({
-    // Basic Information (Required)
-    basicInfo: Joi.object({
-      title: Joi.string().valid('Mr', 'Mrs', 'Ms', 'Dr', 'Prof').optional().trim(),
-      firstName: Joi.string().min(2).max(50).required().trim(),
-      middleInitial: Joi.string().max(1).optional().trim(),
-      lastName: Joi.string().min(2).max(50).required().trim(),
-      suffix: Joi.string().valid('Jr', 'Sr', 'II', 'III', 'IV').optional().trim(),
-      maidenName: Joi.string().max(50).optional().trim(),
-      isConsultant: Joi.boolean().optional()
-    }).required(),
+  const phoneRegex = /^[\+]?[1-9][\d\s\-\(\)]{7,15}$/;
+  const zipRegex = /^\d{5}(-\d{4})?$/;
+  const stateRegex = /^[A-Z]{2}$/;
+  const clientIdRegex = /^CAN\d{5}$/;
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
-    // Contact Information (Required)
-    contactInfo: Joi.object({
-      homePhone: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-      mobilePhone: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-      otherPhone: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-      fax: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-      email: Joi.string().email().max(100).required().trim().lowercase()
-    }).required().custom((value, helpers) => {
-      // At least one phone number is required
-      const { homePhone, mobilePhone, otherPhone } = value;
-      if (!homePhone && !mobilePhone && !otherPhone) {
-        return helpers.error('any.custom', { message: 'At least one phone number is required' });
-      }
-      return value;
-    }),
-
-    // Contact Address (Optional)
-    contactAddress: Joi.object({
-      address: Joi.string().max(200).optional().trim(),
-      city: Joi.string().max(100).optional().trim(),
-      state: Joi.string().length(2).pattern(/^[A-Z]{2}$/).optional().trim().uppercase(),
-      zipCode: Joi.string().pattern(/^\d{5}(-\d{4})?$/).optional().trim(),
-      howLongAtCurrentAddress: Joi.string().max(50).optional().trim()
+  const applicantJoiSchema = Joi.object({
+    title: Joi.string().valid('Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.').optional(),
+    first_name: Joi.string().required(),
+    middle_initial: Joi.string().max(1).optional(),
+    last_name: Joi.string().required(),
+    suffix: Joi.string().valid('Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD').optional(),
+    maiden_name: Joi.string().optional(),
+    is_consultant: Joi.boolean().optional(),
+    date_of_birth: Joi.string().pattern(dateRegex).optional(),
+    marital_status: Joi.string().valid('Single', 'Married', 'Divorced', 'Widowed', 'Separated').optional(),
+    race: Joi.string().valid('White', 'Black', 'Asian', 'Hispanic', 'Other').optional(),
+    birth_place: Joi.string().optional(),
+    anniversary: Joi.string().pattern(dateRegex).optional(),
+    spouse_name: Joi.string().optional(),
+    spouse_occupation: Joi.string().optional(),
+    number_of_dependents: Joi.string().pattern(/^\d+$/).optional(),
+    fax: Joi.string().pattern(phoneRegex).optional(),
+    contact: Joi.object({
+      address: Joi.string().max(200).optional(),
+      city: Joi.string().max(100).optional(),
+      state: Joi.string().pattern(stateRegex).optional(),
+      zip_code: Joi.string().pattern(zipRegex).optional(),
+      county: Joi.string().max(100).optional(),
+      home_phone: Joi.string().pattern(phoneRegex).optional(),
+      work_phone: Joi.string().pattern(phoneRegex).optional(),
+      cell_phone: Joi.string().pattern(phoneRegex).optional(),
+      other_phone: Joi.string().pattern(phoneRegex).optional(),
+      email: Joi.string().email().optional(),
     }).optional(),
-
-    // Co-Applicant Information (Optional)
-    coApplicant: Joi.object({
-      hasCoApplicant: Joi.boolean().optional(),
-      basicInfo: Joi.object({
-        title: Joi.string().optional().trim(),
-        firstName: Joi.string().max(50).optional().trim(),
-        middleInitial: Joi.string().max(1).optional().trim(),
-        lastName: Joi.string().max(50).optional().trim(),
-        suffix: Joi.string().optional().trim(),
-        maidenName: Joi.string().max(50).optional().trim()
-      }).optional(),
-      contactInfo: Joi.object({
-        homePhone: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-        mobilePhone: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-        otherPhone: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-        fax: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-        email: Joi.string().email().optional().trim()
-      }).optional(),
-      address: Joi.object({
-        address: Joi.string().max(200).optional().trim(),
-        city: Joi.string().max(100).optional().trim(),
-        state: Joi.string().length(2).optional().trim(),
-        zipCode: Joi.string().pattern(/^\d{5}(-\d{4})?$/).optional().trim(),
-        howLongAtCurrentAddress: Joi.string().max(50).optional().trim()
-      }).optional()
+    current_address: Joi.object({
+      months: Joi.string().pattern(/^\d+$/).optional(),
+      years: Joi.string().pattern(/^\d+$/).optional(),
+      how_long_at_current_address: Joi.string().optional(),
     }).optional(),
-
-    // Liabilities (Optional)
-    liabilities: Joi.array().items(
-      Joi.object({
-        creditorName: Joi.string().max(100).optional().trim(),
-        accountNumber: Joi.string().max(50).optional().trim(),
-        balance: Joi.number().min(0).optional(),
-        monthlyPayment: Joi.number().min(0).optional(),
-        minimumPayment: Joi.number().min(0).optional(),
-        interestRate: Joi.number().min(0).max(100).optional(),
-        payoffAmount: Joi.number().min(0).optional(),
-        accountType: Joi.string().valid('credit-card', 'auto-loan', 'student-loan', 'personal-loan', 'mortgage', 'other').optional(),
-        status: Joi.string().valid('current', 'past-due', 'closed', 'charge-off').optional()
-      })
-    ).optional(),
-
-    // Mortgages (Optional)
-    mortgages: Joi.array().items(
-      Joi.object({
-        propertyAddress: Joi.string().max(200).optional().trim(),
-        lenderName: Joi.string().max(100).optional().trim(),
-        accountNumber: Joi.string().max(50).optional().trim(),
-        currentBalance: Joi.number().min(0).optional(),
-        monthlyPayment: Joi.number().min(0).optional(),
-        interestRate: Joi.number().min(0).max(100).optional(),
-        propertyValue: Joi.number().min(0).optional(),
-        mortgageType: Joi.string().valid('conventional', 'fha', 'va', 'usda', 'jumbo', 'other').optional(),
-        isPrimaryResidence: Joi.boolean().optional()
-      })
-    ).optional(),
-
-    // Underwriting Information (Optional)
-    underwriting: Joi.object({
-      creditScore: Joi.number().min(300).max(850).optional(),
-      annualIncome: Joi.number().min(0).optional(),
-      monthlyIncome: Joi.number().min(0).optional(),
-      employmentStatus: Joi.string().valid('employed', 'self-employed', 'unemployed', 'retired', 'disabled', 'student').optional(),
-      employer: Joi.string().max(100).optional().trim(),
-      position: Joi.string().max(100).optional().trim(),
-      yearsAtJob: Joi.number().min(0).optional(),
-      previousEmployer: Joi.string().max(100).optional().trim(),
-      debtToIncomeRatio: Joi.number().min(0).max(100).optional(),
-      bankStatements: Joi.boolean().optional(),
-      taxReturns: Joi.boolean().optional(),
-      payStubs: Joi.boolean().optional()
+    previous_address: Joi.object({
+      address: Joi.string().max(200).optional(),
+      city: Joi.string().max(100).optional(),
+      state: Joi.string().pattern(stateRegex).optional(),
+      zip_code: Joi.string().pattern(zipRegex).optional(),
+      months: Joi.string().pattern(/^\d+$/).optional(),
+      years: Joi.string().pattern(/^\d+$/).optional(),
+      duration: Joi.string().optional(),
     }).optional(),
-
-    // Loan Status (Optional)
-    loanStatus: Joi.object({
-      applicationDate: Joi.date().optional(),
-      status: Joi.string().valid('pending', 'approved', 'denied', 'in-review', 'documents-needed').optional(),
-      loanAmount: Joi.number().min(0).optional(),
-      loanPurpose: Joi.string().valid('debt-consolidation', 'home-improvement', 'major-purchase', 'emergency', 'other').optional(),
-      requestedTerm: Joi.number().min(1).optional(),
-      approvedAmount: Joi.number().min(0).optional(),
-      approvedRate: Joi.number().min(0).max(100).optional(),
-      approvedTerm: Joi.number().min(1).optional(),
-      conditions: Joi.array().items(Joi.string()).optional(),
-      denialReason: Joi.string().max(500).optional().trim()
+    employment: Joi.object({
+      status: Joi.string().valid('Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student').optional(),
+      is_business_owner: Joi.string().optional(),
+      employer_name: Joi.string().optional(),
+      employer_address: Joi.string().optional(),
+      employer_city: Joi.string().optional(),
+      employer_state: Joi.string().pattern(stateRegex).optional(),
+      employer_zip_code: Joi.string().pattern(zipRegex).optional(),
+      occupation: Joi.string().optional(),
+      monthly_salary: Joi.string().pattern(/^\d+(\.\d{1,2})?$/).optional(),
+      other_income: Joi.string().pattern(/^\d+(\.\d{1,2})?$/).optional(),
+      start_date: Joi.string().pattern(dateRegex).optional(),
+      end_date: Joi.string().pattern(dateRegex).optional(),
+      supervisor: Joi.string().optional(),
+      supervisor_phone: Joi.string().pattern(phoneRegex).optional(),
+      source: Joi.string().optional(),
     }).optional(),
-
-    // Drivers (Optional)
-    drivers: Joi.array().items(
-      Joi.object({
-        firstName: Joi.string().max(50).optional().trim(),
-        lastName: Joi.string().max(50).optional().trim(),
-        dateOfBirth: Joi.date().optional(),
-        licenseNumber: Joi.string().max(30).optional().trim(),
-        licenseState: Joi.string().length(2).optional().trim(),
-        licenseExpiration: Joi.date().optional(),
-        relationshipToApplicant: Joi.string().max(50).optional().trim(),
-        violations: Joi.array().items(
-          Joi.object({
-            type: Joi.string().max(100).optional().trim(),
-            date: Joi.date().optional(),
-            description: Joi.string().max(500).optional().trim()
-          })
-        ).optional(),
-        accidents: Joi.array().items(
-          Joi.object({
-            date: Joi.date().optional(),
-            description: Joi.string().max(500).optional().trim(),
-            atFault: Joi.boolean().optional()
-          })
-        ).optional()
-      })
-    ).optional(),
-
-    // Vehicles (Optional)
-    vehicles: Joi.array().items(
-      Joi.object({
-        year: Joi.number().min(1900).max(new Date().getFullYear() + 1).optional(),
-        make: Joi.string().max(50).optional().trim(),
-        model: Joi.string().max(50).optional().trim(),
-        vin: Joi.string().length(17).optional().trim(),
-        currentInsurance: Joi.object({
-          company: Joi.string().max(100).optional().trim(),
-          policyNumber: Joi.string().max(50).optional().trim(),
-          expirationDate: Joi.date().optional(),
-          liability: Joi.string().max(50).optional().trim(),
-          comprehensive: Joi.string().max(50).optional().trim(),
-          collision: Joi.string().max(50).optional().trim()
-        }).optional(),
-        lienHolder: Joi.string().max(100).optional().trim(),
-        estimatedValue: Joi.number().min(0).optional()
-      })
-    ).optional(),
-
-    // Homeowners (Optional)
-    homeowners: Joi.object({
-      ownsHome: Joi.boolean().optional(),
-      propertyAddress: Joi.string().max(200).optional().trim(),
-      propertyValue: Joi.number().min(0).optional(),
-      purchaseDate: Joi.date().optional(),
-      mortgageBalance: Joi.number().min(0).optional(),
-      homeInsurance: Joi.object({
-        company: Joi.string().max(100).optional().trim(),
-        policyNumber: Joi.string().max(50).optional().trim(),
-        annualPremium: Joi.number().min(0).optional(),
-        coverageAmount: Joi.number().min(0).optional(),
-        deductible: Joi.number().min(0).optional()
-      }).optional(),
-      propertyTax: Joi.number().min(0).optional(),
-      hoaFees: Joi.number().min(0).optional()
+    previous_employment: Joi.object({
+      employer_name: Joi.string().optional(),
+      employer_address: Joi.string().optional(),
+      employer_city: Joi.string().optional(),
+      employer_state: Joi.string().pattern(stateRegex).optional(),
+      employer_zip_code: Joi.string().pattern(zipRegex).optional(),
+      from_date: Joi.string().pattern(dateRegex).optional(),
+      to_date: Joi.string().pattern(dateRegex).optional(),
+      occupation: Joi.string().optional(),
     }).optional(),
-
-    // Renters (Optional)
-    renters: Joi.object({
-      isRenter: Joi.boolean().optional(),
-      rentalAddress: Joi.string().max(200).optional().trim(),
-      monthlyRent: Joi.number().min(0).optional(),
-      landlordInfo: Joi.object({
-        name: Joi.string().max(100).optional().trim(),
-        phone: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-        email: Joi.string().email().optional().trim()
-      }).optional(),
-      leaseExpiration: Joi.date().optional(),
-      rentersInsurance: Joi.object({
-        hasInsurance: Joi.boolean().optional(),
-        company: Joi.string().max(100).optional().trim(),
-        policyNumber: Joi.string().max(50).optional().trim(),
-        annualPremium: Joi.number().min(0).optional(),
-        coverageAmount: Joi.number().min(0).optional()
-      }).optional()
+    credit_scores: Joi.object({
+      equifax: Joi.string().pattern(/^\d+$/).optional(),
+      experian: Joi.string().pattern(/^\d+$/).optional(),
+      transunion: Joi.string().pattern(/^\d+$/).optional(),
     }).optional(),
-
-    // Income Protection (Optional)
-    incomeProtection: Joi.object({
-      lifeInsurance: Joi.array().items(
-        Joi.object({
-          company: Joi.string().max(100).optional().trim(),
-          policyNumber: Joi.string().max(50).optional().trim(),
-          coverageAmount: Joi.number().min(0).optional(),
-          beneficiary: Joi.string().max(100).optional().trim(),
-          premium: Joi.number().min(0).optional(),
-          policyType: Joi.string().valid('term', 'whole', 'universal', 'variable').optional()
-        })
-      ).optional(),
-      disabilityInsurance: Joi.object({
-        hasInsurance: Joi.boolean().optional(),
-        company: Joi.string().max(100).optional().trim(),
-        monthlyBenefit: Joi.number().min(0).optional(),
-        eliminationPeriod: Joi.number().min(0).optional(),
-        benefitPeriod: Joi.string().max(50).optional().trim()
-      }).optional(),
-      healthInsurance: Joi.object({
-        hasInsurance: Joi.boolean().optional(),
-        company: Joi.string().max(100).optional().trim(),
-        policyType: Joi.string().max(50).optional().trim(),
-        monthlyCost: Joi.number().min(0).optional(),
-        deductible: Joi.number().min(0).optional()
-      }).optional()
-    }).optional(),
-
-    // Retirement (Optional)
-    retirement: Joi.object({
-      currentAge: Joi.number().min(18).max(120).optional(),
-      retirementAge: Joi.number().min(50).max(100).optional(),
-      retirementAccounts: Joi.array().items(
-        Joi.object({
-          accountType: Joi.string().valid('401k', '403b', 'ira', 'roth-ira', 'pension', 'other').optional(),
-          institution: Joi.string().max(100).optional().trim(),
-          currentBalance: Joi.number().min(0).optional(),
-          monthlyContribution: Joi.number().min(0).optional(),
-          employerMatch: Joi.number().min(0).optional()
-        })
-      ).optional(),
-      socialSecurityBenefit: Joi.number().min(0).optional(),
-      pensionBenefit: Joi.number().min(0).optional(),
-      retirementGoals: Joi.string().max(1000).optional().trim(),
-      riskTolerance: Joi.string().valid('conservative', 'moderate', 'aggressive').optional()
-    }).optional(),
-
-    // Lineage (Optional)
-    lineage: Joi.object({
-      referredBy: Joi.string().max(100).optional().trim(),
-      referralSource: Joi.string().valid('consultant', 'client', 'advertisement', 'website', 'social-media', 'other').optional(),
-      consultantAssigned: Joi.string().optional().trim(),
-      teamLead: Joi.string().max(100).optional().trim(),
-      regionalManager: Joi.string().max(100).optional().trim(),
-      enrollmentDate: Joi.date().optional(),
-      clientStatus: Joi.string().valid('prospect', 'enrolled', 'active', 'inactive', 'closed').optional()
-    }).optional(),
-
-    // System Fields (Optional - will be set by backend)
-    status: Joi.string().valid("inactive", "active","pending").optional(),
-    completionStatus: Joi.object({
-      applicant: Joi.boolean().optional(),
-      coApplicant: Joi.boolean().optional(),
-      liabilities: Joi.boolean().optional(),
-      mortgages: Joi.boolean().optional(),
-      underwriting: Joi.boolean().optional(),
-      loanStatus: Joi.boolean().optional(),
-      drivers: Joi.boolean().optional(),
-      vehicleCoverage: Joi.boolean().optional(),
-      homeowners: Joi.boolean().optional(),
-      renters: Joi.boolean().optional(),
-      incomeProtection: Joi.boolean().optional(),
-      retirement: Joi.boolean().optional(),
-      lineage: Joi.boolean().optional()
-    }).optional()
   });
 
-  const { error } = schema.validate(req.body, { abortEarly: false, allowUnknown: true });
+  const clientJoiSchema = Joi.object({
+    applicant: applicantJoiSchema.required(),
+    co_applicant: applicantJoiSchema.optional(),
+    client_id: Joi.forbidden(),
+    entry_date: Joi.string().pattern(dateRegex).required(),
+    payoff_amount: Joi.number().min(0).required(),
+    status: Joi.string().valid('Active', 'Pending', 'Inactive').required(),
+    consultant_name: Joi.string().required(),
+    processor_name: Joi.string().required(),
+  });
+
+  const { error } = clientJoiSchema.validate(req.body, { abortEarly: false, allowUnknown: true });
   
   if (error) {
     return res.status(400).json({
@@ -345,30 +153,101 @@ export const validateMinimumClientFields = (req: Request, res: Response, next: N
 
 // Validation for client updates (all fields optional except ID)
 export const validateClientUpdate = (req: Request, res: Response, next: NextFunction): Response | void => {
-  const schema = Joi.object({
-    basicInfo: Joi.object({
-      title: Joi.string().valid('Mr', 'Mrs', 'Ms', 'Dr', 'Prof').optional().trim(),
-      firstName: Joi.string().min(2).max(50).optional().trim(),
-      middleInitial: Joi.string().max(1).optional().trim(),
-      lastName: Joi.string().min(2).max(50).optional().trim(),
-      suffix: Joi.string().valid('Jr', 'Sr', 'II', 'III', 'IV').optional().trim(),
-      maidenName: Joi.string().max(50).optional().trim(),
-      isConsultant: Joi.boolean().optional()
+  const phoneRegex = /^[\+]?[1-9][\d\s\-\(\)]{7,15}$/;
+  const zipRegex = /^\d{5}(-\d{4})?$/;
+  const stateRegex = /^[A-Z]{2}$/;
+  const clientIdRegex = /^CAN\d{5}$/;
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+  const applicantJoiSchema = Joi.object({
+    title: Joi.string().valid('Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.').optional(),
+    first_name: Joi.string().required(),
+    middle_initial: Joi.string().max(1).optional(),
+    last_name: Joi.string().required(),
+    suffix: Joi.string().valid('Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD').optional(),
+    maiden_name: Joi.string().optional(),
+    is_consultant: Joi.boolean().optional(),
+    date_of_birth: Joi.string().pattern(dateRegex).optional(),
+    marital_status: Joi.string().valid('Single', 'Married', 'Divorced', 'Widowed', 'Separated').optional(),
+    race: Joi.string().valid('White', 'Black', 'Asian', 'Hispanic', 'Other').optional(),
+    birth_place: Joi.string().optional(),
+    anniversary: Joi.string().pattern(dateRegex).optional(),
+    spouse_name: Joi.string().optional(),
+    spouse_occupation: Joi.string().optional(),
+    number_of_dependents: Joi.string().pattern(/^\d+$/).optional(),
+    fax: Joi.string().pattern(phoneRegex).optional(),
+    contact: Joi.object({
+      address: Joi.string().max(200).optional(),
+      city: Joi.string().max(100).optional(),
+      state: Joi.string().pattern(stateRegex).optional(),
+      zip_code: Joi.string().pattern(zipRegex).optional(),
+      county: Joi.string().max(100).optional(),
+      home_phone: Joi.string().pattern(phoneRegex).optional(),
+      work_phone: Joi.string().pattern(phoneRegex).optional(),
+      cell_phone: Joi.string().pattern(phoneRegex).optional(),
+      other_phone: Joi.string().pattern(phoneRegex).optional(),
+      email: Joi.string().email().optional(),
     }).optional(),
-    
-    contactInfo: Joi.object({
-      homePhone: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-      mobilePhone: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-      otherPhone: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-      fax: Joi.string().pattern(/^[\+]?[1-9][\d\s\-\(\)]{7,15}$/).optional().trim(),
-      email: Joi.string().email().max(100).optional().trim().lowercase()
-    }).optional()
-    
-    // Add other optional fields here as needed...
-    
+    current_address: Joi.object({
+      months: Joi.string().pattern(/^\d+$/).optional(),
+      years: Joi.string().pattern(/^\d+$/).optional(),
+      how_long_at_current_address: Joi.string().optional(),
+    }).optional(),
+    previous_address: Joi.object({
+      address: Joi.string().max(200).optional(),
+      city: Joi.string().max(100).optional(),
+      state: Joi.string().pattern(stateRegex).optional(),
+      zip_code: Joi.string().pattern(zipRegex).optional(),
+      months: Joi.string().pattern(/^\d+$/).optional(),
+      years: Joi.string().pattern(/^\d+$/).optional(),
+      duration: Joi.string().optional(),
+    }).optional(),
+    employment: Joi.object({
+      status: Joi.string().valid('Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student').optional(),
+      is_business_owner: Joi.string().optional(),
+      employer_name: Joi.string().optional(),
+      employer_address: Joi.string().optional(),
+      employer_city: Joi.string().optional(),
+      employer_state: Joi.string().pattern(stateRegex).optional(),
+      employer_zip_code: Joi.string().pattern(zipRegex).optional(),
+      occupation: Joi.string().optional(),
+      monthly_salary: Joi.string().pattern(/^\d+(\.\d{1,2})?$/).optional(),
+      other_income: Joi.string().pattern(/^\d+(\.\d{1,2})?$/).optional(),
+      start_date: Joi.string().pattern(dateRegex).optional(),
+      end_date: Joi.string().pattern(dateRegex).optional(),
+      supervisor: Joi.string().optional(),
+      supervisor_phone: Joi.string().pattern(phoneRegex).optional(),
+      source: Joi.string().optional(),
+    }).optional(),
+    previous_employment: Joi.object({
+      employer_name: Joi.string().optional(),
+      employer_address: Joi.string().optional(),
+      employer_city: Joi.string().optional(),
+      employer_state: Joi.string().pattern(stateRegex).optional(),
+      employer_zip_code: Joi.string().pattern(zipRegex).optional(),
+      from_date: Joi.string().pattern(dateRegex).optional(),
+      to_date: Joi.string().pattern(dateRegex).optional(),
+      occupation: Joi.string().optional(),
+    }).optional(),
+    credit_scores: Joi.object({
+      equifax: Joi.string().pattern(/^\d+$/).optional(),
+      experian: Joi.string().pattern(/^\d+$/).optional(),
+      transunion: Joi.string().pattern(/^\d+$/).optional(),
+    }).optional(),
+  });
+
+  const clientJoiSchema = Joi.object({
+    applicant: applicantJoiSchema.required(),
+    co_applicant: applicantJoiSchema.optional(),
+    client_id: Joi.string().required(),
+    entry_date: Joi.string().pattern(dateRegex).required(),
+    payoff_amount: Joi.number().min(0).optional(),
+    status: Joi.string().valid("inactive", "active","pending").optional(),
+    consultant_name: Joi.string().optional().trim(),
+    processor_name: Joi.string().optional().trim(),
   }).unknown(true); // Allow any other fields for updates
 
-  const { error } = schema.validate(req.body, { abortEarly: false });
+  const { error } = clientJoiSchema.validate(req.body, { abortEarly: false });
   
   if (error) {
     return res.status(400).json({

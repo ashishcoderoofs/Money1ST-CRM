@@ -6,8 +6,8 @@ import SecuriaAuditLog from '../models/SecuriaAuditLog';
 import { AuthRequest } from '../types/types';
 import { Response } from 'express';
 import logger from '../../utils/logger';
-import SecuriaClient from '../models/SecuriaClient';
-import { SecuriaClientService } from '../services/SecuriaClientService';
+
+import { Applicant, Client } from '../models';
 
 // In-memory store for Securia sessions (in production, use Redis or database)
 const securiaSessionStore = new Map<string, { userId: string, timestamp: number }>();
@@ -499,66 +499,6 @@ export const toggleConsultantStatus = async (req: AuthRequest, res: Response): P
   }
 };
 
-// Client Management Endpoints
-export const getClients = async (req: AuthRequest, res: Response): Promise<Response> => {
-  try {
-    // Use the SecuriaClientService to get clients from the SecuriaClient collection
-    const result = await SecuriaClientService.getClients(req);
-    return res.json(result);
-  } catch (err) {
-    logger.error('Error fetching clients', err);
-    return res.status(500).json({ success: false, error: 'Internal server error' });
-  }
-};
-
-export const getClientById = async (req: AuthRequest, res: Response): Promise<Response> => {
-  try {
-    const id = req.params.id;
-    const result = await SecuriaClientService.getClientById(id);
-    return res.json(result);
-  } catch (err) {
-    logger.error('Error fetching client by id', err);
-    return res.status(404).json({ success: false, error: 'Client not found' });
-  }
-};
-
-export const createClient = async (req: AuthRequest, res: Response): Promise<Response> => {
-  try {
-    const userId = req.user?.id;
-    const clientData = req.body;
-    const result = await SecuriaClientService.createClient(clientData, userId);
-    return res.status(201).json(result);
-  } catch (err) {
-    logger.error('Error creating client', err);
-    return res.status(500).json({ success: false, error: 'Internal server error' });
-  }
-};
-
-export const updateClient = async (req: AuthRequest, res: Response): Promise<Response> => {
-  try {
-    const clientId = req.params.id;
-    const userId = req.user?.id;
-    const updateData = req.body;
-    const result = await SecuriaClientService.updateClient(clientId, updateData, userId);
-    return res.json(result);
-  } catch (err) {
-    logger.error('Error updating client', err);
-    return res.status(500).json({ success: false, error: 'Internal server error' });
-  }
-};
-
-export const deleteClient = async (req: AuthRequest, res: Response): Promise<Response> => {
-  try {
-    const clientId = req.params.id;
-    const userId = req.user?.id;
-    const result = await SecuriaClientService.deleteClient(clientId, userId);
-    return res.json(result);
-  } catch (err) {
-    logger.error('Error deleting client', err);
-    return res.status(500).json({ success: false, error: 'Internal server error' });
-  }
-};
-
 // Dashboard & Analytics Endpoints
 export const getDashboardStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -566,13 +506,13 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
     const activeConsultants = await Consultant.countDocuments({ status: 'Active' });
     
     // Count clients from both models
-    const securiaClients = await SecuriaClient.countDocuments();
-    const applicantClients = await SecuriaClient.countDocuments({ type: 'Applicant' }); // Assuming Applicant clients are also SecuriaClients
-    const totalClients = securiaClients + applicantClients;
+    const clients = await Client.countDocuments();
+    const applicant = await Applicant.countDocuments({ status: 'active'}); // Assuming Applicant clients are also SecuriaClients
+    const totalClients = clients + applicant;
     
-    const activeSecuriaClients = await SecuriaClient.countDocuments({ status: 'active' });
+    const activeSecuriaClients = await Applicant.countDocuments({ status: 'active' });
     // All applicants are considered active by default
-    const activeClients = activeSecuriaClients + applicantClients;
+    const activeClients = activeSecuriaClients + applicant;
 
     // Calculate mock revenue (in a real app, this would come from a transactions collection)
     const totalRevenue = totalClients * 2500; // Mock calculation

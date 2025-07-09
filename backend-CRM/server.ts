@@ -15,6 +15,7 @@ import adminRoutes from './src/routes/adminRoutes';
 import attachmentRoutes from './src/routes/attachmentRoutes';
 import securiaRoutes from './src/routes/securiaRoutes';
 import consultantRoutes from './src/routes/consultantRoutes';
+import clientRoutes from './src/routes/clientRoutes';
 
 // Import middleware
 import { errorHandler } from './src/middleware/errorHandler';
@@ -54,6 +55,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/securia', securiaRoutes);
 app.use('/api/consultants', consultantRoutes);
+app.use('/api/clients', clientRoutes);
 
 // ✅ Swagger setup
 setupSwagger(app);
@@ -87,6 +89,7 @@ connectDB();
 
 // ✅ Error & 404 handlers
 app.use(errorHandler);
+// Catch-all 404 handler (should be last)
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });

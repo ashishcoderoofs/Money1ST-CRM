@@ -1,11 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useSecuriaClient } from "@/hooks/useSecuriaClients";
+import { useClient } from "@/hooks/useSecuriaClients";
 import { ArrowLeft, Save } from "lucide-react";
 
 export default function EditClient() {
   const { clientId } = useParams<{ clientId: string }>();
-  const { data: clientResponse, isLoading } = useSecuriaClient(clientId!);
+  const { data: clientResponse, isLoading } = useClient(clientId!);
   const client = clientResponse?.data;
   const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ export default function EditClient() {
     <div className="w-full px-6 py-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Edit Client: {client.firstName} {client.lastName}</h1>
+        <h1 className="text-2xl font-bold">Edit Client: {client.applicant?.first_name} {client.applicant?.last_name}</h1>
         <div className="flex gap-3">
           <Button onClick={handleSave}>
             <Save className="w-4 h-4 mr-1" />

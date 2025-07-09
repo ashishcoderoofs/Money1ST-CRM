@@ -492,10 +492,6 @@ const options: swaggerJsdoc.Options = {
               enum: ['active', 'probation', 'suspended', 'terminated'],
               default: 'active'
             },
-            notes: {
-              type: 'string',
-              example: 'Top performer in Q3'
-            },
             isActive: {
               type: 'boolean',
               default: true

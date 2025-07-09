@@ -1,132 +1,109 @@
 // MongoDB Client types for Money1ST CRM
-// Refactored to match the unified, nested structure as per the latest requirements
+// Updated to match backend normalized structure and field names
 
-export interface Address {
-  street?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  county?: string;
-  howLongYears?: number;
-  howLongMonths?: number;
-}
-
-export interface Employment {
-  employmentStatus?:
-    | 'Employed'
-    | 'Full-time'
-    | 'Self-Employed'
-    | 'Unemployed'
-    | 'Retired'
-    | 'Student'
-    | 'Part-Time'
-    | 'Contract';
-  isBusinessOwner?: boolean;
-  occupation?: string;
-  employerName?: string;
-  employerAddress?: string;
-  employerCity?: string;
-  employerState?: string;
-  employerZipCode?: string;
-  monthlyGrossSalary?: number;
-  startDate?: string;
-  endDate?: string;
-  supervisor?: string;
-  supervisorPhone?: string;
-  additionalIncome?: number;
-  source?: string;
-}
-
-export interface PreviousEmployment {
-  employerName?: string;
-  employerAddress?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  occupation?: string;
-  fromDate?: string;
-  toDate?: string;
-}
-
-export interface Demographics {
-  birthPlace?: string;
-  dateOfBirth?: string;
-  ssn?: string;
-  race?:
-    | 'American Indian or Alaska Native'
-    | 'Asian'
-    | 'Black or African American'
-    | 'Hispanic or Latino'
-    | 'Native Hawaiian or Other Pacific Islander'
-    | 'White'
-    | 'Two or More Races'
-    | 'Other';
-  maritalStatus?: 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
-  anniversary?: string;
-  spouseName?: string;
-  spouseOccupation?: string;
-  numberOfDependents?: number;
-}
-
-export interface HouseholdMember {
-  firstName?: string;
-  middleInitial?: string;
-  lastName?: string;
-  relationship?:
-    | 'Applicant'
-    | 'Co-Applicant'
-    | 'Spouse'
-    | 'Partner'
-    | 'Son'
-    | 'Daughter'
-    | 'Parent'
-    | 'Sibling'
-    | 'Other';
-  dateOfBirth?: string;
-  age?: number;
-  sex?: 'Male' | 'Female';
-  maritalStatus?: 'Single' | 'Married' | 'Divorced' | 'Widowed';
-  ssn?: string;
-}
+import type { Title, Suffix } from '../constants';
 
 export interface Applicant {
-  // Name Information
-  title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Dr.';
-  firstName?: string;
-  middleInitial?: string;
-  lastName?: string;
-  suffix?: 'Jr.' | 'Sr.' | 'II' | 'III' | 'IV';
-  maidenName?: string;
-  isConsultant?: boolean;
-  // Contact & Address
-  currentAddress?: Address;
-  previousAddress?: Address;
-  homePhone?: string;
-  workPhone?: string;
-  cellPhone?: string;
-  otherPhone?: string;
-  email?: string;
+  title?: Title;
+  first_name: string;
+  middle_initial?: string;
+  last_name: string;
+  suffix?: Suffix;
+  maiden_name?: string;
+  is_consultant?: boolean;
+  date_of_birth?: string;
+  marital_status?: 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
+  race?: 'White' | 'Black' | 'Asian' | 'Hispanic' | 'Other';
+  birth_place?: string;
+  anniversary?: string;
+  spouse_name?: string;
+  spouse_occupation?: string;
+  number_of_dependents?: string;
   fax?: string;
-  // Employment
-  employment?: Employment;
-  previousEmployment?: PreviousEmployment;
-  // Demographics
-  demographics?: Demographics;
+  contact: {
+    address?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    county?: string;
+    home_phone?: string;
+    work_phone?: string;
+    cell_phone?: string;
+    other_phone?: string;
+    email?: string;
+  };
+  current_address?: {
+    months?: string;
+    years?: string;
+    how_long_at_current_address?: string;
+  };
+  previous_address?: {
+    address?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    months?: string;
+    years?: string;
+    duration?: string;
+  };
+  employment?: {
+    status?: 'Employed' | 'Self-Employed' | 'Unemployed' | 'Retired' | 'Student';
+    is_business_owner?: string;
+    employer_name?: string;
+    employer_address?: string;
+    employer_city?: string;
+    employer_state?: string;
+    employer_zip_code?: string;
+    occupation?: string;
+    monthly_salary?: string;
+    other_income?: string;
+    start_date?: string;
+    end_date?: string;
+    supervisor?: string;
+    supervisor_phone?: string;
+    source?: string;
+  };
+  previous_employment?: {
+    employer_name?: string;
+    employer_address?: string;
+    employer_city?: string;
+    employer_state?: string;
+    employer_zip_code?: string;
+    from_date?: string;
+    to_date?: string;
+    occupation?: string;
+  };
+  credit_scores?: {
+    equifax?: string;
+    experian?: string;
+    transunion?: string;
+  };
+  created_at?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface CoApplicant extends Applicant {
-  includeCoApplicant?: boolean;
+  include_co_applicant?: boolean;
+}
+
+export interface HouseholdMember {
+  name?: string;
+  dob?: string;
+  relationship?: string;
+  age?: string;
 }
 
 export interface Client {
   _id?: string;
-  clientId?: string;
-  entryDate?: string;
-  payoffAmount?: number;
-  status?: 'Active' | 'Pending' | 'Inactive';
-  consultant?: string;
-  processor?: string;
+  client_id: string;
+  entry_date: string;
+  status: 'Active' | 'Pending' | 'Inactive';
+  payoff_amount: number;
+  consultant_name: string;
+  processor_name: string;
   applicant?: Applicant;
-  coApplicant?: CoApplicant;
-  householdMembers?: HouseholdMember[];
+  co_applicant?: CoApplicant;
+  household_members?: HouseholdMember[];
+  // ...add other normalized fields as needed
 }

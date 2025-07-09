@@ -17,11 +17,6 @@ import {
   updateConsultant,
   deleteConsultant,
   toggleConsultantStatus,
-  getClients,
-  createClient,
-  getClientById,
-  updateClient,
-  deleteClient,
   getDashboardStats,
   getAuditLogs
 } from '../controllers/securiaController';
@@ -977,105 +972,7 @@ router.patch('/consultants/:id/status', toggleConsultantStatus);
  *       500:
  *         description: Failed to create partial client
  */
-router.post('/clients/partial', validateMinimumClientFields, createClient);
 
-router.get('/clients', getClients);
-router.post('/clients', createClient);
-
-/**
- * @swagger
- * /api/securia/clients/{id}:
- *   get:
- *     summary: Get client by ID
- *     tags: [Securia]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Client ID
- *     responses:
- *       200:
- *         description: Client retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   $ref: '#/components/schemas/SecuriaClient'
- *       404:
- *         description: Client not found
- *       500:
- *         description: Failed to get client
- *   put:
- *     summary: Update client
- *     tags: [Securia]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Client ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/SecuriaClient'
- *     responses:
- *       200:
- *         description: Client updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/SecuriaClient'
- *       404:
- *         description: Client not found
- *       500:
- *         description: Failed to update client
- *   delete:
- *     summary: Delete client
- *     tags: [Securia]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Client ID
- *     responses:
- *       200:
- *         description: Client deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/SecuriaApiResponse'
- *       404:
- *         description: Client not found
- *       500:
- *         description: Failed to delete client
- */
-router.get('/clients/:id', getClientById);
-router.put('/clients/:id', validateClientUpdate, updateClient);
-router.delete('/clients/:id', deleteClient);
 
 // Multi-Stage Client Form API Routes
 

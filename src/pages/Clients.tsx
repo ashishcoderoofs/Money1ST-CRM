@@ -22,11 +22,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { useSecuriaClients, useDeleteClient } from "@/hooks/useSecuriaClients";
+import { useClients, useDeleteClient } from "@/hooks/useSecuriaClients";
 import { toast } from "sonner";
 
 function ClientsTable({ onAdd }: any) {
-  const { data, isLoading, error } = useSecuriaClients();
+  const { data, isLoading, error } = useClients();
   const deleteClientMutation = useDeleteClient();
   const navigate = useNavigate();
 
