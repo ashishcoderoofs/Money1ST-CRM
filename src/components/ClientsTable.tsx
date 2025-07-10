@@ -27,7 +27,7 @@ export default function ClientsTable({
       search &&
       !(
         client.applicant?.toLowerCase().includes(search.toLowerCase()) ||
-        client.co_applicant?.toLowerCase().includes(search.toLowerCase())
+        client.coApplicant?.toLowerCase().includes(search.toLowerCase())
       )
     ) {
       return false;
@@ -110,7 +110,7 @@ export default function ClientsTable({
                   <td className="px-4 py-3 font-mono text-sm uppercase whitespace-nowrap">{String(client.client_number).padStart(7, "0")}</td>
                   <td className="px-4 py-3 font-bold text-[#222a3c] whitespace-nowrap">
                     {client.applicant}
-                    <span className="block text-xs font-normal text-gray-500 whitespace-nowrap">{client.co_applicant ?? ""}</span>
+                    <span className="block text-xs font-normal text-gray-500 whitespace-nowrap">{client.coApplicant ?? ""}</span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${client.status === "Open"

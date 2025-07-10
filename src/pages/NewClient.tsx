@@ -12,7 +12,7 @@ export default function NewClient() {
       const result = await createClientMutation.mutateAsync(newClient);
       if (result?.data?._id) {
         toast.success("Client created successfully.");
-        navigate(`/securia/clients/${result.data._id}`);
+        navigate("/securia/clients");
       } else {
         throw new Error("No client ID returned from API");
       }

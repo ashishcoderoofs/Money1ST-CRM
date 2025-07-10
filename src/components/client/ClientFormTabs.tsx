@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, ArrowLeft, Shield, SquarePen, Save, X, Plus } from 'lucide-react';
-import { useCreateClient, useUpdateClient } from '@/hooks/useSecuriaClients';
+import { useUpdateClient } from '@/hooks/useSecuriaClients';
 import { toast } from 'sonner';
 import NameInformationSection from './NameInformationSection';
 import AddressSection from './AddressSection';
@@ -314,7 +314,6 @@ const ClientForm = ({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastSubmitTime, setLastSubmitTime] = useState(0);
-  const createClientMutation = useCreateClient();
   const updateClientMutation = useUpdateClient();
   const isReadOnly = mode === 'view';
   const isCreate = mode === 'create';
@@ -394,14 +393,22 @@ const ClientForm = ({
         ...rest,
         applicant,
         co_applicant: coApplicant,
-        household_members: applicant.household_members || [],
+        household_members: (applicant.household_members || []).map(m => ({
+          first_name: m.first_name || '',
+          middle_initial: m.middle_initial || '',
+          last_name: m.last_name || '',
+          relationship: m.relationship || '',
+          dob: m.dob || '',
+          age: m.age || '',
+          sex: m.sex || '',
+          marital_status: m.marital_status || '',
+          ssn: m.ssn || ''
+        })),
       };
       
       if (isCreate) {
-        console.log('📤 Sending create request...');
-        const result = await createClientMutation.mutateAsync(payload);
-        toast.success('Client created successfully!');
-        onSave(result?.data || formData);
+        console.log('📤 Preparing create data...');
+        onSave(payload);
       } else if (isEdit) {
         if (!formData._id) throw new Error('Missing client ID');
         const { _id, createdAt, updatedAt, ...update } = payload;
@@ -565,7 +572,6 @@ const ClientForm = ({
           <div className="flex flex-col space-y-1.5 p-6">
             <div className="text-2xl font-semibold leading-none tracking-tight flex items-center justify-between">
               <span className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye w-5 h-5 mr-2"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 {clientData?.applicant?.firstName} {clientData?.applicant?.lastName}
               </span>
               <div className="flex gap-2">
@@ -633,34 +639,34 @@ const ClientForm = ({
                           handleNestedInputChange={(path, value) => handleNestedInputChange(['applicant', ...path], value)}
                         />
                         <AddressSection 
-                          formData={formData.applicant} 
+                          formData={formData.applicant || {}} 
                           isReadOnly={isReadOnly} 
                           isCreate={isCreate}
                           handleNestedInputChange={(path, value) => handleNestedInputChange(['applicant', ...path], value)} 
                         />
                         <PreviousAddressSection 
-                          formData={formData.applicant} 
+                          formData={formData.applicant || {}} 
                           isReadOnly={isReadOnly} 
                           handleNestedInputChange={(path, value) => handleNestedInputChange(['applicant', ...path], value)} 
                         />
                         <EmploymentSection 
-                          formData={formData.applicant} 
+                          formData={formData.applicant || {}} 
                           isReadOnly={isReadOnly} 
                           handleNestedInputChange={(path, value) => handleNestedInputChange(['applicant', ...path], value)} 
                         />
                         <PreviousEmploymentSection 
-                          formData={formData.applicant} 
+                          formData={formData.applicant || {}} 
                           isReadOnly={isReadOnly} 
                           handleNestedInputChange={(path, value) => handleNestedInputChange(['applicant', ...path], value)} 
                         />
                         <DemographicsSection 
-                          formData={formData.applicant} 
+                          formData={formData.applicant || {}} 
                           isReadOnly={isReadOnly} 
                           isCreate={isCreate}
                           handleNestedInputChange={(path, value) => handleNestedInputChange(['applicant', ...path], value)} 
                         />
                         <HouseholdMembersSection 
-                          formData={formData.applicant} 
+                          formData={formData.applicant || {}} 
                           isReadOnly={isReadOnly} 
                           handleNestedInputChange={handleNestedInputChange}
                           updateHouseholdMember={updateHouseholdMember}
@@ -679,28 +685,28 @@ const ClientForm = ({
                       handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
                     />
                     <AddressSection 
-                      formData={formData.coApplicant} 
+                      formData={formData.coApplicant || {}} 
                       isReadOnly={isReadOnly} 
                       isCreate={isCreate}
                       handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
                     />
                     <PreviousAddressSection 
-                      formData={formData.coApplicant} 
+                      formData={formData.coApplicant || {}} 
                       isReadOnly={isReadOnly} 
                       handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
                     />
                     <EmploymentSection 
-                      formData={formData.coApplicant} 
+                      formData={formData.coApplicant || {}} 
                       isReadOnly={isReadOnly} 
                       handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
                     />
                     <PreviousEmploymentSection 
-                      formData={formData.coApplicant} 
+                      formData={formData.coApplicant || {}} 
                       isReadOnly={isReadOnly} 
                       handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
                     />
                     <DemographicsSection 
-                      formData={formData.coApplicant} 
+                      formData={formData.coApplicant || {}} 
                       isReadOnly={isReadOnly} 
                       handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
                     />

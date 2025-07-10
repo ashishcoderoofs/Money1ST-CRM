@@ -24,9 +24,13 @@ import {
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useClients, useDeleteClient } from "@/hooks/useSecuriaClients";
 import { toast } from "sonner";
+import { useState } from "react";
 
 function ClientsTable({ onAdd }: any) {
-  const { data, isLoading, error } = useClients();
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const { data, isLoading, error } = useClients({ page, limit });
   const deleteClientMutation = useDeleteClient();
   const navigate = useNavigate();
 
@@ -78,6 +82,7 @@ function ClientsTable({ onAdd }: any) {
   }
 
   const clients = data?.data || [];
+  const pagination = data?.pagination || { page: 1, pages: 1, total: 0 };
 
   return (
     <div className="w-full space-y-4">
@@ -89,20 +94,21 @@ function ClientsTable({ onAdd }: any) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ClientID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Risk Tolerance</TableHead>
+              <TableHead>Client ID</TableHead>
               <TableHead>Entry Date</TableHead>
+              <TableHead>Applicant</TableHead>
+              <TableHead>Co-Applicant</TableHead>
+              <TableHead>Consultant</TableHead>
+              <TableHead>Processor</TableHead>
+              <TableHead>Total Debt</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {clients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
+                <TableCell colSpan={9} className="text-center py-8">
                   <div className="text-gray-500">
                     <p className="mb-4">No clients found</p>
                     <Button onClick={onAdd}>Add Your First Client</Button>
@@ -110,38 +116,25 @@ function ClientsTable({ onAdd }: any) {
                 </TableCell>
               </TableRow>
             ) : (
-              clients.map((client) => (
-                <TableRow key={client._id}>
-                  <TableCell className="font-mono text-xs uppercase">
-                    {client.clientId || `CLI${client._id.substring(client._id.length - 6)}`}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {getFullName(client)}
-                  </TableCell>
-                  <TableCell>{client.applicant?.email || 'N/A'}</TableCell>
-                  <TableCell>{client.applicant?.cellPhone || client.applicant?.homePhone || client.applicant?.workPhone || 'N/A'}</TableCell>
+              clients.map((client: any) => (
+                <TableRow key={client.clientId}>
+                  <TableCell className="font-mono text-xs uppercase">{client.clientId}</TableCell>
+                  <TableCell>{client.entryDate ? new Date(client.entryDate).toLocaleDateString() : 'N/A'}</TableCell>
+                  <TableCell>{client.applicantName || 'N/A'}</TableCell>
+                  <TableCell>{client.coApplicantName || 'N/A'}</TableCell>
+                  <TableCell>{client.consultant || client.consultant_name || 'N/A'}</TableCell>
+                  <TableCell>{client.processor || client.processor_name || 'N/A'}</TableCell>
+                  <TableCell>{client.totalDebt !== undefined ? client.totalDebt : 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={getBadgeVariant(client.status)}>
                       {client.status || 'N/A'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="capitalize">
-                    {client.financialInfo?.riskTolerance || 'N/A'}
-                  </TableCell>
-                  <TableCell>{client.entryDate ? new Date(client.entryDate).toLocaleDateString() : 'N/A'}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button
-                      size="sm"
-                      className="bg-cyan-500 text-primary-foreground hover:bg-cyan-600"
-                      onClick={() => navigate(`/securia/clients/${client._id}`)}
-                    >
+                    <Button size="sm" className="bg-cyan-500 text-primary-foreground hover:bg-cyan-600" onClick={() => navigate(`/securia/clients/${client.clientId}`)}>
                       <Eye /> View
                     </Button>
-                    <Button
-                      size="sm"
-                      className="bg-yellow-400 text-secondary-foreground hover:bg-yellow-500"
-                      onClick={() => navigate(`/securia/clients/${client._id}/edit`)}
-                    >
+                    <Button size="sm" className="bg-yellow-400 text-secondary-foreground hover:bg-yellow-500" onClick={() => navigate(`/securia/clients/${client.clientId}/edit`)}>
                       <Pencil /> Edit
                     </Button>
                     <AlertDialog>
@@ -154,16 +147,12 @@ function ClientsTable({ onAdd }: any) {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action will permanently delete the client "{getFullName(client)}" and all their associated data. This action cannot be undone.
+                            This action will permanently delete the client "{client.applicantName || 'N/A'}" and all their associated data. This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(client._id, getFullName(client))}
-                            className="bg-destructive hover:bg-destructive/90"
-                            disabled={deleteClientMutation.isPending}
-                          >
+                          <AlertDialogAction onClick={() => handleDelete(client.clientId, client.applicantName || 'N/A')} className="bg-destructive hover:bg-destructive/90" disabled={deleteClientMutation.isPending}>
                             {deleteClientMutation.isPending ? "Deleting..." : "Delete Permanently"}
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -175,6 +164,28 @@ function ClientsTable({ onAdd }: any) {
             )}
           </TableBody>
         </Table>
+      </div>
+      {/* Pagination Controls */}
+      <div className="flex justify-end items-center gap-4 mt-4">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={pagination.page <= 1}
+        >
+          Previous
+        </Button>
+        <span className="text-sm">
+          Page {pagination.page} of {pagination.pages}
+        </span>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
+          disabled={pagination.page >= pagination.pages}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );

@@ -17,8 +17,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="text"
           id="address"
           name="address"
-          value={formData.current_address?.address || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'address'], e.target.value)}
+          value={formData.contact?.address || ''}
+          onChange={e => handleNestedInputChange(['contact', 'address'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'street address' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -30,8 +30,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="text"
           id="city"
           name="city"
-          value={formData.current_address?.city || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'city'], e.target.value)}
+          value={formData.contact?.city || ''}
+          onChange={e => handleNestedInputChange(['contact', 'city'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'city' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -43,8 +43,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="text"
           id="state"
           name="state"
-          value={formData.current_address?.state || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'state'], e.target.value)}
+          value={formData.contact?.state || ''}
+          onChange={e => handleNestedInputChange(['contact', 'state'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'state' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -56,8 +56,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="text"
           id="zipCode"
           name="zipCode"
-          value={formData.current_address?.zip_code || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'zip_code'], e.target.value)}
+          value={formData.contact?.zip_code || ''}
+          onChange={e => handleNestedInputChange(['contact', 'zip_code'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'zip code' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -69,8 +69,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="text"
           id="county"
           name="county"
-          value={formData.current_address?.county || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'county'], e.target.value)}
+          value={formData.contact?.county || ''}
+          onChange={e => handleNestedInputChange(['contact', 'county'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'county' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -82,8 +82,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="text"
           id="homePhone"
           name="homePhone"
-          value={formData.current_address?.home_phone || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'home_phone'], e.target.value)}
+          value={formData.contact?.home_phone || ''}
+          onChange={e => handleNestedInputChange(['contact', 'home_phone'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'home phone' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -95,8 +95,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="text"
           id="workPhone"
           name="workPhone"
-          value={formData.current_address?.work_phone || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'work_phone'], e.target.value)}
+          value={formData.contact?.work_phone || ''}
+          onChange={e => handleNestedInputChange(['contact', 'work_phone'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'work phone' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -108,8 +108,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="text"
           id="cellPhone"
           name="cellPhone"
-          value={formData.current_address?.cell_phone || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'cell_phone'], e.target.value)}
+          value={formData.contact?.cell_phone || ''}
+          onChange={e => handleNestedInputChange(['contact', 'cell_phone'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'cell phone' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -121,8 +121,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="text"
           id="otherPhone"
           name="otherPhone"
-          value={formData.current_address?.other_phone || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'other_phone'], e.target.value)}
+          value={formData.contact?.other_phone || ''}
+          onChange={e => handleNestedInputChange(['contact', 'other_phone'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'other phone' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -134,8 +134,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="email"
           id="email"
           name="email"
-          value={formData.current_address?.email || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'email'], e.target.value)}
+          value={formData.contact?.email || ''}
+          onChange={e => handleNestedInputChange(['contact', 'email'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'email' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -147,8 +147,8 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           type="text"
           id="fax"
           name="fax"
-          value={formData.current_address?.fax || ''}
-          onChange={e => handleNestedInputChange(['current_address', 'fax'], e.target.value)}
+          value={formData.contact?.fax || ''}
+          onChange={e => handleNestedInputChange(['contact', 'fax'], e.target.value)}
           placeholder={isCreate && !isReadOnly ? 'fax' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
@@ -158,31 +158,35 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
         <label className="text-sm font-medium text-gray-600">How Long at Current Address</label>
         <div className="flex gap-4">
           <label htmlFor="years" className="text-sm font-medium text-gray-600">Years</label>
-          <select
+          <input
+            type="text"
             id="years"
-            value={formData.current_address?.years_at_address || ''}
-            onChange={e => handleNestedInputChange(['current_address', 'years_at_address'], e.target.value)}
+            name="years"
+            value={formData.current_address?.years || ''}
+            onChange={e => handleNestedInputChange(['current_address', 'years'], e.target.value)}
             disabled={isReadOnly}
-            className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base md:text-sm"
-          >
-            <option value="">Select...</option>
-            {[...Array(31).keys()].map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+            className="bg-white flex h-10 w-20 rounded-md border border-input px-3 py-2 text-base md:text-sm"
+          />
           <label htmlFor="months" className="text-sm font-medium text-gray-600">Months</label>
-          <select
+          <input
+            type="text"
             id="months"
-            value={formData.current_address?.months_at_address || ''}
-            onChange={e => handleNestedInputChange(['current_address', 'months_at_address'], e.target.value)}
+            name="months"
+            value={formData.current_address?.months || ''}
+            onChange={e => handleNestedInputChange(['current_address', 'months'], e.target.value)}
             disabled={isReadOnly}
-            className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base md:text-sm"
-          >
-            <option value="">Select...</option>
-            {[...Array(12).keys()].map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+            className="bg-white flex h-10 w-20 rounded-md border border-input px-3 py-2 text-base md:text-sm"
+          />
+          <label htmlFor="howLong" className="text-sm font-medium text-gray-600">How Long</label>
+          <input
+            type="text"
+            id="howLong"
+            name="howLong"
+            value={formData.current_address?.how_long_at_current_address || ''}
+            onChange={e => handleNestedInputChange(['current_address', 'how_long_at_current_address'], e.target.value)}
+            disabled={isReadOnly}
+            className="bg-white flex h-10 w-40 rounded-md border border-input px-3 py-2 text-base md:text-sm"
+          />
         </div>
       </div>
     </div>

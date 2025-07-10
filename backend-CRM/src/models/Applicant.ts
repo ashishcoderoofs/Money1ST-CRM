@@ -8,10 +8,15 @@ export type EmploymentStatus = 'Employed' | 'Self-Employed' | 'Unemployed' | 'Re
 export type ClientStatus = 'Active' | 'Pending' | 'Inactive';
 
 export interface IHouseholdMember {
-  name: string;
-  dob: string;
+  first_name: string;
+  middle_initial?: string;
+  last_name: string;
   relationship: string;
+  dob: string;
   age: string;
+  sex?: string;
+  marital_status?: string;
+  ssn?: string;
 }
 
 export interface IApplicant extends Document {
@@ -100,10 +105,15 @@ export interface IApplicant extends Document {
 }
 
 const HouseholdMemberSchema = new Schema<IHouseholdMember>({
-  name: { type: String },
-  dob: { type: String },
+  first_name: { type: String },
+  middle_initial: { type: String },
+  last_name: { type: String },
   relationship: { type: String },
-  age: { type: String }
+  dob: { type: String },
+  age: { type: String },
+  sex: { type: String },
+  marital_status: { type: String },
+  ssn: { type: String }
 });
 
 const ApplicantSchema = new Schema<IApplicant>({

@@ -73,10 +73,61 @@ export const getClients = async (req: Request, res: Response) => {
     const skip = (Number(page) - 1) * Number(limit);
     const query = Client.find(filters)
       .skip(skip)
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .populate('applicant')
+      .populate('co_applicant');
     const total = await Client.countDocuments(filters);
     const clients = await query;
-    res.json({ success: true, data: clients, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });
+
+    // Transform the data to only include required fields
+    const clientList = clients.map(client => {
+      let applicantName = 'N/A', coApplicantName = 'N/A';
+      if (
+        client.applicant &&
+        typeof client.applicant === 'object' &&
+        client.applicant !== null &&
+        !Array.isArray(client.applicant) &&
+        'first_name' in client.applicant
+      ) {
+        const applicant = client.applicant as any;
+        applicantName = [applicant.first_name, applicant.last_name].filter(Boolean).join(' ') || 'N/A';
+      }
+      if (
+        client.co_applicant &&
+        typeof client.co_applicant === 'object' &&
+        client.co_applicant !== null &&
+        !Array.isArray(client.co_applicant) &&
+        'first_name' in client.co_applicant
+      ) {
+        const coApplicant = client.co_applicant as any;
+        coApplicantName = [coApplicant.first_name, coApplicant.last_name].filter(Boolean).join(' ') || 'N/A';
+      }
+      // Calculate totalDebt from liabilities
+      let totalDebt = 0;
+      if (Array.isArray(client.liabilities)) {
+        for (const liability of client.liabilities) {
+          if (liability && typeof liability === 'object' && 'amount' in liability && typeof liability.amount === 'number') {
+            totalDebt += liability.amount;
+          }
+        }
+      }
+      return {
+        clientId: client.client_id || client._id,
+        entryDate: client.entry_date ? new Date(client.entry_date).toISOString().split('T')[0] : 'N/A',
+        applicantName,
+        coApplicantName,
+        consultant: client.consultant_name || 'N/A',
+        processor: client.processor_name || 'N/A',
+        totalDebt: totalDebt || 'N/A',
+        status: client.status || 'N/A',
+      };
+    });
+
+    res.json({
+      success: true,
+      data: clientList,
+      pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) }
+    });
   } catch (error) {
     const err = error as Error;
     res.status(500).json({ success: false, error: err.message });
@@ -85,22 +136,60 @@ export const getClients = async (req: Request, res: Response) => {
 
 export const getClientById = async (req: Request, res: Response) => {
   try {
-    const client = await Client.findById(req.params.id)
-      .populate('applicant')
-      .populate('co_applicant')
-      .populate('property')
-      .populate('first_mortgage')
-      .populate('second_mortgage')
-      .populate('loan_details')
-      .populate('proposed_first_loan')
-      .populate('proposed_second_loan')
-      .populate('loan_options')
-      .populate('underwriting')
-      .populate('chm')
-      .populate('tud')
-      .populate('liabilities');
+    let client = null;
+    // Try to find by MongoDB ObjectId
+    if (/^[a-fA-F0-9]{24}$/.test(req.params.id)) {
+      client = await Client.findById(req.params.id)
+        .populate('applicant')
+        .populate('co_applicant')
+        .populate('property')
+        .populate('first_mortgage')
+        .populate('second_mortgage')
+        .populate('loan_details')
+        .populate('proposed_first_loan')
+        .populate('proposed_second_loan')
+        .populate('loan_options')
+        .populate('underwriting')
+        .populate('chm')
+        .populate('tud')
+        .populate('liabilities');
+    }
+    // If not found, or not a valid ObjectId, try by client_id
+    if (!client) {
+      client = await Client.findOne({ client_id: req.params.id })
+        .populate('applicant')
+        .populate('co_applicant')
+        .populate('property')
+        .populate('first_mortgage')
+        .populate('second_mortgage')
+        .populate('loan_details')
+        .populate('proposed_first_loan')
+        .populate('proposed_second_loan')
+        .populate('loan_options')
+        .populate('underwriting')
+        .populate('chm')
+        .populate('tud')
+        .populate('liabilities');
+    }
     if (!client) return res.status(404).json({ success: false, error: 'Client not found' });
-    return res.json({ success: true, data: client });
+    // Build a clean, camelCase-only response
+    const obj = client.toObject();
+    const response = {
+      id: obj._id,
+      clientId: obj.client_id,
+      entryDate: obj.entry_date,
+      status: obj.status,
+      payoffAmount: obj.payoff_amount,
+      consultantName: obj.consultant_name,
+      processorName: obj.processor_name,
+      applicant: obj.applicant || {},
+      coApplicant: obj.co_applicant || {},
+      liabilities: obj.liabilities || [],
+      createdAt: obj.createdAt,
+      updatedAt: obj.updatedAt,
+      // add more fields as needed by the frontend only
+    };
+    return res.json({ success: true, data: response });
   } catch (error) {
     const err = error as Error;
     return res.status(500).json({ success: false, error: err.message });
