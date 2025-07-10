@@ -76,7 +76,7 @@ export interface CoApplicantEmploymentData {
   };
 }
 
-export interface CoApplicantDemographicsData {
+export type CoApplicantDemographicsData = {
   birthPlace?: string;
   dateOfBirth?: string;
   race?: string;
@@ -85,7 +85,14 @@ export interface CoApplicantDemographicsData {
   spouseName?: string;
   spouseOccupation?: string;
   numberOfDependents?: number;
-}
+  // snake_case for backend
+  birth_place?: string;
+  dob?: string;
+  marital_status?: string;
+  spouse_name?: string;
+  spouse_occupation?: string;
+  number_of_dependents?: number;
+};
 
 // Helper function to make authenticated API calls
 const makeSecuriaApiCall = async (

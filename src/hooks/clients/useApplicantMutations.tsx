@@ -69,7 +69,7 @@ export interface ApplicantEmploymentData {
   };
 }
 
-export interface ApplicantDemographicsData {
+export type ApplicantDemographicsData = {
   birthPlace?: string;
   dateOfBirth?: string;
   ssn?: string;
@@ -79,7 +79,14 @@ export interface ApplicantDemographicsData {
   spouseName?: string;
   spouseOccupation?: string;
   numberOfDependents?: number;
-}
+  // snake_case for backend
+  birth_place?: string;
+  dob?: string;
+  marital_status?: string;
+  spouse_name?: string;
+  spouse_occupation?: string;
+  number_of_dependents?: number;
+};
 
 // Helper function to make authenticated API calls
 const makeSecuriaApiCall = async (

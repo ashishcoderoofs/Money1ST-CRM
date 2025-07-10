@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // import { useDependents, useCreateDependent, useUpdateDependent, useDeleteDependent } from "@/hooks/useDependents";
 import { Trash2, Plus, Edit, Save, X } from "lucide-react";
-// import type { Database } from "@/integrations/supabase/types";
-// type Dependent = Database["public"]["Tables"]["dependents"]["Row"];
+// Remove all supabase type imports. Use REST types if needed.
 type Dependent = any;
 
 interface DependentsManagerProps {

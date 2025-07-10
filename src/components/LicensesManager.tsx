@@ -10,9 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Database } from "@/integrations/supabase/types";
 
-type License = Database["public"]["Tables"]["licenses"]["Row"];
 
 interface LicensesManagerProps {
   consultantId: string;
@@ -25,7 +23,7 @@ export function LicensesManager({ consultantId }: LicensesManagerProps) {
   const deleteLicenseMutation = useDeleteLicense();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingLicense, setEditingLicense] = useState<License | null>(null);
+  const [editingLicense, setEditingLicense] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     license_type: "",
     license_number: "",
@@ -70,7 +68,7 @@ export function LicensesManager({ consultantId }: LicensesManagerProps) {
     setEditingLicense(null);
   };
 
-  const handleEdit = (license: License) => {
+  const handleEdit = (license: any) => {
     setEditingLicense(license);
     setFormData({
       license_type: license.license_type,
@@ -82,7 +80,7 @@ export function LicensesManager({ consultantId }: LicensesManagerProps) {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (license: License) => {
+  const handleDelete = (license: any) => {
     if (confirm("Are you sure you want to delete this license?")) {
       deleteLicenseMutation.mutate({ id: license.id, consultant_id: consultantId });
     }

@@ -11,9 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import type { Database } from "@/integrations/supabase/types";
 
-type Payment = Database["public"]["Tables"]["payments"]["Row"];
 
 interface PaymentsManagerProps {
   consultantId: string;
@@ -26,7 +24,7 @@ export function PaymentsManager({ consultantId }: PaymentsManagerProps) {
   const deletePaymentMutation = useDeletePayment();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [editingPayment, setEditingPayment] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     payment_type: "",
     amount: "",
@@ -71,7 +69,7 @@ export function PaymentsManager({ consultantId }: PaymentsManagerProps) {
     setEditingPayment(null);
   };
 
-  const handleEdit = (payment: Payment) => {
+  const handleEdit = (payment: any) => {
     setEditingPayment(payment);
     setFormData({
       payment_type: payment.payment_type,
@@ -83,7 +81,7 @@ export function PaymentsManager({ consultantId }: PaymentsManagerProps) {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (payment: Payment) => {
+  const handleDelete = (payment: any) => {
     if (confirm("Are you sure you want to delete this payment?")) {
       deletePaymentMutation.mutate({ id: payment.id, consultant_id: consultantId });
     }

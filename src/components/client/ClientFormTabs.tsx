@@ -12,6 +12,10 @@ import HouseholdMembersSection from './HouseholdMembersSection';
 import * as yup from 'yup';
 import dayjs from 'dayjs';
 import CaseInformationSection from './CaseInformationSection';
+import { useUpdateApplicantBasicInfo, useUpdateApplicantAddress, useUpdateApplicantEmployment, useUpdateApplicantDemographics } from '@/hooks/clients/useApplicantMutations';
+import { useUpdateCoApplicantBasicInfo, useUpdateCoApplicantAddress, useUpdateCoApplicantEmployment, useUpdateCoApplicantDemographics } from '@/hooks/clients/useCoApplicantMutations';
+import LiabilitiesSection from './LiabilitiesSection';
+import { createLiabilityREST } from '@/hooks/clients/useLiabilityMutations';
 
 interface ClientFormProps {
   mode?: 'view' | 'edit' | 'create';
@@ -22,18 +26,17 @@ interface ClientFormProps {
 }
 
 const emptyClient = {
-  // Only include the minimal structure needed for the form to work
   applicant: { household_members: [
-    { name: '', dob: '', relationship: '', age: '' }
+    { first_name: '', middle_initial: '', last_name: '', relationship: '', dob: '', age: '', sex: '', marital_status: '', ssn: '' }
   ] },
   coApplicant: {},
   householdMembers: [],
-  client_id: '',
-  entry_date: dayjs().format('YYYY-MM-DD'), // Set to today by default
+  clientId: '',
+  entryDate: dayjs().format('YYYY-MM-DD'),
   status: '',
-  payoff_amount: 0,
-  consultant_name: '',
-  processor_name: '',
+  payoffAmount: 0,
+  consultantName: '',
+  processorName: '',
 };
 
 function setNestedValue(obj, path, value) {
@@ -81,8 +84,8 @@ const applicantSchema = yup.object().shape({
     work_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
     cell_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
     other_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    email: yup.string().email('Invalid email').optional(),
-  }).optional(),
+    email: yup.string().email('Invalid email').required('Email is required'),
+  }).required('Contact information is required'),
   current_address: yup.object({
     months: yup.string().matches(/^\d+$/, 'Months must be a number').optional(),
     years: yup.string().matches(/^\d+$/, 'Years must be a number').optional(),
@@ -301,6 +304,98 @@ function randomApplicant() {
   };
 }
 
+// Helper to map backend applicant/coApplicant to form structure
+function mapApplicantFromBackend(app: any) {
+  if (!app) return {};
+  return {
+    // Name info
+    title: app.title || '',
+    first_name: app.firstName || '',
+    middle_initial: app.middleInitial || '',
+    last_name: app.lastName || '',
+    maiden_name: app.maidenName || '',
+    suffix: app.suffix || '',
+    is_consultant: app.isConsultant || false,
+    // Contact info
+    contact: {
+      address: app.currentAddress?.address || '',
+      city: app.currentAddress?.city || '',
+      state: app.currentAddress?.state || '',
+      zip_code: app.currentAddress?.zipCode || '',
+      county: app.currentAddress?.county || '',
+      home_phone: app.currentAddress?.homePhone || '',
+      work_phone: app.currentAddress?.workPhone || '',
+      cell_phone: app.currentAddress?.cellPhone || '',
+      other_phone: app.currentAddress?.otherPhone || '',
+      email: app.currentAddress?.email || '',
+      fax: app.currentAddress?.fax || '',
+    },
+    current_address: {
+      months: app.currentAddress?.months || '',
+      years: app.currentAddress?.years || '',
+      how_long_at_current_address: app.currentAddress?.howLongAtCurrentAddress || '',
+    },
+    previous_address: {
+      address: app.previousAddress?.address || '',
+      city: app.previousAddress?.city || '',
+      state: app.previousAddress?.state || '',
+      zip_code: app.previousAddress?.zipCode || '',
+      months: app.previousAddress?.months || '',
+      years: app.previousAddress?.years || '',
+      duration: app.previousAddress?.duration || '',
+    },
+    employment: {
+      status: app.currentEmployment?.status || '',
+      is_business_owner: app.currentEmployment?.isBusinessOwner || '',
+      employer_name: app.currentEmployment?.employerName || '',
+      employer_address: app.currentEmployment?.employerAddress || '',
+      employer_city: app.currentEmployment?.employerCity || '',
+      employer_state: app.currentEmployment?.employerState || '',
+      employer_zip_code: app.currentEmployment?.employerZipCode || '',
+      occupation: app.currentEmployment?.occupation || '',
+      monthly_salary: app.currentEmployment?.monthlySalary || '',
+      other_income: app.currentEmployment?.otherIncome || '',
+      start_date: app.currentEmployment?.startDate || '',
+      end_date: app.currentEmployment?.endDate || '',
+      supervisor: app.currentEmployment?.supervisor || '',
+      supervisor_phone: app.currentEmployment?.supervisorPhone || '',
+      source: app.currentEmployment?.source || '',
+    },
+    previous_employment: {
+      employer_name: app.previousEmployment?.employerName || '',
+      employer_address: app.previousEmployment?.employerAddress || '',
+      employer_city: app.previousEmployment?.employerCity || '',
+      employer_state: app.previousEmployment?.employerState || '',
+      employer_zip_code: app.previousEmployment?.employerZipCode || '',
+      from_date: app.previousEmployment?.fromDate || '',
+      to_date: app.previousEmployment?.toDate || '',
+      occupation: app.previousEmployment?.occupation || '',
+    },
+    // Demographics
+    birth_place: app.demographics?.birthPlace || '',
+    dob: app.demographics?.dob.slice(0,10) || '',
+    marital_status: app.demographics?.maritalStatus || '',
+    race: app.demographics?.race || '',
+    anniversary: app.demographics?.anniversary || '',
+    spouse_name: app.demographics?.spouseName || '',
+    spouse_occupation: app.demographics?.spouseOccupation || '',
+    number_of_dependents: app.demographics?.numberOfDependents || '',
+    household_members: Array.isArray(app.householdMembers)
+      ? app.householdMembers.map((m: any) => ({
+          first_name: m.firstName || '',
+          middle_initial: m.middleInitial || '',
+          last_name: m.lastName || '',
+          relationship: m.relationship || '',
+          dob: m.dob || '',
+          age: m.age || '',
+          sex: m.sex || '',
+          marital_status: m.maritalStatus || '',
+          ssn: m.ssn || '',
+        }))
+      : [],
+  };
+}
+
 const ClientForm = ({ 
   mode = 'view',
   clientData = null,
@@ -315,6 +410,14 @@ const ClientForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastSubmitTime, setLastSubmitTime] = useState(0);
   const updateClientMutation = useUpdateClient();
+  const updateApplicantBasic = useUpdateApplicantBasicInfo();
+  const updateApplicantAddress = useUpdateApplicantAddress();
+  const updateApplicantEmployment = useUpdateApplicantEmployment();
+  const updateApplicantDemographics = useUpdateApplicantDemographics();
+  const updateCoApplicantBasic = useUpdateCoApplicantBasicInfo();
+  const updateCoApplicantAddress = useUpdateCoApplicantAddress();
+  const updateCoApplicantEmployment = useUpdateCoApplicantEmployment();
+  const updateCoApplicantDemographics = useUpdateCoApplicantDemographics();
   const isReadOnly = mode === 'view';
   const isCreate = mode === 'create';
   const isEdit = mode === 'edit';
@@ -323,10 +426,11 @@ const ClientForm = ({
 
   React.useEffect(() => {
     if (clientData) {
-      console.log('ClientFormTabs received clientData:', clientData);
-    }
-    if (clientData) {
-      setFormData(clientData);
+      setFormData({
+        ...clientData,
+        applicant: mapApplicantFromBackend(clientData.applicant || clientData.Applicant),
+        coApplicant: mapApplicantFromBackend(clientData.co_applicant || clientData.coApplicant),
+      });
     } else {
       setFormData(emptyClient);
     }
@@ -370,7 +474,10 @@ const ClientForm = ({
     try {
       // Validate applicant and co-applicant
       const applicantErrors = await validateSection('applicant', formData.applicant);
-      const coApplicantErrors = await validateSection('coApplicant', formData.coApplicant);
+      let coApplicantErrors = {};
+      if (formData.coApplicant?.include_coapplicant) {
+        coApplicantErrors = await validateSection('coApplicant', formData.coApplicant);
+      }
       setErrors({ applicant: applicantErrors, coApplicant: coApplicantErrors });
       
       console.log('Applicant validation errors:', applicantErrors);
@@ -386,13 +493,35 @@ const ClientForm = ({
       if (applicant.middle_initial) applicant.middle_initial = applicant.middle_initial[0];
       const coApplicant = { ...formData.coApplicant };
       if (coApplicant.middle_initial) coApplicant.middle_initial = coApplicant.middle_initial[0];
-      
+
+      // --- NEST name fields under name_information for backend ---
+      const {
+        title, first_name, middle_initial, last_name, suffix, maiden_name, is_consultant, ...restApplicant
+      } = applicant;
+      const applicantPayload = {
+        ...restApplicant,
+        name_information: {
+          title, first_name, middle_initial, last_name, suffix, maiden_name, is_consultant
+        }
+      };
+      const {
+        title: coTitle, first_name: coFirstName, middle_initial: coMiddleInitial, last_name: coLastName, suffix: coSuffix, maiden_name: coMaidenName, is_consultant: coIsConsultant, ...restCoApplicant
+      } = coApplicant;
+      const coApplicantPayload = formData.coApplicant?.include_coapplicant
+        ? {
+            ...restCoApplicant,
+            name_information: {
+              title: coTitle, first_name: coFirstName, middle_initial: coMiddleInitial, last_name: coLastName, suffix: coSuffix, maiden_name: coMaidenName, is_consultant: coIsConsultant
+            },
+            include_coapplicant: true
+          }
+        : { include_coapplicant: false };
       // Remove client_id from payload
-      const { client_id, coApplicant: coApplicantPayload, householdMembers, ...rest } = formData;
+      const { clientId, coApplicant: coApplicantRaw, householdMembers, ...rest } = formData;
       const payload = {
         ...rest,
-        applicant,
-        co_applicant: coApplicant,
+        applicant: applicantPayload,
+        co_applicant: coApplicantPayload,
         household_members: (applicant.household_members || []).map(m => ({
           first_name: m.first_name || '',
           middle_initial: m.middle_initial || '',
@@ -408,14 +537,86 @@ const ClientForm = ({
       
       if (isCreate) {
         console.log('📤 Preparing create data...');
-        onSave(payload);
+        // Step 1: Remove liabilities from payload
+        const { liabilities, ...clientPayload } = payload;
+        // Step 2: Create client (without liabilities)
+        await onSave(clientPayload);
+        // Step 3: (skip liabilities for now, or handle in parent if needed)
+        toast.success('Client created successfully!');
+        if (typeof onBack === 'function') {
+          onBack();
+        }
+        setIsSubmitting(false);
+        return;
       } else if (isEdit) {
-        if (!formData._id) throw new Error('Missing client ID');
-        const { _id, createdAt, updatedAt, ...update } = payload;
+        if (!formData.clientId) throw new Error('Missing client ID');
+        // Update applicant and co_applicant separately
+        if (formData.applicant && formData.applicant._id) {
+          // Update applicant sections
+          await updateApplicantBasic.mutateAsync({ clientId: formData.clientId, data: applicantPayload.name_information });
+          await updateApplicantAddress.mutateAsync({ clientId: formData.clientId, data: { currentAddress: applicantPayload.current_address, previousAddress: applicantPayload.previous_address } });
+          await updateApplicantEmployment.mutateAsync({ clientId: formData.clientId, data: { employment: applicantPayload.employment, previousEmployment: applicantPayload.previous_employment } });
+          await updateApplicantDemographics.mutateAsync({ clientId: formData.clientId, data: {
+            birth_place: applicantPayload.birth_place,
+            dob: applicantPayload.date_of_birth,
+            ssn: applicantPayload.ssn,
+            race: applicantPayload.race,
+            marital_status: applicantPayload.marital_status,
+            anniversary: applicantPayload.anniversary,
+            spouse_name: applicantPayload.spouse_name,
+            spouse_occupation: applicantPayload.spouse_occupation,
+            number_of_dependents: applicantPayload.number_of_dependents
+          }});
+        }
+        if (formData.coApplicant && formData.coApplicant._id) {
+          // Update co-applicant sections
+          await updateCoApplicantBasic.mutateAsync({ clientId: formData.clientId, data: coApplicantPayload.name_information });
+          await updateCoApplicantAddress.mutateAsync({ clientId: formData.clientId, data: { currentAddress: coApplicantPayload.current_address, previousAddress: coApplicantPayload.previous_address } });
+          await updateCoApplicantEmployment.mutateAsync({ clientId: formData.clientId, data: { employment: coApplicantPayload.employment, previousEmployment: coApplicantPayload.previous_employment } });
+          await updateCoApplicantDemographics.mutateAsync({ clientId: formData.clientId, data: {
+            birth_place: coApplicantPayload.birth_place,
+            dob: coApplicantPayload.date_of_birth,
+            race: coApplicantPayload.race,
+            marital_status: coApplicantPayload.marital_status,
+            anniversary: coApplicantPayload.anniversary,
+            spouse_name: coApplicantPayload.spouse_name,
+            spouse_occupation: coApplicantPayload.spouse_occupation,
+            number_of_dependents: coApplicantPayload.number_of_dependents
+          }});
+        }
+        const { clientId, createdAt, updatedAt, ...update } = payload;
+        // Map top-level fields to snake_case for backend
+        const updateSnake = {
+          ...update,
+          client_id: formData.clientId, // ensure client_id is included
+          entry_date: (update.entryDate || '').split('T')[0], // format as YYYY-MM-DD
+          payoff_amount: update.payoffAmount,
+          consultant_name: update.consultantName,
+          processor_name: update.processorName,
+          status: (update.status || '').toLowerCase(), // ensure lowercase
+          applicant: formData.applicant && formData.applicant._id ? formData.applicant._id : null, // Only send ObjectId or null
+          co_applicant: formData.coApplicant && formData.coApplicant._id ? formData.coApplicant._id : null, // Only send ObjectId or null
+        };
+        // Patch liabilities: only send array of ObjectIds if present
+        if (Array.isArray(formData.liabilities) && formData.liabilities.length > 0) {
+          updateSnake.liabilities = formData.liabilities
+            .filter(l => l && typeof l === 'object' && l._id)
+            .map(l => l._id);
+          if (updateSnake.liabilities.length === 0) {
+            delete updateSnake.liabilities;
+          }
+        } else {
+          delete updateSnake.liabilities;
+        }
+        delete updateSnake.entryDate;
+        delete updateSnake.payoffAmount;
+        delete updateSnake.consultantName;
+        delete updateSnake.processorName;
         console.log('📤 Sending update request...');
-        const result = await updateClientMutation.mutateAsync({ id: formData._id, update });
+        console.log('Payload for updateClient:', updateSnake);
+        const result = await updateClientMutation.mutateAsync({ id: formData.clientId, update: updateSnake });
         toast.success('Client updated successfully!');
-        onSave(result?.data || formData);
+        onSave(formData);
       }
       
       console.log('✅ Form submission completed successfully');
@@ -505,10 +706,11 @@ const ClientForm = ({
     { id: 'notes', label: 'Notes' }
   ];
 
-  const getClientId = () => (clientData?.client_id || '');
+  // Update getClientId and getEntryDate to use camelCase
+  const getClientId = () => (clientData?.clientId || '');
   const getEntryDate = () => {
     if (mode === 'create') return dayjs().format('YYYY-MM-DD');
-    return clientData?.entry_date ? dayjs(clientData.entry_date).format('YYYY-MM-DD') : '';
+    return clientData?.entryDate ? dayjs(clientData.entryDate).format('YYYY-MM-DD') : '';
   };
 
   const handleFillDummyData = () => {
@@ -517,10 +719,10 @@ const ClientForm = ({
       applicant: randomApplicant(),
       coApplicant: randomApplicant(),
       status: ['Active','Pending','Inactive'][randomInt(0,2)],
-      payoff_amount: randomInt(0,100000),
-      consultant_name: randomName().first + ' ' + randomName().last,
-      processor_name: randomName().first + ' ' + randomName().last,
-      entry_date: dayjs().format('YYYY-MM-DD'),
+      payoffAmount: randomInt(0,100000),
+      consultantName: randomName().first + ' ' + randomName().last,
+      processorName: randomName().first + ' ' + randomName().last,
+      entryDate: dayjs().format('YYYY-MM-DD'),
     }));
   };
 
@@ -550,7 +752,7 @@ const ClientForm = ({
               </div>
             </div>
         <h1 className="text-3xl font-bold">
-          {isCreate ? 'Create Client' : isReadOnly ? 'Client Details' : 'Edit Client'}
+          {isCreate ? 'Create New Client' : isReadOnly ? 'Client Details' : 'Edit Client'}
         </h1>
         <p className="text-gray-300 mt-2">
           {isCreate ? 'Enter new client information' : isReadOnly ? 'Viewing comprehensive client information' : 'Edit client details and save changes'}
@@ -613,17 +815,18 @@ const ClientForm = ({
                   <div role="tablist" aria-orientation="horizontal" className="items-center rounded-md text-muted-foreground flex flex-wrap w-full gap-1 p-2 h-auto bg-muted/50 justify-start">
                 <button type="button" role="tab" aria-selected={activeTab === 'applicant'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'applicant' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('applicant')}>Applicant</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'co-applicant'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'co-applicant' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('co-applicant')}>Co-Applicant</button>
+                <button type="button" role="tab" aria-selected={activeTab === 'liabilities'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'liabilities' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('liabilities')}>Liabilities</button>
                   </div>
                   <div className="mt-6">
                     {activeTab === 'applicant' && (
                       <>
                         <CaseInformationSection
-                          client_id={formData.client_id}
-                          entry_date={formData.entry_date}
-                          payoff_amount={formData.payoff_amount}
+                          clientId={formData.clientId}
+                          entryDate={formData.entryDate}
+                          payoffAmount={formData.payoffAmount}
                           status={formData.status}
-                          consultant_name={formData.consultant_name}
-                          processor_name={formData.processor_name}
+                          consultantName={formData.consultantName}
+                          processorName={formData.processorName}
                           isReadOnly={isReadOnly}
                           isCreate={isCreate}
                           errors={errors.applicant}
@@ -677,40 +880,73 @@ const ClientForm = ({
                     )}
                 {activeTab === 'co-applicant' && (
                   <>
-                    <NameInformationSection 
-                      formData={formData.coApplicant || {}} 
-                      isReadOnly={isReadOnly} 
-                      isCreate={isCreate}
-                      errors={errors.coApplicant}
-                      handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
-                    />
-                    <AddressSection 
-                      formData={formData.coApplicant || {}} 
-                      isReadOnly={isReadOnly} 
-                      isCreate={isCreate}
-                      handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
-                    />
-                    <PreviousAddressSection 
-                      formData={formData.coApplicant || {}} 
-                      isReadOnly={isReadOnly} 
-                      handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
-                    />
-                    <EmploymentSection 
-                      formData={formData.coApplicant || {}} 
-                      isReadOnly={isReadOnly} 
-                      handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
-                    />
-                    <PreviousEmploymentSection 
-                      formData={formData.coApplicant || {}} 
-                      isReadOnly={isReadOnly} 
-                      handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
-                    />
-                    <DemographicsSection 
-                      formData={formData.coApplicant || {}} 
-                      isReadOnly={isReadOnly} 
-                      handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
-                    />
+                    <div className="bg-blue-100 rounded-lg p-6 mb-6 flex items-center justify-between">
+                      <span className="text-xl font-semibold text-blue-900">Co-Applicant Information</span>
+                      <label className="flex items-center gap-2 text-base font-medium text-black">
+                        <input
+                          type="checkbox"
+                          checked={!!formData.coApplicant?.include_coapplicant}
+                          onChange={e => {
+                            const checked = e.target.checked;
+                            setFormData(prev => ({
+                              ...prev,
+                              coApplicant: {
+                                ...prev.coApplicant,
+                                include_coapplicant: checked
+                              }
+                            }));
+                          }}
+                          disabled={isReadOnly}
+                        />
+                        Include Co-Applicant
+                      </label>
+                    </div>
+                    {formData.coApplicant?.include_coapplicant ? (
+                      <>
+                        <NameInformationSection 
+                          formData={formData.coApplicant || {}} 
+                          isReadOnly={isReadOnly} 
+                          isCreate={isCreate}
+                          errors={errors.coApplicant}
+                          handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
+                        />
+                        <AddressSection 
+                          formData={formData.coApplicant || {}} 
+                          isReadOnly={isReadOnly} 
+                          isCreate={isCreate}
+                          handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
+                        />
+                        <PreviousAddressSection 
+                          formData={formData.coApplicant || {}} 
+                          isReadOnly={isReadOnly} 
+                          handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
+                        />
+                        <EmploymentSection 
+                          formData={formData.coApplicant || {}} 
+                          isReadOnly={isReadOnly} 
+                          handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
+                        />
+                        <PreviousEmploymentSection 
+                          formData={formData.coApplicant || {}} 
+                          isReadOnly={isReadOnly} 
+                          handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
+                        />
+                        <DemographicsSection 
+                          formData={formData.coApplicant || {}} 
+                          isReadOnly={isReadOnly} 
+                          handleNestedInputChange={(path, value) => handleNestedInputChange(['coApplicant', ...path], value)} 
+                        />
+                      </>
+                    ) : null}
                   </>
+                )}
+                {activeTab === 'liabilities' && (
+                  <LiabilitiesSection
+                    formData={formData}
+                    setFormData={setFormData}
+                    isReadOnly={isReadOnly}
+                    clientId={formData.clientId}
+                  />
                 )}
               </div>
             </div>

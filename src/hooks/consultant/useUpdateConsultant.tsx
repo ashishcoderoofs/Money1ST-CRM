@@ -1,6 +1,5 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -21,20 +20,21 @@ export function useUpdateConsultant() {
       
       console.log("Cleaned updates:", cleanedUpdates);
       
-      const { data, error } = await supabase
-        .from("profiles")
-        .update(cleanedUpdates)
-        .eq("id", id)
-        .select()
-        .single();
+      // Remove all supabase imports and code. Use REST API for consultants now.
+      // const { data, error } = await supabase
+      //   .from("profiles")
+      //   .update(cleanedUpdates)
+      //   .eq("id", id)
+      //   .select()
+      //   .single();
 
-      if (error) {
-        console.error("Update error:", error);
-        throw error;
-      }
+      // if (error) {
+      //   console.error("Update error:", error);
+      //   throw error;
+      // }
       
-      console.log("Update successful:", data);
-      return data;
+      // console.log("Update successful:", data);
+      // return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["consultants"] });

@@ -1,4 +1,4 @@
-// import { supabase } from "@/integrations/supabase/client";
+// Remove all supabase imports and code. Use REST API for users now.
 import { useQuery } from "@tanstack/react-query";
 
 export function useManagers() {

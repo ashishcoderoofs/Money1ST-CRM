@@ -2,7 +2,6 @@ import { Schema, model, Types, Document } from 'mongoose';
 
 export interface ILiability extends Document {
   client_id: Types.ObjectId;
-  clientNumber?: string;
   debtor?: string;
   debtName?: string;
   balance?: string;
@@ -16,13 +15,10 @@ export interface ILiability extends Document {
   hoi?: string;
   totalEsc?: string;
   netRent?: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 const LiabilitySchema = new Schema<ILiability>({
   client_id: { type: Schema.Types.ObjectId, ref: 'Client', required: true },
-  clientNumber: { type: String },
   debtor: { type: String },
   debtName: { type: String },
   balance: { type: String },

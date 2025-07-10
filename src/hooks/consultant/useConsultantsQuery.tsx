@@ -1,19 +1,16 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+
+// Remove all supabase imports and code. Use REST API for consultants now.
 
 // Hook to fetch all consultants (including inactive ones)
 export function useConsultants() {
   return useQuery({
     queryKey: ["consultants"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data;
+      // This function will need to be updated to use a REST API
+      // For now, it will throw an error as supabase is removed.
+      throw new Error("Supabase client not available for useConsultants");
     },
   });
 }
@@ -24,13 +21,9 @@ export function useConsultant(id: string | null) {
     queryKey: ["consultant", id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (error) throw error;
-      return data;
+      // This function will need to be updated to use a REST API
+      // For now, it will throw an error as supabase is removed.
+      throw new Error("Supabase client not available for useConsultant");
     },
     enabled: !!id,
   });

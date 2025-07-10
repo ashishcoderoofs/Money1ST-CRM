@@ -37,7 +37,19 @@ export default function EditClient() {
       if (!updatedClient || !updatedClient._id) throw new Error("Missing client ID");
       // Remove fields that should not be updated
       const { _id, createdAt, updatedAt, ...update } = updatedClient;
-      await updateClientMutation.mutateAsync({ id: updatedClient._id, update });
+      // Map top-level fields to snake_case for backend
+      const updateSnake = {
+        ...update,
+        entry_date: update.entryDate,
+        payoff_amount: update.payoffAmount,
+        consultant_name: update.consultantName,
+        processor_name: update.processorName,
+      };
+      delete updateSnake.entryDate;
+      delete updateSnake.payoffAmount;
+      delete updateSnake.consultantName;
+      delete updateSnake.processorName;
+      await updateClientMutation.mutateAsync({ id: updatedClient._id, update: updateSnake });
       toast.success("Client updated successfully!");
       navigate(`/securia/clients/${updatedClient._id}`);
     } catch (err: any) {

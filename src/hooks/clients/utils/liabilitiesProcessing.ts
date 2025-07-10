@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+// Remove all supabase imports and code. Use REST API for liabilities now.
 
 // Helper function to check if a liability has meaningful data
 export const isValidLiability = (liability: any) => {
@@ -35,15 +35,26 @@ export const processLiabilities = async (values: any) => {
   if (liabilities.length > 0) {
     // First, delete all existing liabilities for this client
     if (processedValues.id) {
-      const { error: deleteError } = await supabase
-        .from("client_liabilities")
-        .delete()
-        .eq("client_id", processedValues.id);
-        
-      if (deleteError) {
-        console.error("Error deleting existing liabilities:", deleteError);
-        throw deleteError;
-      }
+      // Use REST API for liabilities
+      // This part of the code would need to be replaced with actual REST API calls
+      // For example, using fetch or axios to delete liabilities from an external endpoint
+      console.warn("REST API call for deleting liabilities not implemented yet.");
+      // Example:
+      // try {
+      //   const response = await fetch(`${API_BASE_URL}/clients/${processedValues.id}/liabilities`, {
+      //     method: 'DELETE',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       'Authorization': `Bearer ${token}`, // Assuming token is available
+      //     },
+      //   });
+      //   if (!response.ok) {
+      //     throw new Error(`HTTP error! status: ${response.status}`);
+      //   }
+      // } catch (error) {
+      //   console.error("Error deleting existing liabilities:", error);
+      //   throw error;
+      // }
     }
     
     // Filter out empty liabilities using the validation function
@@ -69,27 +80,49 @@ export const processLiabilities = async (values: any) => {
         hoi: liability.hoi || 0,
       }));
       
-      const { error } = await supabase
-        .from("client_liabilities")
-        .insert(liabilitiesWithClientId);
-        
-      if (error) {
-        console.error("Error inserting liabilities:", error);
-        throw error;
-      }
+      // Use REST API for inserting liabilities
+      // This part of the code would need to be replaced with actual REST API calls
+      console.warn("REST API call for inserting liabilities not implemented yet.");
+      // Example:
+      // try {
+      //   const response = await fetch(`${API_BASE_URL}/clients/${processedValues.id}/liabilities`, {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       'Authorization': `Bearer ${token}`, // Assuming token is available
+      //     },
+      //     body: JSON.stringify(liabilitiesWithClientId),
+      //   });
+      //   if (!response.ok) {
+      //     throw new Error(`HTTP error! status: ${response.status}`);
+      //   }
+      // } catch (error) {
+      //   console.error("Error inserting liabilities:", error);
+      //   throw error;
+      // }
     }
   } else {
     // If no liabilities in the form, still delete existing ones
     if (processedValues.id) {
-      const { error: deleteError } = await supabase
-        .from("client_liabilities")
-        .delete()
-        .eq("client_id", processedValues.id);
-        
-      if (deleteError) {
-        console.error("Error deleting existing liabilities:", deleteError);
-        throw deleteError;
-      }
+      // Use REST API for liabilities
+      // This part of the code would need to be replaced with actual REST API calls
+      console.warn("REST API call for deleting liabilities not implemented yet.");
+      // Example:
+      // try {
+      //   const response = await fetch(`${API_BASE_URL}/clients/${processedValues.id}/liabilities`, {
+      //     method: 'DELETE',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       'Authorization': `Bearer ${token}`, // Assuming token is available
+      //     },
+      //   });
+      //   if (!response.ok) {
+      //     throw new Error(`HTTP error! status: ${response.status}`);
+      //   }
+      // } catch (error) {
+      //   console.error("Error deleting existing liabilities:", error);
+      //   throw error;
+      // }
     }
   }
   

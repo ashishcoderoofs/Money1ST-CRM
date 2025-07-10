@@ -9,7 +9,7 @@ export const validateSecuriaClientCreation = (req: Request, res: Response, next:
   const clientIdRegex = /^CAN\d{5}$/;
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
-  const applicantJoiSchema = Joi.object({
+  const nameInformationJoiSchema = Joi.object({
     title: Joi.string().valid('Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.').optional(),
     first_name: Joi.string().required(),
     middle_initial: Joi.string().max(1).optional(),
@@ -17,6 +17,10 @@ export const validateSecuriaClientCreation = (req: Request, res: Response, next:
     suffix: Joi.string().valid('Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD').optional(),
     maiden_name: Joi.string().optional(),
     is_consultant: Joi.boolean().optional(),
+  });
+
+  const applicantJoiSchema = Joi.object({
+    name_information: nameInformationJoiSchema.required(),
     date_of_birth: Joi.string().pattern(dateRegex).optional(),
     marital_status: Joi.string().valid('Single', 'Married', 'Divorced', 'Widowed', 'Separated').optional(),
     race: Joi.string().valid('White', 'Black', 'Asian', 'Hispanic', 'Other').optional(),
@@ -25,7 +29,7 @@ export const validateSecuriaClientCreation = (req: Request, res: Response, next:
     spouse_name: Joi.string().optional(),
     spouse_occupation: Joi.string().optional(),
     number_of_dependents: Joi.string().pattern(/^\d+$/).optional(),
-    fax: Joi.string().pattern(phoneRegex).optional(),
+    fax: Joi.string().pattern(phoneRegex).allow('').optional(),
     contact: Joi.object({
       address: Joi.string().max(200).optional(),
       city: Joi.string().max(100).optional(),
@@ -37,7 +41,19 @@ export const validateSecuriaClientCreation = (req: Request, res: Response, next:
       cell_phone: Joi.string().pattern(phoneRegex).optional(),
       other_phone: Joi.string().pattern(phoneRegex).optional(),
       email: Joi.string().email().optional(),
+      fax: Joi.string().pattern(phoneRegex).allow('').optional(),
     }).optional(),
+    household_members: Joi.array().items(Joi.object({
+      first_name: Joi.string().optional(),
+      middle_initial: Joi.string().optional(),
+      last_name: Joi.string().optional(),
+      relationship: Joi.string().optional(),
+      dob: Joi.string().optional(),
+      age: Joi.string().optional(),
+      sex: Joi.string().optional(),
+      marital_status: Joi.string().optional(),
+      ssn: Joi.string().optional(),
+    })).optional(),
     current_address: Joi.object({
       months: Joi.string().pattern(/^\d+$/).optional(),
       years: Joi.string().pattern(/^\d+$/).optional(),
@@ -159,7 +175,7 @@ export const validateClientUpdate = (req: Request, res: Response, next: NextFunc
   const clientIdRegex = /^CAN\d{5}$/;
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
-  const applicantJoiSchema = Joi.object({
+  const nameInformationJoiSchema = Joi.object({
     title: Joi.string().valid('Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.').optional(),
     first_name: Joi.string().required(),
     middle_initial: Joi.string().max(1).optional(),
@@ -167,6 +183,10 @@ export const validateClientUpdate = (req: Request, res: Response, next: NextFunc
     suffix: Joi.string().valid('Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD').optional(),
     maiden_name: Joi.string().optional(),
     is_consultant: Joi.boolean().optional(),
+  });
+
+  const applicantJoiSchema = Joi.object({
+    name_information: nameInformationJoiSchema.required(),
     date_of_birth: Joi.string().pattern(dateRegex).optional(),
     marital_status: Joi.string().valid('Single', 'Married', 'Divorced', 'Widowed', 'Separated').optional(),
     race: Joi.string().valid('White', 'Black', 'Asian', 'Hispanic', 'Other').optional(),
@@ -175,7 +195,7 @@ export const validateClientUpdate = (req: Request, res: Response, next: NextFunc
     spouse_name: Joi.string().optional(),
     spouse_occupation: Joi.string().optional(),
     number_of_dependents: Joi.string().pattern(/^\d+$/).optional(),
-    fax: Joi.string().pattern(phoneRegex).optional(),
+    fax: Joi.string().pattern(phoneRegex).allow('').optional(),
     contact: Joi.object({
       address: Joi.string().max(200).optional(),
       city: Joi.string().max(100).optional(),
@@ -187,11 +207,34 @@ export const validateClientUpdate = (req: Request, res: Response, next: NextFunc
       cell_phone: Joi.string().pattern(phoneRegex).optional(),
       other_phone: Joi.string().pattern(phoneRegex).optional(),
       email: Joi.string().email().optional(),
+      fax: Joi.string().pattern(phoneRegex).allow('').optional(),
     }).optional(),
+    household_members: Joi.array().items(Joi.object({
+      first_name: Joi.string().optional(),
+      middle_initial: Joi.string().optional(),
+      last_name: Joi.string().optional(),
+      relationship: Joi.string().optional(),
+      dob: Joi.string().optional(),
+      age: Joi.string().optional(),
+      sex: Joi.string().optional(),
+      marital_status: Joi.string().optional(),
+      ssn: Joi.string().optional(),
+    })).optional(),
     current_address: Joi.object({
+      address: Joi.string().max(200).optional(),
+      city: Joi.string().max(100).optional(),
+      state: Joi.string().pattern(stateRegex).optional(),
+      zip_code: Joi.string().pattern(zipRegex).optional(),
+      county: Joi.string().max(100).optional(),
+      home_phone: Joi.string().pattern(phoneRegex).optional(),
+      work_phone: Joi.string().pattern(phoneRegex).optional(),
+      cell_phone: Joi.string().pattern(phoneRegex).optional(),
+      other_phone: Joi.string().pattern(phoneRegex).optional(),
+      email: Joi.string().email().optional(),
       months: Joi.string().pattern(/^\d+$/).optional(),
       years: Joi.string().pattern(/^\d+$/).optional(),
       how_long_at_current_address: Joi.string().optional(),
+      fax: Joi.string().pattern(phoneRegex).allow('').optional(),
     }).optional(),
     previous_address: Joi.object({
       address: Joi.string().max(200).optional(),

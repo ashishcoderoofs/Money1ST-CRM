@@ -1,5 +1,3 @@
-import { Tables } from "@/integrations/supabase/types";
-
 export interface MortgageFormValues {
   id?: string;
   client_id: string;
@@ -111,5 +109,3 @@ export interface MortgageFormValues {
   closing_cost_field?: number;
   dti_percent_field?: number;
 }
-
-export type Mortgage = Tables<"mortgages">;

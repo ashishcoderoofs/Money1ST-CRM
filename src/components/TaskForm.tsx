@@ -8,10 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCreateTask, useUpdateTask } from "@/hooks/useTasks";
 import { useContacts } from "@/hooks/useContacts";
 import { useDeals } from "@/hooks/useDeals";
-import type { Database } from "@/integrations/supabase/types";
-
-type TaskPriority = Database["public"]["Enums"]["task_priority"];
-type TaskStatus = Database["public"]["Enums"]["task_status"];
 
 interface TaskFormProps {
   task?: any;
@@ -23,8 +19,8 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
     title: task?.title || "",
     description: task?.description || "",
     due_date: task?.due_date ? task.due_date.split('T')[0] : "",
-    priority: (task?.priority || "Medium") as TaskPriority,
-    status: (task?.status || "Pending") as TaskStatus,
+    priority: (task?.priority || "Medium") as "Low" | "Medium" | "High" | "Critical",
+    status: (task?.status || "Pending") as "Pending" | "In Progress" | "Completed" | "Cancelled",
     assigned_to: task?.assigned_to || "",
     contact_id: task?.contact_id || "",
     deal_id: task?.deal_id || "",
@@ -99,7 +95,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
           <Label htmlFor="priority">Priority</Label>
           <Select
             value={formData.priority}
-            onValueChange={(value: TaskPriority) => setFormData({ ...formData, priority: value })}
+            onValueChange={(value: "Low" | "Medium" | "High" | "Critical") => setFormData({ ...formData, priority: value })}
           >
             <SelectTrigger>
               <SelectValue />
@@ -119,7 +115,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
           <Label htmlFor="status">Status</Label>
           <Select
             value={formData.status}
-            onValueChange={(value: TaskStatus) => setFormData({ ...formData, status: value })}
+            onValueChange={(value: "Pending" | "In Progress" | "Completed" | "Cancelled") => setFormData({ ...formData, status: value })}
           >
             <SelectTrigger>
               <SelectValue />

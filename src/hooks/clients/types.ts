@@ -1,6 +1,4 @@
 
-import { Tables } from "@/integrations/supabase/types";
-
 export interface HouseholdMember {
   first_name: string;
   mi: string;
@@ -164,5 +162,3 @@ export type ClientFormValues = {
   underwriting_programs?: string;
   underwriting_notes?: string;
 };
-
-export type Client = Tables<"clients">;

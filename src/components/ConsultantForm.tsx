@@ -7,7 +7,6 @@ import { Form } from "@/components/ui/form";
 import { Constants } from "@/integrations/supabase/types";
 import { useConsultants } from "@/hooks/consultant";
 import { Loader2 } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,8 +21,6 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect } from "react";
-
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export const consultantFormSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -89,7 +86,7 @@ export type ConsultantFormValues = z.infer<typeof consultantFormSchema>;
 
 interface ConsultantFormProps {
   onSubmit: (values: ConsultantFormValues) => void;
-  defaultValues?: Partial<Profile>;
+  defaultValues?: Partial<any>; // Changed from Profile to any as Profile type is removed
   isLoading: boolean;
   isEditMode?: boolean;
 }

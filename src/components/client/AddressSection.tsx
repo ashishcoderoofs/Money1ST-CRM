@@ -5,9 +5,10 @@ interface AddressSectionProps {
   isReadOnly: boolean;
   isCreate?: boolean;
   handleNestedInputChange: (path: string[], value: any) => void;
+  errors?: { [key: string]: string };
 }
 
-const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, isCreate, handleNestedInputChange }) => (
+const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, isCreate, handleNestedInputChange, errors = {} }) => (
   <div className="bg-gray-200 p-6 rounded-lg mb-6">
     <h3 className="font-semibold text-green-800 mb-4">Current Address</h3>
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -129,7 +130,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
         />
       </div>
       <div>
-        <label htmlFor="email" className="text-sm font-medium text-gray-600">Email</label>
+        <label htmlFor="email" className="text-sm font-medium text-gray-600">Email <span className="text-red-500">*</span></label>
         <input
           type="email"
           id="email"
@@ -139,7 +140,9 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           placeholder={isCreate && !isReadOnly ? 'email' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
+          required
         />
+        {errors.email && <div className="text-red-500 text-xs mt-1">{errors.email}</div>}
       </div>
       <div>
         <label htmlFor="fax" className="text-sm font-medium text-gray-600">Fax</label>
@@ -176,16 +179,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
             onChange={e => handleNestedInputChange(['current_address', 'months'], e.target.value)}
             disabled={isReadOnly}
             className="bg-white flex h-10 w-20 rounded-md border border-input px-3 py-2 text-base md:text-sm"
-          />
-          <label htmlFor="howLong" className="text-sm font-medium text-gray-600">How Long</label>
-          <input
-            type="text"
-            id="howLong"
-            name="howLong"
-            value={formData.current_address?.how_long_at_current_address || ''}
-            onChange={e => handleNestedInputChange(['current_address', 'how_long_at_current_address'], e.target.value)}
-            disabled={isReadOnly}
-            className="bg-white flex h-10 w-40 rounded-md border border-input px-3 py-2 text-base md:text-sm"
           />
         </div>
       </div>

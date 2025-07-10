@@ -1,23 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
-// import { useClientByIdQuery } from "./useClientByIdQuery";
 
-export function useLiabilitiesQuery(clientId?: string) {
-  // const { data: client } = useClientByIdQuery(clientId);
-  const client: any = {};
-  
+export function useLiabilitiesQuery(clientId?: string, token?: string) {
   return useQuery({
     queryKey: ["liabilities", clientId],
     queryFn: async () => {
-      console.log("[useLiabilitiesQuery] Extracting liabilities from client data");
-      
-      if (!client || !client.liabilities) {
-        console.log("[useLiabilitiesQuery] No liabilities found in client data, returning empty array");
-        return [];
+      if (!clientId) return [];
+      const apiUrl = import.meta.env?.VITE_API_URL || process.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/api/liabilities?client_id=${clientId}`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch liabilities: ${response.status} ${response.statusText}`);
       }
-      
-      console.log("[useLiabilitiesQuery] Found liabilities:", client.liabilities);
-      return client.liabilities || [];
+      return response.json();
     },
-    enabled: !!clientId && !!client,
+    enabled: !!clientId,
   });
 }

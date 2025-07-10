@@ -9,15 +9,29 @@ export default function NewClient() {
 
   async function handleSave(newClient: any) {
     try {
-      const result = await createClientMutation.mutateAsync(newClient);
+      // Map top-level fields to snake_case for backend
+      const payload = {
+        ...newClient,
+        entry_date: newClient.entryDate,
+        payoff_amount: newClient.payoffAmount,
+        consultant_name: newClient.consultantName,
+        processor_name: newClient.processorName,
+      };
+      delete payload.entryDate;
+      delete payload.payoffAmount;
+      delete payload.consultantName;
+      delete payload.processorName;
+      const result = await createClientMutation.mutateAsync(payload);
       if (result?.data?._id) {
         toast.success("Client created successfully.");
-        navigate("/securia/clients");
+        // Do not navigate here; let ClientFormTabs handle it after liabilities are created
+        return result.data;
       } else {
         throw new Error("No client ID returned from API");
       }
     } catch (err: any) {
       toast.error("Failed to create client: " + (err?.message || "Unknown error"));
+      return null;
     }
   }
 

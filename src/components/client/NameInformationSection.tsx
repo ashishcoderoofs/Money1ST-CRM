@@ -14,29 +14,7 @@ interface NameInformationSectionProps {
 const NameInformationSection: React.FC<NameInformationSectionProps> = ({ formData, isReadOnly, isCreate, errors = {}, clientId, entryDate, handleNestedInputChange }) => (
   <div className="bg-gray-200 p-6 rounded-lg mb-6">
     <h3 className="font-semibold text-green-800 mb-4">Name Information</h3>
-    {/* Show Client ID and Entry Date only in edit/view mode */}
-    {!isCreate && (
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-        <div>
-          <label className="text-sm font-medium text-gray-600">Client ID</label>
-          <input
-            type="text"
-            value={clientId || ''}
-            readOnly
-            className="bg-gray-100 flex h-10 w-full rounded-md border border-input px-3 py-2 text-base text-gray-700 md:text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-600">Entry Date</label>
-          <input
-            type="text"
-            value={entryDate || ''}
-            readOnly
-            className="bg-gray-100 flex h-10 w-full rounded-md border border-input px-3 py-2 text-base text-gray-700 md:text-sm"
-          />
-        </div>
-      </div>
-    )}
+    {/* Removed Client ID and Entry Date fields */}
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       <div>
         <label htmlFor="title" className="text-sm font-medium text-gray-600">Title</label>

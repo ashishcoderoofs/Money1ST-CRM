@@ -11,6 +11,7 @@ export interface ICoApplicant extends Document {
   createdBy?: string;
   lastModifiedBy?: string;
   
+  include_coapplicant: boolean;
   // Basic Info - Required when co-applicant is provided
   title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Dr.' | 'Prof.';
   firstName?: string; // Required when co-applicant is included
@@ -110,6 +111,7 @@ export interface ICoApplicant extends Document {
 
 // Co-Applicant Schema
 const CoApplicantSchema = new Schema<ICoApplicant>({
+  include_coapplicant: { type: Boolean, default: false },
   clientId: { 
     type: String, 
     required: true,

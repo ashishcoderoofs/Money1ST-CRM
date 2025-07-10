@@ -75,19 +75,41 @@ const MultiStageClientSchema = Joi.object({
   // Add other nested sections as needed (liabilities, mortgages, etc.)
 });
 
+const CoApplicantIncludeOnlySchema = Joi.object({
+  include_coapplicant: Joi.boolean().valid(false).required()
+});
+
 export const validateMultiStageClient = (req: Request, res: Response, next: NextFunction): void => {
-  const { error } = MultiStageClientSchema.validate(req.body, { 
+  // Custom coApplicant validation logic
+  let coApplicantError = null;
+  if (req.body.coApplicant) {
+    if (req.body.coApplicant.include_coapplicant === false) {
+      const { error } = CoApplicantIncludeOnlySchema.validate(req.body.coApplicant, {
+        allowUnknown: false,
+        stripUnknown: true
+      });
+      if (error) coApplicantError = error;
+    } else {
+      const { error } = CoApplicantSchema.validate(req.body.coApplicant, {
+        allowUnknown: false,
+        stripUnknown: true
+      });
+      if (error) coApplicantError = error;
+    }
+  }
+  // Validate the rest of the client (applicant, etc.)
+  const { error: mainError } = ApplicantSchema.validate(req.body.applicant, {
     allowUnknown: false,
-    stripUnknown: true 
+    stripUnknown: true
   });
-  if (error) {
-    res.status(400).json({ 
+  if (mainError || coApplicantError) {
+    res.status(400).json({
       success: false,
       error: 'Validation failed',
-      details: error.details.map(detail => ({
-        field: detail.path.join('.'),
-        message: detail.message
-      }))
+      details: [
+        ...(mainError ? mainError.details.map(detail => ({ field: detail.path.join('.'), message: detail.message })) : []),
+        ...(coApplicantError ? coApplicantError.details.map(detail => ({ field: 'coApplicant.' + detail.path.join('.'), message: detail.message })) : [])
+      ]
     });
     return;
   }
