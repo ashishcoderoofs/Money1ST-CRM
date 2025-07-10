@@ -16,6 +16,7 @@ import attachmentRoutes from './src/routes/attachmentRoutes';
 import securiaRoutes from './src/routes/securiaRoutes';
 import consultantRoutes from './src/routes/consultantRoutes';
 import clientRoutes from './src/routes/clientRoutes';
+import underwritingRoutes from './src/routes/underwritingRoutes';
 const liabilityRoutes = require('./src/routes/liabilityRoutes');
 
 // Import middleware
@@ -58,6 +59,7 @@ app.use('/api/securia', securiaRoutes);
 app.use('/api/consultants', consultantRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/liabilities', liabilityRoutes);
+app.use('/api/underwriting', underwritingRoutes);
 
 // ✅ Swagger setup
 setupSwagger(app);

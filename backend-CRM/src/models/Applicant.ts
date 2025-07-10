@@ -99,6 +99,7 @@ export interface IApplicant extends Document {
   created_at?: Date;
   createdAt: Date;
   updatedAt: Date;
+  liabilities?: Types.ObjectId[]; // Add this line to the interface
 }
 
 
@@ -200,7 +201,8 @@ const ApplicantSchema = new Schema<IApplicant>({
   notes: { type: String },
   created_at: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  liabilities: [{ type: Schema.Types.ObjectId, ref: 'Liability' }], // Add this line to the schema
 }, { timestamps: true });
 
 export default model<IApplicant>('Applicant', ApplicantSchema);

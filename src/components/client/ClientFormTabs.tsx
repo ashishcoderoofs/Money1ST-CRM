@@ -16,6 +16,8 @@ import { useUpdateApplicantBasicInfo, useUpdateApplicantAddress, useUpdateApplic
 import { useUpdateCoApplicantBasicInfo, useUpdateCoApplicantAddress, useUpdateCoApplicantEmployment, useUpdateCoApplicantDemographics } from '@/hooks/clients/useCoApplicantMutations';
 import LiabilitiesSection from './LiabilitiesSection';
 import { createLiabilityREST } from '@/hooks/clients/useLiabilityMutations';
+import MortgageApplicationSection from './MortgageApplicationSection';
+import UnderwritingSection from './UnderwritingSection';
 
 interface ClientFormProps {
   mode?: 'view' | 'edit' | 'create';
@@ -58,80 +60,80 @@ const clientIdRegex = /^CAN\d{5}$/;
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 const applicantSchema = yup.object().shape({
-  title: yup.string().oneOf(['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.']).optional(),
-  first_name: yup.string().required('First name is required'),
-  middle_initial: yup.string().max(1, 'Middle initial must be 1 character').optional(),
-  last_name: yup.string().required('Last name is required'),
-  suffix: yup.string().oneOf(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD']).optional(),
-  maiden_name: yup.string().optional(),
-  is_consultant: yup.boolean().optional(),
-  date_of_birth: yup.string().matches(dateRegex, 'Date of birth must be YYYY-MM-DD').optional(),
-  marital_status: yup.string().oneOf(['Single', 'Married', 'Divorced', 'Widowed', 'Separated']).optional(),
-  race: yup.string().oneOf(['White', 'Black', 'Asian', 'Hispanic', 'Other']).optional(),
-  birth_place: yup.string().optional(),
-  anniversary: yup.string().matches(dateRegex, 'Anniversary must be YYYY-MM-DD').optional(),
-  spouse_name: yup.string().optional(),
-  spouse_occupation: yup.string().optional(),
-  number_of_dependents: yup.string().matches(/^\d+$/, 'Number of dependents must be a number').optional(),
-  fax: yup.string().matches(phoneRegex, 'Invalid fax number').optional(),
-  contact: yup.object({
-    address: yup.string().max(200, 'Address too long').optional(),
-    city: yup.string().max(100, 'City too long').optional(),
-    state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
-    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
-    county: yup.string().max(100, 'County too long').optional(),
-    home_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    work_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    cell_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    other_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    email: yup.string().email('Invalid email').required('Email is required'),
-  }).required('Contact information is required'),
-  current_address: yup.object({
-    months: yup.string().matches(/^\d+$/, 'Months must be a number').optional(),
-    years: yup.string().matches(/^\d+$/, 'Years must be a number').optional(),
-    how_long_at_current_address: yup.string().optional(),
-  }).optional(),
-  previous_address: yup.object({
-    address: yup.string().max(200, 'Address too long').optional(),
-    city: yup.string().max(100, 'City too long').optional(),
-    state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
-    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
-    months: yup.string().matches(/^\d+$/, 'Months must be a number').optional(),
-    years: yup.string().matches(/^\d+$/, 'Years must be a number').optional(),
-    duration: yup.string().optional(),
-  }).optional(),
-  employment: yup.object({
-    status: yup.string().oneOf(['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student']).optional(),
-    is_business_owner: yup.string().optional(),
-    employer_name: yup.string().optional(),
-    employer_address: yup.string().optional(),
-    employer_city: yup.string().optional(),
-    employer_state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
-    employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
-    occupation: yup.string().optional(),
-    monthly_salary: yup.string().matches(/^\d+(\.\d{1,2})?$/, 'Monthly salary must be a number').optional(),
-    other_income: yup.string().matches(/^\d+(\.\d{1,2})?$/, 'Other income must be a number').optional(),
-    start_date: yup.string().matches(dateRegex, 'Start date must be YYYY-MM-DD').optional(),
-    end_date: yup.string().matches(dateRegex, 'End date must be YYYY-MM-DD').optional(),
-    supervisor: yup.string().optional(),
-    supervisor_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    source: yup.string().optional(),
-  }).optional(),
-  previous_employment: yup.object({
-    employer_name: yup.string().optional(),
-    employer_address: yup.string().optional(),
-    employer_city: yup.string().optional(),
-    employer_state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
-    employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
-    from_date: yup.string().matches(dateRegex, 'From date must be YYYY-MM-DD').optional(),
-    to_date: yup.string().matches(dateRegex, 'To date must be YYYY-MM-DD').optional(),
-    occupation: yup.string().optional(),
-  }).optional(),
-  credit_scores: yup.object({
-    equifax: yup.string().matches(/^\d+$/, 'Equifax score must be a number').optional(),
-    experian: yup.string().matches(/^\d+$/, 'Experian score must be a number').optional(),
-    transunion: yup.string().matches(/^\d+$/, 'Transunion score must be a number').optional(),
-  }).optional(),
+  // title: yup.string().oneOf(['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.']).optional(),
+  // first_name: yup.string().required('First name is required'),
+  // middle_initial: yup.string().max(1, 'Middle initial must be 1 character').optional(),
+  // last_name: yup.string().required('Last name is required'),
+  // suffix: yup.string().oneOf(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD']).optional(),
+  // maiden_name: yup.string().optional(),
+  // is_consultant: yup.boolean().optional(),
+  // date_of_birth: yup.string().matches(dateRegex, 'Date of birth must be YYYY-MM-DD').optional(),
+  // marital_status: yup.string().oneOf(['Single', 'Married', 'Divorced', 'Widowed', 'Separated']).optional(),
+  // race: yup.string().oneOf(['White', 'Black', 'Asian', 'Hispanic', 'Other']).optional(),
+  // birth_place: yup.string().optional(),
+  // anniversary: yup.string().matches(dateRegex, 'Anniversary must be YYYY-MM-DD').optional(),
+  // spouse_name: yup.string().optional(),
+  // spouse_occupation: yup.string().optional(),
+  // number_of_dependents: yup.string().matches(/^\d+$/, 'Number of dependents must be a number').optional(),
+  // fax: yup.string().matches(phoneRegex, 'Invalid fax number').optional(),
+  // contact: yup.object({
+  //   address: yup.string().max(200, 'Address too long').optional(),
+  //   city: yup.string().max(100, 'City too long').optional(),
+  //   state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
+  //   zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
+  //   county: yup.string().max(100, 'County too long').optional(),
+  //   home_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+  //   work_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+  //   cell_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+  //   other_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+  //   email: yup.string().email('Invalid email').required('Email is required'),
+  // }).required('Contact information is required'),
+  // current_address: yup.object({
+  //   months: yup.string().matches(/^\d+$/, 'Months must be a number').optional(),
+  //   years: yup.string().matches(/^\d+$/, 'Years must be a number').optional(),
+  //   how_long_at_current_address: yup.string().optional(),
+  // }).optional(),
+  // previous_address: yup.object({
+  //   address: yup.string().max(200, 'Address too long').optional(),
+  //   city: yup.string().max(100, 'City too long').optional(),
+  //   state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
+  //   zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
+  //   months: yup.string().matches(/^\d+$/, 'Months must be a number').optional(),
+  //   years: yup.string().matches(/^\d+$/, 'Years must be a number').optional(),
+  //   duration: yup.string().optional(),
+  // }).optional(),
+  // employment: yup.object({
+  //   status: yup.string().oneOf(['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student']).optional(),
+  //   is_business_owner: yup.string().optional(),
+  //   employer_name: yup.string().optional(),
+  //   employer_address: yup.string().optional(),
+  //   employer_city: yup.string().optional(),
+  //   employer_state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
+  //   employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
+  //   occupation: yup.string().optional(),
+  //   monthly_salary: yup.string().matches(/^\d+(\.\d{1,2})?$/, 'Monthly salary must be a number').optional(),
+  //   other_income: yup.string().matches(/^\d+(\.\d{1,2})?$/, 'Other income must be a number').optional(),
+  //   start_date: yup.string().matches(dateRegex, 'Start date must be YYYY-MM-DD').optional(),
+  //   end_date: yup.string().matches(dateRegex, 'End date must be YYYY-MM-DD').optional(),
+  //   supervisor: yup.string().optional(),
+  //   supervisor_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+  //   source: yup.string().optional(),
+  // }).optional(),
+  // previous_employment: yup.object({
+  //   employer_name: yup.string().optional(),
+  //   employer_address: yup.string().optional(),
+  //   employer_city: yup.string().optional(),
+  //   employer_state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
+  //   employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
+  //   from_date: yup.string().matches(dateRegex, 'From date must be YYYY-MM-DD').optional(),
+  //   to_date: yup.string().matches(dateRegex, 'To date must be YYYY-MM-DD').optional(),
+  //   occupation: yup.string().optional(),
+  // }).optional(),
+  // credit_scores: yup.object({
+  //   equifax: yup.string().matches(/^\d+$/, 'Equifax score must be a number').optional(),
+  //   experian: yup.string().matches(/^\d+$/, 'Experian score must be a number').optional(),
+  //   transunion: yup.string().matches(/^\d+$/, 'Transunion score must be a number').optional(),
+  // }).optional(),
 });
 
 const coApplicantSchema = applicantSchema;
@@ -308,88 +310,88 @@ function randomApplicant() {
 function mapApplicantFromBackend(app: any) {
   if (!app) return {};
   return {
-    // Name info
-    title: app.title || '',
-    first_name: app.firstName || '',
-    middle_initial: app.middleInitial || '',
-    last_name: app.lastName || '',
-    maiden_name: app.maidenName || '',
-    suffix: app.suffix || '',
-    is_consultant: app.isConsultant || false,
-    // Contact info
+    // Name info - map from name_information object
+    title: app.name_information?.title || '',
+    first_name: app.name_information?.first_name || '',
+    middle_initial: app.name_information?.middle_initial || '',
+    last_name: app.name_information?.last_name || '',
+    maiden_name: app.name_information?.maiden_name || '',
+    suffix: app.name_information?.suffix || '',
+    is_consultant: app.name_information?.is_consultant || false,
+    // Contact info - map from current_address object
     contact: {
-      address: app.currentAddress?.address || '',
-      city: app.currentAddress?.city || '',
-      state: app.currentAddress?.state || '',
-      zip_code: app.currentAddress?.zipCode || '',
-      county: app.currentAddress?.county || '',
-      home_phone: app.currentAddress?.homePhone || '',
-      work_phone: app.currentAddress?.workPhone || '',
-      cell_phone: app.currentAddress?.cellPhone || '',
-      other_phone: app.currentAddress?.otherPhone || '',
-      email: app.currentAddress?.email || '',
-      fax: app.currentAddress?.fax || '',
+      address: app.current_address?.address || '',
+      city: app.current_address?.city || '',
+      state: app.current_address?.state || '',
+      zip_code: app.current_address?.zip_code || '',
+      county: app.current_address?.county || '',
+      home_phone: app.current_address?.home_phone || '',
+      work_phone: app.current_address?.work_phone || '',
+      cell_phone: app.current_address?.cell_phone || '',
+      other_phone: app.current_address?.other_phone || '',
+      email: app.current_address?.email || '',
+      fax: app.current_address?.fax || '',
     },
     current_address: {
-      months: app.currentAddress?.months || '',
-      years: app.currentAddress?.years || '',
-      how_long_at_current_address: app.currentAddress?.howLongAtCurrentAddress || '',
+      months: app.current_address?.months || '',
+      years: app.current_address?.years || '',
+      how_long_at_current_address: app.current_address?.how_long_at_current_address || '',
     },
     previous_address: {
-      address: app.previousAddress?.address || '',
-      city: app.previousAddress?.city || '',
-      state: app.previousAddress?.state || '',
-      zip_code: app.previousAddress?.zipCode || '',
-      months: app.previousAddress?.months || '',
-      years: app.previousAddress?.years || '',
-      duration: app.previousAddress?.duration || '',
+      address: app.previous_address?.address || '',
+      city: app.previous_address?.city || '',
+      state: app.previous_address?.state || '',
+      zip_code: app.previous_address?.zip_code || '',
+      months: app.previous_address?.months || '',
+      years: app.previous_address?.years || '',
+      duration: app.previous_address?.duration || '',
     },
     employment: {
-      status: app.currentEmployment?.status || '',
-      is_business_owner: app.currentEmployment?.isBusinessOwner || '',
-      employer_name: app.currentEmployment?.employerName || '',
-      employer_address: app.currentEmployment?.employerAddress || '',
-      employer_city: app.currentEmployment?.employerCity || '',
-      employer_state: app.currentEmployment?.employerState || '',
-      employer_zip_code: app.currentEmployment?.employerZipCode || '',
-      occupation: app.currentEmployment?.occupation || '',
-      monthly_salary: app.currentEmployment?.monthlySalary || '',
-      other_income: app.currentEmployment?.otherIncome || '',
-      start_date: app.currentEmployment?.startDate || '',
-      end_date: app.currentEmployment?.endDate || '',
-      supervisor: app.currentEmployment?.supervisor || '',
-      supervisor_phone: app.currentEmployment?.supervisorPhone || '',
-      source: app.currentEmployment?.source || '',
+      status: app.current_employment?.status || '',
+      is_business_owner: app.current_employment?.is_business_owner || '',
+      employer_name: app.current_employment?.employer_name || '',
+      employer_address: app.current_employment?.employer_address || '',
+      employer_city: app.current_employment?.employer_city || '',
+      employer_state: app.current_employment?.employer_state || '',
+      employer_zip_code: app.current_employment?.employer_zip_code || '',
+      occupation: app.current_employment?.occupation || '',
+      monthly_salary: app.current_employment?.monthly_salary || '',
+      other_income: app.current_employment?.other_income || '',
+      start_date: app.current_employment?.start_date || '',
+      end_date: app.current_employment?.end_date || '',
+      supervisor: app.current_employment?.supervisor || '',
+      supervisor_phone: app.current_employment?.supervisor_phone || '',
+      source: app.current_employment?.source || '',
     },
     previous_employment: {
-      employer_name: app.previousEmployment?.employerName || '',
-      employer_address: app.previousEmployment?.employerAddress || '',
-      employer_city: app.previousEmployment?.employerCity || '',
-      employer_state: app.previousEmployment?.employerState || '',
-      employer_zip_code: app.previousEmployment?.employerZipCode || '',
-      from_date: app.previousEmployment?.fromDate || '',
-      to_date: app.previousEmployment?.toDate || '',
-      occupation: app.previousEmployment?.occupation || '',
+      employer_name: app.previous_employment?.employer_name || '',
+      employer_address: app.previous_employment?.employer_address || '',
+      employer_city: app.previous_employment?.employer_city || '',
+      employer_state: app.previous_employment?.employer_state || '',
+      employer_zip_code: app.previous_employment?.employer_zip_code || '',
+      from_date: app.previous_employment?.from_date || '',
+      to_date: app.previous_employment?.to_date || '',
+      occupation: app.previous_employment?.occupation || '',
     },
-    // Demographics
-    birth_place: app.demographics?.birthPlace || '',
-    dob: app.demographics?.dob.slice(0,10) || '',
-    marital_status: app.demographics?.maritalStatus || '',
-    race: app.demographics?.race || '',
-    anniversary: app.demographics?.anniversary || '',
-    spouse_name: app.demographics?.spouseName || '',
-    spouse_occupation: app.demographics?.spouseOccupation || '',
-    number_of_dependents: app.demographics?.numberOfDependents || '',
-    household_members: Array.isArray(app.householdMembers)
-      ? app.householdMembers.map((m: any) => ({
-          first_name: m.firstName || '',
-          middle_initial: m.middleInitial || '',
-          last_name: m.lastName || '',
+    // Demographics - map from demographics_information object
+    birth_place: app.demographics_information?.birth_place || '',
+    dob: app.demographics_information?.dob ? app.demographics_information.dob.slice(0,10) : '',
+    marital_status: app.demographics_information?.marital_status || '',
+    race: app.demographics_information?.race || '',
+    anniversary: app.demographics_information?.anniversary || '',
+    spouse_name: app.demographics_information?.spouse_name || '',
+    spouse_occupation: app.demographics_information?.spouse_occupation || '',
+    number_of_dependents: app.demographics_information?.number_of_dependents || '',
+    household_members: Array.isArray(app.household_members)
+      ? app.household_members.map((m: any) => ({
+          first_name: m.first_name || '',
+          middle_initial: m.middle_initial || '',
+          last_name: m.last_name || '',
           relationship: m.relationship || '',
           dob: m.dob || '',
           age: m.age || '',
           sex: m.sex || '',
-          marital_status: m.maritalStatus || '',
+          marital_status: m.marital_status || '',
           ssn: m.ssn || '',
         }))
       : [],
@@ -426,10 +428,63 @@ const ClientForm = ({
 
   React.useEffect(() => {
     if (clientData) {
+      const mortgageData = {
+        // Property information - map from first mortgage
+        address: clientData.first_mortgage?.address || '',
+        city: clientData.first_mortgage?.city || '',
+        state: clientData.first_mortgage?.state || '',
+        zip_code: clientData.first_mortgage?.zip_code || '',
+        occupancy_type: clientData.first_mortgage?.occupancy_type || '',
+        
+        // First mortgage data
+        first_loan_amount: clientData.proposed_first_loan?.amount || '',
+        first_mortgage_balance: clientData.first_mortgage?.balance || '',
+        first_mortgage_rate: clientData.first_mortgage?.rate || '',
+        first_loan_rate: clientData.proposed_first_loan?.rate || '',
+        first_mortgage_term: clientData.first_mortgage?.term || '',
+        first_loan_term: clientData.proposed_first_loan?.term || '',
+        first_loan_int_term: clientData.proposed_first_loan?.int_term || '',
+        first_mortgage_payment: clientData.first_mortgage?.payment || '',
+        first_loan_new_payment: clientData.proposed_first_loan?.new_payment || '',
+        lienholder_1: clientData.first_mortgage?.lienholder || '',
+        
+        // Second mortgage data
+        second_mortgage_balance: clientData.second_mortgage?.balance || '',
+        second_loan_amount: clientData.proposed_second_loan?.amount || '',
+        second_mortgage_rate: clientData.second_mortgage?.rate || '',
+        second_loan_rate: clientData.proposed_second_loan?.rate || '',
+        second_mortgage_term: clientData.second_mortgage?.term || '',
+        second_loan_term: clientData.proposed_second_loan?.term || '',
+        second_mortgage_payment: clientData.second_mortgage?.payment || '',
+        second_loan_new_payment: clientData.proposed_second_loan?.new_payment || '',
+        lienholder_2: clientData.second_mortgage?.lienholder || '',
+        
+        // Additional fields
+        existing_balance: clientData.first_mortgage?.balance || '',
+        property_taxes: clientData.first_mortgage?.property_taxes || '',
+        homeowners_insurance: clientData.first_mortgage?.homeowners_insurance || '',
+        hoi_included: clientData.first_mortgage?.hoi_included || false,
+        taxes_included: clientData.first_mortgage?.taxes_included || false,
+        loan_purpose: clientData.first_mortgage?.loan_purpose || '',
+        market_value: clientData.first_mortgage?.market_value || '',
+        estimated_fees: clientData.first_mortgage?.estimated_fees || '',
+        cash_to_close: clientData.first_mortgage?.cash_to_close || '',
+        appraisal_fee: clientData.first_mortgage?.appraisal_fee || '',
+        loan_volume: clientData.first_mortgage?.loan_volume || '',
+      };
+      
       setFormData({
         ...clientData,
+        clientId: clientData.client_id || clientData.clientId || '',
+        entryDate: clientData.entry_date || clientData.entryDate || '',
+        payoffAmount: clientData.payoff_amount || clientData.payoffAmount || 0,
+        status: clientData.status || '',
+        consultantName: clientData.consultant_name || clientData.consultantName || '',
+        processorName: clientData.processor_name || clientData.processorName || '',
         applicant: mapApplicantFromBackend(clientData.applicant || clientData.Applicant),
         coApplicant: mapApplicantFromBackend(clientData.co_applicant || clientData.coApplicant),
+        liabilities: clientData.liabilities || [],
+        mortgage: mortgageData,
       });
     } else {
       setFormData(emptyClient);
@@ -502,7 +557,8 @@ const ClientForm = ({
         ...restApplicant,
         name_information: {
           title, first_name, middle_initial, last_name, suffix, maiden_name, is_consultant
-        }
+        },
+        liabilities: formData.liabilities || [] // Add liabilities to applicant payload
       };
       const {
         title: coTitle, first_name: coFirstName, middle_initial: coMiddleInitial, last_name: coLastName, suffix: coSuffix, maiden_name: coMaidenName, is_consultant: coIsConsultant, ...restCoApplicant
@@ -533,15 +589,12 @@ const ClientForm = ({
           marital_status: m.marital_status || '',
           ssn: m.ssn || ''
         })),
+        mortgage: formData.mortgage || {} // Add mortgage data to payload
       };
       
       if (isCreate) {
         console.log('📤 Preparing create data...');
-        // Step 1: Remove liabilities from payload
-        const { liabilities, ...clientPayload } = payload;
-        // Step 2: Create client (without liabilities)
-        await onSave(clientPayload);
-        // Step 3: (skip liabilities for now, or handle in parent if needed)
+        await onSave(payload); // Send applicant.liabilities only
         toast.success('Client created successfully!');
         if (typeof onBack === 'function') {
           onBack();
@@ -552,7 +605,6 @@ const ClientForm = ({
         if (!formData.clientId) throw new Error('Missing client ID');
         // Update applicant and co_applicant separately
         if (formData.applicant && formData.applicant._id) {
-          // Update applicant sections
           await updateApplicantBasic.mutateAsync({ clientId: formData.clientId, data: applicantPayload.name_information });
           await updateApplicantAddress.mutateAsync({ clientId: formData.clientId, data: { currentAddress: applicantPayload.current_address, previousAddress: applicantPayload.previous_address } });
           await updateApplicantEmployment.mutateAsync({ clientId: formData.clientId, data: { employment: applicantPayload.employment, previousEmployment: applicantPayload.previous_employment } });
@@ -569,7 +621,6 @@ const ClientForm = ({
           }});
         }
         if (formData.coApplicant && formData.coApplicant._id) {
-          // Update co-applicant sections
           await updateCoApplicantBasic.mutateAsync({ clientId: formData.clientId, data: coApplicantPayload.name_information });
           await updateCoApplicantAddress.mutateAsync({ clientId: formData.clientId, data: { currentAddress: coApplicantPayload.current_address, previousAddress: coApplicantPayload.previous_address } });
           await updateCoApplicantEmployment.mutateAsync({ clientId: formData.clientId, data: { employment: coApplicantPayload.employment, previousEmployment: coApplicantPayload.previous_employment } });
@@ -585,29 +636,18 @@ const ClientForm = ({
           }});
         }
         const { clientId, createdAt, updatedAt, ...update } = payload;
-        // Map top-level fields to snake_case for backend
         const updateSnake = {
           ...update,
-          client_id: formData.clientId, // ensure client_id is included
-          entry_date: (update.entryDate || '').split('T')[0], // format as YYYY-MM-DD
+          client_id: formData.clientId,
+          entry_date: (update.entryDate || '').split('T')[0],
           payoff_amount: update.payoffAmount,
           consultant_name: update.consultantName,
           processor_name: update.processorName,
-          status: (update.status || '').toLowerCase(), // ensure lowercase
-          applicant: formData.applicant && formData.applicant._id ? formData.applicant._id : null, // Only send ObjectId or null
-          co_applicant: formData.coApplicant && formData.coApplicant._id ? formData.coApplicant._id : null, // Only send ObjectId or null
+          status: (update.status || '').toLowerCase(),
+          applicant: formData.applicant && formData.applicant._id ? formData.applicant._id : null,
+          co_applicant: formData.coApplicant && formData.coApplicant._id ? formData.coApplicant._id : null
+          // Do NOT patch liabilities as ObjectIds
         };
-        // Patch liabilities: only send array of ObjectIds if present
-        if (Array.isArray(formData.liabilities) && formData.liabilities.length > 0) {
-          updateSnake.liabilities = formData.liabilities
-            .filter(l => l && typeof l === 'object' && l._id)
-            .map(l => l._id);
-          if (updateSnake.liabilities.length === 0) {
-            delete updateSnake.liabilities;
-          }
-        } else {
-          delete updateSnake.liabilities;
-        }
         delete updateSnake.entryDate;
         delete updateSnake.payoffAmount;
         delete updateSnake.consultantName;
@@ -696,7 +736,7 @@ const ClientForm = ({
     { id: 'mortgages', label: 'Mortgages' },
     { id: 'underwriting', label: 'Underwriting' },
     { id: 'loan-status', label: 'Loan Status' },
-    { id: 'drivers', label: 'Drivers' },
+    { id: 'mortgage-application', label: 'Mortgage' }, // New tab
     { id: 'vehicle-coverage', label: 'Vehicle Coverage' },
     { id: 'homeowners', label: 'Homeowners' },
     { id: 'renters', label: 'Renters' },
@@ -774,7 +814,33 @@ const ClientForm = ({
           <div className="flex flex-col space-y-1.5 p-6">
             <div className="text-2xl font-semibold leading-none tracking-tight flex items-center justify-between">
               <span className="flex items-center">
-                {clientData?.applicant?.firstName} {clientData?.applicant?.lastName}
+                {mode === 'create' ? (
+                  <>
+                    <span className="text-xl font-semibold">+ New Client Information</span>
+                    {clientData?.client_id && (
+                      <span className="ml-4 text-lg font-normal">
+                        {clientData.client_id}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-5 h-5 mr-2 text-gray-500" />
+                    {clientData?.client_id && (
+                      <span className="text-xl font-semibold">
+                        {clientData.client_id}
+                      </span>
+                    )}
+                    {clientData?.applicant?.name_information && (
+                      <>
+                        {clientData?.client_id && <span className="mx-2">|</span>}
+                        <span className="text-lg font-normal">
+                          {clientData.applicant.name_information.first_name} {clientData.applicant.name_information.last_name}
+                        </span>
+                      </>
+                    )}
+                  </>
+                )}
               </span>
               <div className="flex gap-2">
                 {isReadOnly && (
@@ -816,6 +882,8 @@ const ClientForm = ({
                 <button type="button" role="tab" aria-selected={activeTab === 'applicant'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'applicant' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('applicant')}>Applicant</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'co-applicant'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'co-applicant' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('co-applicant')}>Co-Applicant</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'liabilities'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'liabilities' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('liabilities')}>Liabilities</button>
+                <button type="button" role="tab" aria-selected={activeTab === 'mortgage-application'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'mortgage-application' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('mortgage-application')}>Mortgage</button>
+                <button type="button" role="tab" aria-selected={activeTab === 'underwriting'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'underwriting' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('underwriting')}>Underwriting</button>
                   </div>
                   <div className="mt-6">
                     {activeTab === 'applicant' && (
@@ -947,6 +1015,12 @@ const ClientForm = ({
                     isReadOnly={isReadOnly}
                     clientId={formData.clientId}
                   />
+                )}
+                {activeTab === 'mortgage-application' && (
+                  <MortgageApplicationSection formData={formData} setFormData={setFormData} isReadOnly={isReadOnly} />
+                )}
+                {activeTab === 'underwriting' && (
+                  <UnderwritingSection formData={formData} setFormData={setFormData} isReadOnly={isReadOnly} />
                 )}
               </div>
             </div>

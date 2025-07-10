@@ -5,9 +5,17 @@ export interface IUnderwriting extends Document {
   address?: string;
   city?: string;
   state?: string;
-  notes?: string;
-  terms_dropdown?: string;
-  programs_dropdown?: string;
+  chm_selection?: string;
+  tud_selection?: string;
+  equifax_applicant?: number;
+  equifax_co_applicant?: number;
+  experian_applicant?: number;
+  experian_co_applicant?: number;
+  transunion_applicant?: number;
+  transunion_co_applicant?: number;
+  underwriting_notes?: string;
+  terms?: string;
+  programs?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,9 +25,29 @@ const UnderwritingSchema = new Schema<IUnderwriting>({
   address: { type: String },
   city: { type: String },
   state: { type: String },
-  notes: { type: String },
-  terms_dropdown: { type: String },
-  programs_dropdown: { type: String }
+  chm_selection: { 
+    type: String, 
+    enum: ['credit', 'equity', 'ltv', 'bankrupt', 'no_benefit', 'suspend_fu_date', 'collateral', 'dti'] 
+  },
+  tud_selection: { 
+    type: String, 
+    enum: ['no_interest', 'rate', 'terms_payment', 'fee', 'no_value', 'went_elsewhere'] 
+  },
+  equifax_applicant: { type: Number, min: 300, max: 850 },
+  equifax_co_applicant: { type: Number, min: 300, max: 850 },
+  experian_applicant: { type: Number, min: 300, max: 850 },
+  experian_co_applicant: { type: Number, min: 300, max: 850 },
+  transunion_applicant: { type: Number, min: 300, max: 850 },
+  transunion_co_applicant: { type: Number, min: 300, max: 850 },
+  underwriting_notes: { type: String, maxlength: 500 },
+  terms: { 
+    type: String, 
+    enum: ['15_year', '20_year', '30_year', '3_27', '2_28'] 
+  },
+  programs: { 
+    type: String, 
+    enum: ['pay_option_arm', 'secure_option_arm', 'interest_only', 'principle_interest'] 
+  }
 }, { timestamps: true });
 
 export default model<IUnderwriting>('Underwriting', UnderwritingSchema); 

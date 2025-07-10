@@ -34,7 +34,7 @@ const CaseInformationSection: React.FC<CaseInformationSectionProps> = ({ clientI
         <label className="block text-sm font-medium text-black">Entry Date *</label>
         <input
           type="text"
-          value={entryDate.slice(0,10) || ''}
+          value={entryDate ? entryDate.slice(0,10) : ''}
           readOnly
           className="bg-gray-100 flex h-10 w-full rounded-md border border-input px-3 py-2 text-base text-gray-700 md:text-sm"
         />

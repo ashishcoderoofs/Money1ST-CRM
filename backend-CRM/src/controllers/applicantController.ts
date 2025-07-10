@@ -1,9 +1,16 @@
 import { Request, Response } from 'express';
-import { Applicant } from '../models';
+import { Applicant, Liability } from '../models';
 
 export const createApplicant = async (req: Request, res: Response) => {
   try {
     const applicantData = req.body.applicant;
+    let liabilityIds: any[] = [];
+    if (applicantData.liabilities && Array.isArray(applicantData.liabilities) && applicantData.liabilities.length > 0) {
+      // Create liabilities and get their ObjectIds
+      const liabilitiesWithClientId = applicantData.liabilities.map((l: any) => ({ ...l, client_id: applicantData.client_id }));
+      const createdLiabilities = await Liability.insertMany(liabilitiesWithClientId);
+      liabilityIds = createdLiabilities.map((l: any) => l._id);
+    }
     const mappedApplicant = {
       name_information: applicantData.name_information,
       current_address: {
@@ -30,7 +37,8 @@ export const createApplicant = async (req: Request, res: Response) => {
       notes: applicantData.notes,
       created_at: applicantData.created_at,
       createdAt: applicantData.createdAt,
-      updatedAt: applicantData.updatedAt
+      updatedAt: applicantData.updatedAt,
+      liabilities: liabilityIds
     };
     const applicant = await Applicant.create(mappedApplicant);
     res.status(201).json({ success: true, data: applicant });
@@ -46,7 +54,8 @@ export const getApplicants = async (req: Request, res: Response) => {
     const skip = (Number(page) - 1) * Number(limit);
     const query = Applicant.find(filters)
       .skip(skip)
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .populate('liabilities'); // Populate liabilities
     const total = await Applicant.countDocuments(filters);
     const applicants = await query;
     res.json({ success: true, data: applicants, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });
@@ -58,7 +67,7 @@ export const getApplicants = async (req: Request, res: Response) => {
 
 export const getApplicantById = async (req: Request, res: Response) => {
   try {
-    const applicant = await Applicant.findById(req.params.id);
+    const applicant = await Applicant.findById(req.params.id).populate('liabilities'); // Populate liabilities
     if (!applicant) return res.status(404).json({ success: false, error: 'Applicant not found' });
     res.json({ success: true, data: applicant });
   } catch (error) {
@@ -70,6 +79,19 @@ export const getApplicantById = async (req: Request, res: Response) => {
 export const updateApplicant = async (req: Request, res: Response) => {
   try {
     const data = req.body;
+    let liabilityIds: any[] = [];
+    if (data.liabilities && Array.isArray(data.liabilities) && data.liabilities.length > 0) {
+      // Remove existing liabilities for this applicant
+      if (/^[a-fA-F0-9]{24}$/.test(req.params.id)) {
+        await Liability.deleteMany({ client_id: req.params.id });
+      } else if (data.client_id) {
+        await Liability.deleteMany({ client_id: data.client_id });
+      }
+      // Create new liabilities
+      const liabilitiesWithClientId = data.liabilities.map((l: any) => ({ ...l, client_id: data.client_id }));
+      const createdLiabilities = await Liability.insertMany(liabilitiesWithClientId);
+      liabilityIds = createdLiabilities.map((l: any) => l._id);
+    }
     const mappedApplicant = {
       name_infromation: data.name_infromation,
       current_address: data.current_address,
@@ -84,7 +106,8 @@ export const updateApplicant = async (req: Request, res: Response) => {
       notes: data.notes,
       created_at: data.created_at,
       createdAt: data.createdAt,
-      updatedAt: data.updatedAt
+      updatedAt: data.updatedAt,
+      liabilities: liabilityIds
     };
     let applicant;
     if (/^[a-fA-F0-9]{24}$/.test(req.params.id)) {
