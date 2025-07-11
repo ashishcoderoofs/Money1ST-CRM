@@ -3,8 +3,8 @@ import { Schema, model, Types, Document } from 'mongoose';
 export type ApplicantTitle = 'Mr.' | 'Mrs.' | 'Ms.' | 'Dr.' | 'Prof.';
 export type ApplicantSuffix = 'Jr.' | 'Sr.' | 'II' | 'III' | 'IV' | 'V' | 'MD' | 'PhD';
 export type MaritalStatus = 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
-export type Race = 'White' | 'Black' | 'Asian' | 'Hispanic' | 'Other';
-export type EmploymentStatus = 'Employed' | 'Self-Employed' | 'Unemployed' | 'Retired' | 'Student';
+export type Race = 'American Indian or Alaska Native' | 'Asian' | 'Black or African American' | 'Hispanic or Latino' | 'Native Hawaiian or Other Pacific Islander' | 'White' | 'Two or More Races' | 'Other';
+export type EmploymentStatus = 'Employed' | 'Self-Employed' | 'Unemployed' | 'Retired' | 'Student' | 'Part time' | 'Contract';
 export type ClientStatus = 'Active' | 'Pending' | 'Inactive';
 
 
@@ -118,7 +118,7 @@ const DemographicsInformationSchema = new Schema({
   birth_place: { type: String },
   dob: { type: Date },
   marital_status: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] },
-  race: { type: String, enum: ['White', 'Black', 'Asian', 'Hispanic', 'Other'] },
+  race: { type: String, enum: ['American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'Native Hawaiian or Other Pacific Islander', 'White', 'Two or More Races', 'Other'] },
   anniversary: { type: String },
   spouse_name: { type: String },
   spouse_occupation: { type: String },
@@ -138,7 +138,7 @@ const HouseholdMemberSchema = new Schema({
 }, { _id: false });
 
 const CurrentEmploymentSchema = new Schema({
-  status: { type: String, enum: ['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student'] },
+  status: { type: String, enum: ['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student', 'Part time', 'Contract'] },
   is_business_owner: { type: String },
   employer_name: { type: String },
   employer_address: { type: String },

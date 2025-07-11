@@ -669,6 +669,8 @@ export function ConsultantForm({
                               <SelectItem value="Self-Employed">Self-Employed</SelectItem>
                               <SelectItem value="Retired">Retired</SelectItem>
                               <SelectItem value="Student">Student</SelectItem>
+                              <SelectItem value="Part time">Part time</SelectItem>
+                              <SelectItem value="Contract">Contract</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

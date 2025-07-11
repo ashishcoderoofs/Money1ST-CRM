@@ -12,7 +12,7 @@ interface NameInformationSectionProps {
 }
 
 const NameInformationSection: React.FC<NameInformationSectionProps> = ({ formData, isReadOnly, isCreate, errors = {}, clientId, entryDate, handleNestedInputChange }) => (
-  <div className="bg-gray-200 p-6 rounded-lg mb-6">
+  <div className=" p-6 rounded-lg mb-6">
     <h3 className="font-semibold text-green-800 mb-4">Name Information</h3>
     {/* Removed Client ID and Entry Date fields */}
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -73,20 +73,7 @@ const NameInformationSection: React.FC<NameInformationSectionProps> = ({ formDat
         />
         {errors.last_name && <div className="text-red-500 text-xs mt-1">{errors.last_name}</div>}
       </div>
-      <div>
-        <label htmlFor="maiden_name" className="text-sm font-medium text-gray-600">Maiden Name</label>
-        <input
-          type="text"
-          id="maiden_name"
-          name="maiden_name"
-          value={formData.maiden_name || ''}
-          onChange={e => handleNestedInputChange(['maiden_name'], e.target.value)}
-          placeholder={isCreate && !isReadOnly ? 'Enter maiden name' : undefined}
-          className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          readOnly={isReadOnly}
-        />
-        {errors.maiden_name && <div className="text-red-500 text-xs mt-1">{errors.maiden_name}</div>}
-      </div>
+     
       <div>
         <label htmlFor="suffix" className="text-sm font-medium text-gray-600">Suffix</label>
         <select
@@ -101,6 +88,20 @@ const NameInformationSection: React.FC<NameInformationSectionProps> = ({ formDat
           ))}
         </select>
         {errors.suffix && <div className="text-red-500 text-xs mt-1">{errors.suffix}</div>}
+      </div>
+      <div>
+        <label htmlFor="maiden_name" className="text-sm font-medium text-gray-600">Maiden Name</label>
+        <input
+          type="text"
+          id="maiden_name"
+          name="maiden_name"
+          value={formData.maiden_name || ''}
+          onChange={e => handleNestedInputChange(['maiden_name'], e.target.value)}
+          placeholder={isCreate && !isReadOnly ? 'Enter maiden name' : undefined}
+          className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+          readOnly={isReadOnly}
+        />
+        {errors.maiden_name && <div className="text-red-500 text-xs mt-1">{errors.maiden_name}</div>}
       </div>
       <div className="flex items-center mt-2">
         <input

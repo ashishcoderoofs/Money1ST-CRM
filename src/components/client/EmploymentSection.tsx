@@ -7,7 +7,7 @@ interface EmploymentSectionProps {
 }
 
 const EmploymentSection: React.FC<EmploymentSectionProps> = ({ formData, isReadOnly, handleNestedInputChange }) => (
-  <div className="bg-gray-200 p-6 rounded-lg mb-6">
+  <div className=" p-6 rounded-lg mb-6">
     <h3 className="font-semibold text-green-800 mb-4">Current Employment Information</h3>
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -27,6 +27,8 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({ formData, isReadO
               <option value="Unemployed">Unemployed</option>
               <option value="Student">Student</option>
               <option value="Retired">Retired</option>
+              <option value="Part time">Part time</option>
+              <option value="Contract">Contract</option>
             </select>
           </div>
           <div className="flex-shrink-0 flex items-end">

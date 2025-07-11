@@ -8,7 +8,7 @@ interface DemographicsSectionProps {
 }
 
 const DemographicsSection: React.FC<DemographicsSectionProps> = ({ formData, isReadOnly, isCreate, handleNestedInputChange }) => (
-  <div className="bg-gray-200 p-6 rounded-lg mb-6">
+  <div className=" p-6 rounded-lg mb-6">
     <h3 className="font-semibold text-green-800 mb-4">Demographics</h3>
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       <div>
@@ -48,18 +48,21 @@ const DemographicsSection: React.FC<DemographicsSectionProps> = ({ formData, isR
           disabled={isReadOnly}
         >
           <option value="">Select race</option>
-          <option value="White">White</option>
-          <option value="Black">Black</option>
+          <option value="American Indian or Alaska Native">American Indian or Alaska Native</option>
           <option value="Asian">Asian</option>
-          <option value="Hispanic">Hispanic</option>
+          <option value="Black or African American">Black or African American</option>
+          <option value="Hispanic or Latino">Hispanic or Latino</option>
+          <option value="Native Hawaiian or Other Pacific Islander">Native Hawaiian or Other Pacific Islander</option>
+          <option value="White">White</option>
+          <option value="Two or More Races">Two or More Races</option>
           <option value="Other">Other</option>
         </select>
       </div>
       <div>
-        <label htmlFor="maritalStatus" className="block text-sm font-medium text-black">Marital Status</label>
+        <label htmlFor="marital_status" className="block text-sm font-medium text-black">Marital Status</label>
         <select
-          id="maritalStatus"
-          name="maritalStatus"
+          id="marital_status"
+          name="marital_status"
           value={formData.marital_status || ''}
           onChange={e => handleNestedInputChange(['marital_status'], e.target.value)}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"

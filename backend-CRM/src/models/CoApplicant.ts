@@ -52,7 +52,7 @@ export interface ICoApplicant extends Document {
   
   // Employment Information
   employment?: {
-    status?: 'Employed' | 'Self-Employed' | 'Unemployed' | 'Retired' | 'Student';
+    status?: 'Employed' | 'Self-Employed' | 'Unemployed' | 'Retired' | 'Student' | 'Part time' | 'Contract';
     isBusinessOwner?: boolean;
     employerName?: string;
     employerAddress?: {
@@ -207,7 +207,7 @@ const CoApplicantSchema = new Schema<ICoApplicant>({
   employment: {
     status: { 
       type: String, 
-      enum: ['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student'] 
+      enum: ['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student', 'Part time', 'Contract'] 
     },
     isBusinessOwner: { type: Boolean },
     employerName: { type: String, trim: true },

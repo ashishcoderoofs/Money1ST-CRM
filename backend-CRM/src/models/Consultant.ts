@@ -264,7 +264,7 @@ const consultantSchema = new Schema<IConsultant>({
   },
   employmentStatus: {
     type: String,
-    enum: ['Employed', 'Unemployed', 'Self-Employed', 'Retired', 'Student'],
+    enum: ['Employed', 'Unemployed', 'Self-Employed', 'Retired', 'Student', 'Part time', 'Contract'],
     trim: true
   },
   employer: {

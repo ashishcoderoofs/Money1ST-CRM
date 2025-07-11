@@ -55,7 +55,7 @@ export const consultantFormSchema = z.object({
   educationLevel: z.enum(['High School', 'Associate Degree', 'Bachelor Degree', 'Master Degree', 'Doctorate', 'Other']).optional(),
   driversLicenseNumber: z.string().optional(),
   driversLicenseState: z.string().optional(),
-  employmentStatus: z.enum(['Employed', 'Unemployed', 'Self-Employed', 'Retired', 'Student']).optional(),
+  employmentStatus: z.enum(['Employed', 'Unemployed', 'Self-Employed', 'Retired', 'Student', 'Part time', 'Contract']).optional(),
   employer: z.string().optional(),
   occupation: z.string().optional(),
   industry: z.string().optional(),
@@ -927,6 +927,8 @@ export function ConsultantFormApi({
                           <SelectItem value="Self-Employed">Self-Employed</SelectItem>
                           <SelectItem value="Retired">Retired</SelectItem>
                           <SelectItem value="Student">Student</SelectItem>
+                          <SelectItem value="Part time">Part time</SelectItem>
+                          <SelectItem value="Contract">Contract</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

@@ -69,7 +69,7 @@ const applicantSchema = yup.object().shape({
   // is_consultant: yup.boolean().optional(),
   // date_of_birth: yup.string().matches(dateRegex, 'Date of birth must be YYYY-MM-DD').optional(),
   // marital_status: yup.string().oneOf(['Single', 'Married', 'Divorced', 'Widowed', 'Separated']).optional(),
-  // race: yup.string().oneOf(['White', 'Black', 'Asian', 'Hispanic', 'Other']).optional(),
+  // race: yup.string().oneOf(['American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'Native Hawaiian or Other Pacific Islander', 'White', 'Two or More Races', 'Other']).optional(),
   // birth_place: yup.string().optional(),
   // anniversary: yup.string().matches(dateRegex, 'Anniversary must be YYYY-MM-DD').optional(),
   // spouse_name: yup.string().optional(),
@@ -103,7 +103,7 @@ const applicantSchema = yup.object().shape({
   //   duration: yup.string().optional(),
   // }).optional(),
   // employment: yup.object({
-  //   status: yup.string().oneOf(['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student']).optional(),
+  //   status: yup.string().oneOf(['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student', 'Part time', 'Contract']).optional(),
   //   is_business_owner: yup.string().optional(),
   //   employer_name: yup.string().optional(),
   //   employer_address: yup.string().optional(),
@@ -175,7 +175,7 @@ function randomMarital() {
   return ['Single','Married','Divorced','Widowed','Separated'][randomInt(0,4)];
 }
 function randomRace() {
-  return ['White','Black','Asian','Hispanic','Other'][randomInt(0,4)];
+  return ['American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'Native Hawaiian or Other Pacific Islander', 'White', 'Two or More Races', 'Other'][randomInt(0,7)];
 }
 function randomState() {
   const states = ['NY','CA','TX','FL','IL','PA','OH','GA','NC','MI'];
@@ -258,7 +258,7 @@ function randomApplicant() {
       duration: `${randomInt(0,20)} years ${randomInt(0,11)} months`,
     },
     employment: {
-      status: ['Employed','Self-Employed','Unemployed','Retired','Student'][randomInt(0,4)],
+      status: ['Employed','Self-Employed','Unemployed','Retired','Student','Part time','Contract'][randomInt(0,6)],
       is_business_owner: Math.random() > 0.5 ? 'Yes' : 'No',
       employer_name: employer,
       employer_address: randomInt(100,9999) + ' ' + randomString(6) + ' Blvd',
@@ -773,7 +773,7 @@ const ClientForm = ({
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="min-h-screen bg-gray-50">
+    <form onSubmit={handleFormSubmit} className="min-h-screen">
       <div className="text-white p-6 shadow-lg bg-[#34495e]">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -885,7 +885,7 @@ const ClientForm = ({
                 <button type="button" role="tab" aria-selected={activeTab === 'mortgage-application'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'mortgage-application' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('mortgage-application')}>Mortgage</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'underwriting'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'underwriting' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('underwriting')}>Underwriting</button>
                   </div>
-                  <div className="mt-6">
+                  <div className="m-2 mt-6  bg-gray-200 rounded-xl">
                     {activeTab === 'applicant' && (
                       <>
                         <CaseInformationSection

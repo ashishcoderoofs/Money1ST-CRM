@@ -16,7 +16,7 @@ const HouseholdMembersSection: React.FC<HouseholdMembersSectionProps> = ({
   removeHouseholdMember,
   handleAddHouseholdMember
 }) => (
-  <div className="bg-gray-200 p-6 rounded-lg mb-6">
+  <div className=" p-6 rounded-lg mb-6">
     <h3 className="font-semibold text-green-800 mb-4">Household Members</h3>
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <div className="bg-green-600 text-white px-4 py-2 hidden lg:block">

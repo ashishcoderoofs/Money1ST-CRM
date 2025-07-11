@@ -13,7 +13,7 @@ export interface Applicant {
   is_consultant?: boolean;
   date_of_birth?: string;
   marital_status?: 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
-  race?: 'White' | 'Black' | 'Asian' | 'Hispanic' | 'Other';
+  race?: 'American Indian or Alaska Native' | 'Asian' | 'Black or African American' | 'Hispanic or Latino' | 'Native Hawaiian or Other Pacific Islander' | 'White' | 'Two or More Races' | 'Other';
   birth_place?: string;
   anniversary?: string;
   spouse_name?: string;
@@ -47,7 +47,7 @@ export interface Applicant {
     duration?: string;
   };
   employment?: {
-    status?: 'Employed' | 'Self-Employed' | 'Unemployed' | 'Retired' | 'Student';
+    status?: 'Employed' | 'Self-Employed' | 'Unemployed' | 'Retired' | 'Student' | 'Part time' | 'Contract';
     is_business_owner?: string;
     employer_name?: string;
     employer_address?: string;

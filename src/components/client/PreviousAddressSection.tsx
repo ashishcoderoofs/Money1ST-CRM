@@ -7,7 +7,7 @@ interface PreviousAddressSectionProps {
 }
 
 const PreviousAddressSection: React.FC<PreviousAddressSectionProps> = ({ formData, isReadOnly, handleNestedInputChange }) => (
-  <div className="bg-gray-200 p-6 rounded-lg mb-6">
+  <div className=" p-6 rounded-lg mb-6">
     <h3 className="font-semibold text-green-800 mb-4">Previous Address Information</h3>
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div>

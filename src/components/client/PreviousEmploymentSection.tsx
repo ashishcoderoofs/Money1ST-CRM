@@ -7,7 +7,7 @@ interface PreviousEmploymentSectionProps {
 }
 
 const PreviousEmploymentSection: React.FC<PreviousEmploymentSectionProps> = ({ formData, isReadOnly, handleNestedInputChange }) => (
-  <div className="bg-gray-200 p-6 rounded-lg mb-6">
+  <div className=" p-6 rounded-lg mb-6">
     <h3 className="font-semibold text-green-800 mb-4">Previous Employment Information</h3>
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       <div>

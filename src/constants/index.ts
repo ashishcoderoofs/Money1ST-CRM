@@ -89,11 +89,31 @@ export const MARITAL_STATUS_OPTIONS = [
   'Separated'
 ] as const;
 
+export const MARITAL_STATUS_SELECT_OPTIONS = [
+  { value: '', label: 'Select status' },
+  { value: 'Single', label: 'Single' },
+  { value: 'Married', label: 'Married' },
+  { value: 'Divorced', label: 'Divorced' },
+  { value: 'Widowed', label: 'Widowed' },
+  { value: 'Separated', label: 'Separated' }
+];
+
 export const SEX_OPTIONS = [
   'Male',
   'Female',
   'Other',
   'Prefer not to say'
+] as const;
+
+export const RACE_OPTIONS = [
+  'American Indian or Alaska Native',
+  'Asian',
+  'Black or African American',
+  'Hispanic or Latino',
+  'Native Hawaiian or Other Pacific Islander',
+  'White',
+  'Two or More Races',
+  'Other'
 ] as const;
 
 export const EMPLOYMENT_STATUS_OPTIONS = [
@@ -102,7 +122,9 @@ export const EMPLOYMENT_STATUS_OPTIONS = [
   'Unemployed',
   'Retired',
   'Student',
-  'Homemaker'
+  'Homemaker',
+  'Part time',
+  'Contract'
 ] as const;
 
 export const EDUCATION_LEVEL_OPTIONS = [
@@ -185,5 +207,6 @@ export type Title = typeof TITLE_OPTIONS[number];
 export type Suffix = typeof SUFFIX_OPTIONS[number];
 export type MaritalStatus = typeof MARITAL_STATUS_OPTIONS[number];
 export type Sex = typeof SEX_OPTIONS[number];
+export type Race = typeof RACE_OPTIONS[number];
 export type EmploymentStatus = typeof EMPLOYMENT_STATUS_OPTIONS[number];
 export type EducationLevel = typeof EDUCATION_LEVEL_OPTIONS[number];

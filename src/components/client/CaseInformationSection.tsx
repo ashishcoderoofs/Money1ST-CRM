@@ -17,7 +17,7 @@ const statusOptions = ['Active', 'Pending', 'Inactive'];
 const consultantOptions = ['Select...', 'Consultant A', 'Consultant B', 'Consultant C']; // Replace with dynamic if needed
 
 const CaseInformationSection: React.FC<CaseInformationSectionProps> = ({ clientId, entryDate, payoffAmount, status, consultantName, processorName, isReadOnly, isCreate, errors = {}, handleInputChange }) => (
-  <div className="bg-gray-200 p-6 rounded-lg mb-6">
+  <div className=" p-6 rounded-lg mb-6">
     <h3 className="font-semibold text-green-800 mb-4">Case Information</h3>
     <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
       <div>
