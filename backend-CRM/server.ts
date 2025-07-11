@@ -33,7 +33,7 @@ const app: Application = express();
 app.use(helmet());
 // Fix CORS to allow frontend on port 8081
 app.use(cors({ 
-  origin: ['http://localhost:8080', 'http://localhost:8081', 'http://localhost:3000',`${process.env.VITE_API_URL}`], 
+  origin: ['http://localhost:8080', 'http://localhost:8081', 'http://localhost:3000',`https://money1st-crm.onrender.com`], 
   credentials: true 
 }));
 app.use(express.json({ limit: '10mb' }));
