@@ -33,7 +33,7 @@ const app: Application = express();
 app.use(helmet());
 // Fix CORS to allow frontend on port 8081
 app.use(cors({ 
-  origin: ['http://localhost:8080', 'http://localhost:8081', 'http://localhost:3000'], 
+  origin: ['http://localhost:8080', 'http://localhost:8081', 'http://localhost:3000',`${process.env.VITE_API_URL}`], 
   credentials: true 
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -60,9 +60,6 @@ app.use('/api/consultants', consultantRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/liabilities', liabilityRoutes);
 app.use('/api/underwriting', underwritingRoutes);
-
-// ✅ Swagger setup
-setupSwagger(app);
 
 // ✅ Health check
 app.get('/health', (req, res) => {
