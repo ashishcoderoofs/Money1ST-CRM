@@ -43,6 +43,12 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined'));
 
+// Public endpoint: does not require authentication
+app.post('/log-time', (req, res) => {
+  console.log('Time logged:', new Date().toISOString());
+  res.json({ message: 'Time logged successfully', timestamp: new Date().toISOString() });
+});
+
 // ✅ Apply rate limiter
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -72,6 +78,8 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
   });
 });
+
+
 
 // ✅ Database connection
 const connectDB = async (): Promise<void> => {

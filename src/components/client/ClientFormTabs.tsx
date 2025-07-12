@@ -61,7 +61,7 @@ const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 const applicantSchema = yup.object().shape({
   // title: yup.string().oneOf(['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.']).optional(),
-  // first_name: yup.string().required('First name is required'),
+  first_name: yup.string().required('First name is required'),
   // middle_initial: yup.string().max(1, 'Middle initial must be 1 character').optional(),
   // last_name: yup.string().required('Last name is required'),
   // suffix: yup.string().oneOf(['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD']).optional(),
