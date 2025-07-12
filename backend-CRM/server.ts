@@ -53,8 +53,10 @@ app.post('/log-time', (req, res) => {
   console.log('Query Params:', req.query);
   console.log('Route Params:', req.params);
   console.log('Body Params:', req.body);
+  setTimeout(() => {
     res.json({ message: 'Time logged successfully', timestamp: new Date().toISOString() });
-});
+  }, 15000);
+ });
 
 // ✅ Apply rate limiter
 const limiter = rateLimit({
