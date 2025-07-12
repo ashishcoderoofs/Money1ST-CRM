@@ -640,11 +640,22 @@ export const updateClient = async (req: Request, res: Response) => {
 
 export const deleteClient = async (req: Request, res: Response) => {
   try {
-    const client = await Client.findByIdAndDelete(req.params.id);
+    let client;
+    
+    // Check if the ID is a valid ObjectId format
+    if (/^[a-fA-F0-9]{24}$/.test(req.params.id)) {
+      // If it's a valid ObjectId, search and delete by _id
+      client = await Client.findByIdAndDelete(req.params.id);
+    } else {
+      // If it's not a valid ObjectId, search and delete by client_id
+      client = await Client.findOneAndDelete({ client_id: req.params.id });
+    }
+    
     if (!client) return res.status(404).json({ success: false, error: 'Client not found' });
     return res.json({ success: true, message: 'Client deleted' });
   } catch (error) {
     const err = error as Error;
+    console.error('DeleteClient - Error:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 };
