@@ -24,13 +24,16 @@ import {
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useClients, useDeleteClient } from "@/hooks/useSecuriaClients";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import ClientManagementHeader from '@/components/client/ClientManagementHeader';
+import { Search } from "lucide-react";
+import Loader from '@/components/ui/Loader';
 
-function ClientsTable({ onAdd }: any) {
+function ClientsTable({ onAdd, data, isSearching, onDeleteSuccess }: any) {
   // Pagination state
   const [page, setPage] = useState(1);
   const limit = 10;
-  const { data, isLoading, error } = useClients({ page, limit });
+  const { data: clientsData, isLoading, error } = useClients({ page, limit });
   const deleteClientMutation = useDeleteClient();
   const navigate = useNavigate();
 
@@ -38,6 +41,7 @@ function ClientsTable({ onAdd }: any) {
     try {
       await deleteClientMutation.mutateAsync(id);
       toast.success("Client deleted successfully");
+      if (onDeleteSuccess) onDeleteSuccess(id);
     } catch (error) {
       toast.error("Failed to delete client");
     }
@@ -81,8 +85,8 @@ function ClientsTable({ onAdd }: any) {
     return <div>Error loading clients: {error.message}</div>;
   }
 
-  const clients = data?.data || [];
-  const pagination = data?.pagination || { page: 1, pages: 1, total: 0 };
+  const clients = data || clientsData?.data || [];
+  const pagination = clientsData?.pagination || { page: 1, pages: 1, total: 0 };
 
   return (
     <div className="w-full space-y-4">
@@ -152,7 +156,11 @@ function ClientsTable({ onAdd }: any) {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(client.clientId, client.applicantName || 'N/A')} className="bg-destructive hover:bg-destructive/90" disabled={deleteClientMutation.isPending}>
+                          <AlertDialogAction 
+                            onClick={() => handleDelete(client.clientId || client._id, client.applicantName || 'N/A')}
+                            className="bg-destructive hover:bg-destructive/90"
+                            disabled={deleteClientMutation.isPending}
+                          >
                             {deleteClientMutation.isPending ? "Deleting..." : "Delete Permanently"}
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -191,17 +199,71 @@ function ClientsTable({ onAdd }: any) {
   );
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function Clients() {
   const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleAdd = () => {
     navigate("/securia/clients/new");
   };
 
+  const handleRemoveFromSearchResults = (id: string) => {
+    setSearchResults(results => results.filter(client => (client.clientId || client._id) !== id));
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim() === "") {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/clients/search?query=${encodeURIComponent(value)}`);
+        const data = await res.json();
+        setSearchResults(data.data || []);
+      } catch (err) {
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen w-full px-2 py-2">
-      <div className="w-full flex justify-center">
-        <ClientsTable onAdd={handleAdd} />
+    <div>
+      <ClientManagementHeader />
+      <div className="flex flex-col items-center justify-start min-h-screen w-full px-2 py-2">
+        <div className="w-full max-w-3xl mx-auto mb-6">
+          <div className="relative w-full">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <Search size={18} />
+            </span>
+            <input
+              type="text"
+              className="w-full border rounded-lg py-2 pl-10 pr-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Search by Client ID, Applicant Name, or Consultant"
+              value={search}
+              onChange={handleSearch}
+            />
+          </div>
+        </div>
+        <div className="w-full flex justify-center">
+          {isSearching ? (
+            <Loader />
+          ) : (
+            <ClientsTable onAdd={handleAdd} data={search ? searchResults : undefined} isSearching={isSearching} onDeleteSuccess={handleRemoveFromSearchResults} />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createClient, getClients, getClientById, updateClient, deleteClient } from '../controllers/clientController';
+import { createClient, getClients, getClientById, updateClient, deleteClient, searchClients } from '../controllers/clientController';
 // import { validateSecuriaClientCreation, validateClientUpdate } from '../middleware/clientValidation';
 
 const router = Router();
@@ -9,6 +9,9 @@ router.post('/', createClient);
 
 // Get all clients (with pagination/filter)
 router.get('/', getClients);
+
+// Search clients (must be before :id route)
+router.get('/search', searchClients);
 
 // Get a client by ID
 router.get('/:id', getClientById);

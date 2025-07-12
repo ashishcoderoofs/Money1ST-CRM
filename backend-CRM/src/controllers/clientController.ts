@@ -323,6 +323,77 @@ export const getClients = async (req: Request, res: Response) => {
   }
 };
 
+export const searchClients = async (req: Request, res: Response) => {
+  try {
+    const { query } = req.query;
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ success: false, error: 'Query parameter is required' });
+    }
+    const regex = new RegExp(query, 'i');
+
+    // Aggregation to match client_id, consultant_name, or applicant name
+    const clients = await Client.aggregate([
+      {
+        $lookup: {
+          from: 'applicants',
+          localField: 'applicant',
+          foreignField: '_id',
+          as: 'applicant'
+        }
+      },
+      { $unwind: { path: '$applicant', preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          $or: [
+            { client_id: regex },
+            { consultant_name: regex },
+            { 'applicant.name_information.first_name': regex },
+            { 'applicant.name_information.last_name': regex },
+            {
+              $expr: {
+                $regexMatch: {
+                  input: {
+                    $concat: [
+                      { $ifNull: ['$applicant.name_information.first_name', ''] },
+                      ' ',
+                      { $ifNull: ['$applicant.name_information.last_name', ''] }
+                    ]
+                  },
+                  regex: query,
+                  options: 'i'
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]);
+
+    // Map results as before
+    const clientList = clients.map(client => {
+      let applicantName = 'N/A', coApplicantName = 'N/A';
+      if (client.applicant && client.applicant.name_information) {
+        applicantName = [client.applicant.name_information.first_name, client.applicant.name_information.last_name].filter(Boolean).join(' ') || 'N/A';
+      }
+      // coApplicantName logic omitted for brevity
+      return {
+        clientId: client.client_id || client._id,
+        entryDate: client.entry_date ? new Date(client.entry_date).toISOString().split('T')[0] : 'N/A',
+        applicantName,
+        coApplicantName,
+        consultant: client.consultant_name || 'N/A',
+        processor: client.processor_name || 'N/A',
+        totalDebt: 'N/A', // You can add logic for liabilities if needed
+        status: client.status || 'N/A',
+      };
+    });
+
+    return res.json({ success: true, data: clientList });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};
+
 export const getClientById = async (req: Request, res: Response) => {
   try {
     let client;
