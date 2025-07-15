@@ -20,7 +20,7 @@ const PreviousAddressSection: React.FC<PreviousAddressSectionProps> = ({ formDat
           onChange={e => handleNestedInputChange(['previous_address', 'address'], e.target.value)}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
-          placeholder="Previous address"
+          placeholder={!isReadOnly ? 'Previous address' : undefined}
         />
       </div>
       <div>
@@ -33,7 +33,7 @@ const PreviousAddressSection: React.FC<PreviousAddressSectionProps> = ({ formDat
           onChange={e => handleNestedInputChange(['previous_address', 'city'], e.target.value)}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
-          placeholder="Previous city"
+          placeholder={!isReadOnly ? 'Previous city' : undefined}
         />
       </div>
       <div>
@@ -46,7 +46,7 @@ const PreviousAddressSection: React.FC<PreviousAddressSectionProps> = ({ formDat
           onChange={e => handleNestedInputChange(['previous_address', 'state'], e.target.value)}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
-          placeholder="Previous state"
+          placeholder={!isReadOnly ? 'Previous state' : undefined}
         />
       </div>
       <div>
@@ -59,7 +59,7 @@ const PreviousAddressSection: React.FC<PreviousAddressSectionProps> = ({ formDat
           onChange={e => handleNestedInputChange(['previous_address', 'zip_code'], e.target.value)}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
-          placeholder="Zip Code"
+          placeholder={!isReadOnly ? 'Zip Code' : undefined}
         />
       </div>
     </div>
@@ -67,32 +67,27 @@ const PreviousAddressSection: React.FC<PreviousAddressSectionProps> = ({ formDat
       <div>
         <label className="block text-sm font-medium text-black">How Long at Previous Address</label>
         <div className="flex gap-4">
-          <select
+          <input
+            type="number"
             name="prevAddressYears"
-            value={formData.previous_address?.years || ''}
-            onChange={e => handleNestedInputChange(['previous_address', 'years'], e.target.value)}
+            min={0}
+            value={formData.previous_address?.years ?? ''}
+            onChange={e => handleNestedInputChange(['previous_address', 'years'], e.target.value === '' ? '' : Number(e.target.value))}
             className="bg-white flex h-10 rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-40"
-          >
-            <option value="">Select years</option>
-            {Array.from({ length: 50 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {i + 1}
-              </option>
-            ))}
-          </select>
-          <select
+            placeholder="Years"
+            readOnly={isReadOnly}
+          />
+          <input
+            type="number"
             name="prevAddressMonths"
-            value={formData.previous_address?.months || ''}
-            onChange={e => handleNestedInputChange(['previous_address', 'months'], e.target.value)}
+            min={0}
+            max={11}
+            value={formData.previous_address?.months ?? ''}
+            onChange={e => handleNestedInputChange(['previous_address', 'months'], e.target.value === '' ? '' : Number(e.target.value))}
             className="bg-white flex h-10 rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-40"
-          >
-            <option value="">Select months</option>
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {i + 1}
-              </option>
-            ))}
-          </select>
+            placeholder="Months (0-11)"
+            readOnly={isReadOnly}
+          />
         </div>
       </div>
     </div>

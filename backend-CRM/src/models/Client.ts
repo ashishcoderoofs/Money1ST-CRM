@@ -27,6 +27,20 @@ export interface IClient extends Document {
   underwriting: Types.ObjectId;
   chm: Types.ObjectId;
   tud: Types.ObjectId;
+  loanStatus?: any; // Add this line for loan status tracking
+  drivers?: Array<{
+    fullName: string;
+    dateOfBirth: string;
+    age: string;
+    relationship: string;
+    ssn: string;
+    sex: string;
+    maritalStatus: string;
+    drivingStatus: string;
+    licenseNumber: string;
+    state: string;
+    accidentsViolations: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,7 +64,21 @@ const ClientSchema = new Schema<IClient>({
   loan_options: { type: Schema.Types.ObjectId, ref: 'LoanOptions' },
   underwriting: { type: Schema.Types.ObjectId, ref: 'Underwriting' },
   chm: { type: Schema.Types.ObjectId, ref: 'CHM' },
-  tud: { type: Schema.Types.ObjectId, ref: 'TUD' }
+  tud: { type: Schema.Types.ObjectId, ref: 'TUD' },
+  loanStatus: { type: Schema.Types.Mixed }, // Add this line for loan status tracking
+  drivers: [{
+    fullName: { type: String },
+    dateOfBirth: { type: String },
+    age: { type: String },
+    relationship: { type: String },
+    ssn: { type: String },
+    sex: { type: String },
+    maritalStatus: { type: String },
+    drivingStatus: { type: String },
+    licenseNumber: { type: String },
+    state: { type: String },
+    accidentsViolations: { type: String },
+  }],
 }, { timestamps: true });
 
 // Pre-save hook to auto-generate incremental client_id if not present

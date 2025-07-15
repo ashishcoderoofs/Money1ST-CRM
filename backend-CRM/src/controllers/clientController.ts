@@ -2,6 +2,60 @@ import { Request, Response } from 'express';
 import { Client, Applicant, Property, Mortgage, LoanDetails, LoanOptions, Underwriting, CHM, TUD, Liability } from '../models';
 import { CoApplicant } from '../models/CoApplicant';
 
+function validateDriverBackend(driver) {
+  const nameRegex = /^[A-Za-z\s\-']+$/;
+  const ssnRegex = /^\d{3}-\d{2}-\d{4}$/;
+  const errors = {};
+  if (!driver.fullName || !nameRegex.test(driver.fullName)) {
+    errors.fullName = 'Full Name is required and can only contain letters, spaces, hyphens, and apostrophes.';
+  }
+  if (!driver.dateOfBirth) {
+    errors.dateOfBirth = 'DOB is required.';
+  } else {
+    const dob = new Date(driver.dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    if (isNaN(age) || age < 16 || age > 99) {
+      errors.dateOfBirth = 'Driver must be at least 16 years old.';
+    }
+  }
+  if (!driver.age || isNaN(driver.age) || driver.age < 16 || driver.age > 99) {
+    errors.age = 'Age must be between 16 and 99.';
+  }
+  if (!driver.relationship) {
+    errors.relationship = 'Relationship is required.';
+  }
+  if (!driver.ssn || !ssnRegex.test(driver.ssn)) {
+    errors.ssn = 'SSN must be in the format XXX-XX-XXXX.';
+  }
+  if (!driver.sex) {
+    errors.sex = 'Sex is required.';
+  }
+  if (!driver.maritalStatus) {
+    errors.maritalStatus = 'Marital Status is required.';
+  }
+  if (!driver.drivingStatus) {
+    errors.drivingStatus = 'Driving Status is required.';
+  }
+  if (driver.drivingStatus === 'licensed' && !driver.licenseNumber) {
+    errors.licenseNumber = 'License Number is required for licensed drivers.';
+  }
+  if (!driver.state) {
+    errors.state = 'State is required.';
+  }
+  if (
+    driver.accidentsViolations === '' ||
+    isNaN(Number(driver.accidentsViolations)) ||
+    Number(driver.accidentsViolations) < 0 ||
+    Number(driver.accidentsViolations) > 99
+  ) {
+    errors.accidentsViolations = 'Accidents/Violations must be a number between 0 and 99.';
+  }
+  return errors;
+}
+
 export const createClient = async (req: Request, res: Response) => {
   try {
     console.log('--- Incoming createClient request body ---');
@@ -29,6 +83,22 @@ export const createClient = async (req: Request, res: Response) => {
       processor_name: req.body.processor_name,
     });
     console.log('Created minimal client:', minimalClient);
+
+    // Add loanStatus if provided
+    if (req.body.loanStatus) {
+      minimalClient.loanStatus = req.body.loanStatus;
+      await minimalClient.save();
+    }
+
+    // Add drivers if provided
+    if (req.body.drivers) {
+      const driverErrors = req.body.drivers.map(validateDriverBackend);
+      if (driverErrors.some(e => Object.keys(e).length > 0)) {
+        return res.status(400).json({ success: false, error: 'Driver validation failed', details: driverErrors });
+      }
+      minimalClient.drivers = req.body.drivers;
+      await minimalClient.save();
+    }
 
     // 2. Create applicant(s) with client._id as client_id
     const applicantData = req.body.applicant;
@@ -223,6 +293,7 @@ export const createClient = async (req: Request, res: Response) => {
       .populate('second_mortgage')
       .populate('proposed_first_loan')
       .populate('proposed_second_loan');
+      
     
     if (!populatedClient) {
       return res.status(500).json({ success: false, error: 'Failed to retrieve created client' });
@@ -466,7 +537,6 @@ export const updateClient = async (req: Request, res: Response) => {
 
     // Update basic client fields
     client.entry_date = req.body.entry_date || client.entry_date;
-    
     // Fix status case to match enum values
     if (req.body.status) {
       const statusMap: { [key: string]: string } = {
@@ -479,51 +549,64 @@ export const updateClient = async (req: Request, res: Response) => {
       };
       client.status = statusMap[req.body.status] || req.body.status;
     }
-    
     client.payoff_amount = req.body.payoff_amount || client.payoff_amount;
     client.consultant_name = req.body.consultant_name || client.consultant_name;
     client.processor_name = req.body.processor_name || client.processor_name;
 
-    // Update mortgage data
+    // --- Unified sub-object update logic ---
+    // 1. Applicant
+    if (req.body.applicant) {
+      if (client.applicant) {
+        await Applicant.findByIdAndUpdate(client.applicant, req.body.applicant, { new: true });
+      } else {
+        const newApplicant = await Applicant.create(req.body.applicant);
+        client.applicant = newApplicant._id;
+      }
+    }
+    // 2. Co-Applicant
+    if (req.body.co_applicant) {
+      if (client.co_applicant) {
+        await Applicant.findByIdAndUpdate(client.co_applicant, req.body.co_applicant, { new: true });
+      } else {
+        const newCoApplicant = await Applicant.create(req.body.co_applicant);
+        client.co_applicant = newCoApplicant._id;
+      }
+    }
+    // 3. Liabilities
+    if (req.body.liabilities) {
+      // Remove existing liabilities
+      await Liability.deleteMany({ client_id: client._id });
+      // Create new liabilities
+      const createdLiabilities = await Liability.insertMany(req.body.liabilities.map((l: any) => ({ ...l, client_id: client._id })));
+      client.liabilities = createdLiabilities.map((l: any) => l._id);
+    }
+    // 4. Mortgage (first, second, proposed)
     if (req.body.mortgage) {
-      console.log('UpdateClient - Updating mortgage data');
       const m = req.body.mortgage;
       // First Mortgage
       if (m.first_mortgage_balance || m.first_mortgage_rate || m.first_mortgage_term || m.first_mortgage_payment || m.lienholder_1 || m.address || m.city || m.state || m.zip_code || m.occupancy_type) {
-        console.log('UpdateClient - Updating first mortgage, existing:', client.first_mortgage);
         if (client.first_mortgage) {
-          try {
             await Mortgage.findByIdAndUpdate(client.first_mortgage, {
-              // Property information
               address: m.address,
               city: m.city,
               state: m.state,
               zip_code: m.zip_code,
               occupancy_type: m.occupancy_type,
-              // Mortgage details
               balance: m.first_mortgage_balance,
               rate: m.first_mortgage_rate,
               term: m.first_mortgage_term,
               payment: m.first_mortgage_payment,
               lienholder: m.lienholder_1
             });
-            console.log('UpdateClient - First mortgage updated successfully');
-          } catch (error) {
-            console.error('UpdateClient - Error updating first mortgage:', error);
-            throw error;
-          }
         } else {
-          console.log('UpdateClient - Creating new first mortgage');
           const firstMortgage = await Mortgage.create({
             client_id: client._id,
             type: 'first',
-            // Property information
             address: m.address,
             city: m.city,
             state: m.state,
             zip_code: m.zip_code,
             occupancy_type: m.occupancy_type,
-            // Mortgage details
             balance: m.first_mortgage_balance,
             rate: m.first_mortgage_rate,
             term: m.first_mortgage_term,
@@ -531,7 +614,6 @@ export const updateClient = async (req: Request, res: Response) => {
             lienholder: m.lienholder_1
           });
           client.first_mortgage = firstMortgage._id;
-          console.log('UpdateClient - First mortgage created successfully');
         }
       }
       // Second Mortgage
@@ -604,67 +686,30 @@ export const updateClient = async (req: Request, res: Response) => {
         }
       }
     }
-    
-    // Update underwriting data
+    // 5. Underwriting
     if (req.body.underwriting) {
-      console.log('UpdateClient - Updating underwriting data');
-      const underwritingData = req.body.underwriting;
-      if (Object.keys(underwritingData).length > 0) {
-        try {
-          // Check if underwriting record exists
-          let existingUnderwriting = await Underwriting.findOne({ client_id: client._id });
-          if (existingUnderwriting) {
-            // Update existing underwriting
-            await Underwriting.findByIdAndUpdate(existingUnderwriting._id, {
-              address: underwritingData.address,
-              city: underwritingData.city,
-              state: underwritingData.state,
-              chm_selection: underwritingData.chm_selection,
-              tud_selection: underwritingData.tud_selection,
-              equifax_applicant: underwritingData.equifax_applicant,
-              equifax_co_applicant: underwritingData.equifax_co_applicant,
-              experian_applicant: underwritingData.experian_applicant,
-              experian_co_applicant: underwritingData.experian_co_applicant,
-              transunion_applicant: underwritingData.transunion_applicant,
-              transunion_co_applicant: underwritingData.transunion_co_applicant,
-              underwriting_notes: underwritingData.underwriting_notes,
-              terms: underwritingData.terms,
-              programs: underwritingData.programs
-            });
-            console.log('UpdateClient - Underwriting updated successfully');
+      let existingUnderwriting = null;
+      if (client.underwriting) {
+        existingUnderwriting = await Underwriting.findByIdAndUpdate(client.underwriting, req.body.underwriting, { new: true });
           } else {
-            // Create new underwriting record
-            await Underwriting.create({
-              client_id: client._id,
-              address: underwritingData.address,
-              city: underwritingData.city,
-              state: underwritingData.state,
-              chm_selection: underwritingData.chm_selection,
-              tud_selection: underwritingData.tud_selection,
-              equifax_applicant: underwritingData.equifax_applicant,
-              equifax_co_applicant: underwritingData.equifax_co_applicant,
-              experian_applicant: underwritingData.experian_applicant,
-              experian_co_applicant: underwritingData.experian_co_applicant,
-              transunion_applicant: underwritingData.transunion_applicant,
-              transunion_co_applicant: underwritingData.transunion_co_applicant,
-              underwriting_notes: underwritingData.underwriting_notes,
-              terms: underwritingData.terms,
-              programs: underwritingData.programs
-            });
-            console.log('UpdateClient - Underwriting created successfully');
-          }
-        } catch (error) {
-          console.error('UpdateClient - Error updating underwriting:', error);
-          throw error;
-        }
+        existingUnderwriting = await Underwriting.create({ ...req.body.underwriting, client_id: client._id });
+        client.underwriting = existingUnderwriting._id;
       }
     }
-    
-    console.log('UpdateClient - Saving client');
+    // 6. Loan Status
+    if (req.body.loanStatus) {
+      client.loanStatus = req.body.loanStatus;
+        }
+    // Save client
+    if (req.body.drivers) {
+      const driverErrors = req.body.drivers.map(validateDriverBackend);
+      if (driverErrors.some(e => Object.keys(e).length > 0)) {
+        return res.status(400).json({ success: false, error: 'Driver validation failed', details: driverErrors });
+      }
+      client.drivers = req.body.drivers;
+    }
     await client.save();
-    console.log('UpdateClient - Client saved successfully');
     
-    // Respond with the full client, populated
     console.log('UpdateClient - Populating client data');
     const populatedClient = await Client.findById(client._id)
       .populate('applicant')
@@ -728,5 +773,43 @@ export const deleteClient = async (req: Request, res: Response) => {
     const err = error as Error;
     console.error('DeleteClient - Error:', err);
     return res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+
+export const getLoanStatus = async (req: Request, res: Response) => {
+  try {
+    const client = await Client.findById(req.params.id);
+    if (!client) return res.status(404).json({ success: false, error: 'Client not found' });
+    return res.json({ success: true, data: client.loanStatus || null });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};
+
+export const updateLoanStatus = async (req: Request, res: Response) => {
+  try {
+    const client = await Client.findById(req.params.id);
+    if (!client) return res.status(404).json({ success: false, error: 'Client not found' });
+    client.loanStatus = { ...client.loanStatus, ...req.body };
+    await client.save();
+    return res.json({ success: true, data: client.loanStatus });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};
+
+export const createLoanStatus = async (req: Request, res: Response) => {
+  try {
+    const client = await Client.findById(req.params.id);
+    if (!client) return res.status(404).json({ success: false, error: 'Client not found' });
+    if (client.loanStatus) {
+      return res.status(400).json({ success: false, error: 'Loan status already exists. Use PUT to update.' });
+    }
+    client.loanStatus = req.body;
+    await client.save();
+    return res.status(201).json({ success: true, data: client.loanStatus });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
   }
 };

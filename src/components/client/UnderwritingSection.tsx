@@ -77,7 +77,7 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
           <input 
             type="text" 
             className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" 
-            placeholder="103" 
+            placeholder={!isReadOnly ? '103' : undefined} 
             value={formData.clientId || underwriting.client_id || ''} 
             onChange={e => updateUnderwritingField('client_id', e.target.value)} 
             disabled={true} 
@@ -90,7 +90,7 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
           <input 
             type="text" 
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" 
-            placeholder="Enter Address" 
+            placeholder={!isReadOnly ? 'Enter Address' : undefined} 
             value={underwriting.address || ''} 
             onChange={e => updateUnderwritingField('address', e.target.value)} 
             disabled={isReadOnly} 
@@ -103,7 +103,7 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
           <input 
             type="text" 
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" 
-            placeholder="Enter City" 
+            placeholder={!isReadOnly ? 'Enter City' : undefined} 
             value={underwriting.city || ''} 
             onChange={e => updateUnderwritingField('city', e.target.value)} 
             disabled={isReadOnly} 
@@ -170,7 +170,7 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
                   <input 
                     type="number" 
                     className="w-16 h-6 text-center text-xs border-0 bg-transparent" 
-                    placeholder="300-850" 
+                    placeholder={!isReadOnly ? '300-850' : undefined} 
                     value={underwriting.equifax_applicant || ''} 
                     onChange={e => updateUnderwritingField('equifax_applicant', e.target.value)} 
                     disabled={isReadOnly} 
@@ -182,7 +182,7 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
                   <input 
                     type="number" 
                     className="w-16 h-6 text-center text-xs border-0 bg-transparent" 
-                    placeholder="300-850" 
+                    placeholder={!isReadOnly ? '300-850' : undefined} 
                     value={underwriting.equifax_co_applicant || ''} 
                     onChange={e => updateUnderwritingField('equifax_co_applicant', e.target.value)} 
                     disabled={isReadOnly} 
@@ -197,7 +197,7 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
                   <input 
                     type="number" 
                     className="w-16 h-6 text-center text-xs border-0 bg-transparent" 
-                    placeholder="300-850" 
+                    placeholder={!isReadOnly ? '300-850' : undefined} 
                     value={underwriting.experian_applicant || ''} 
                     onChange={e => updateUnderwritingField('experian_applicant', e.target.value)} 
                     disabled={isReadOnly} 
@@ -209,7 +209,7 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
                   <input 
                     type="number" 
                     className="w-16 h-6 text-center text-xs border-0 bg-transparent" 
-                    placeholder="300-850" 
+                    placeholder={!isReadOnly ? '300-850' : undefined} 
                     value={underwriting.experian_co_applicant || ''} 
                     onChange={e => updateUnderwritingField('experian_co_applicant', e.target.value)} 
                     disabled={isReadOnly} 
@@ -224,7 +224,7 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
                   <input 
                     type="number" 
                     className="w-16 h-6 text-center text-xs border-0 bg-transparent" 
-                    placeholder="300-850" 
+                    placeholder={!isReadOnly ? '300-850' : undefined} 
                     value={underwriting.transunion_applicant || ''} 
                     onChange={e => updateUnderwritingField('transunion_applicant', e.target.value)} 
                     disabled={isReadOnly} 
@@ -236,7 +236,7 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
                   <input 
                     type="number" 
                     className="w-16 h-6 text-center text-xs border-0 bg-transparent" 
-                    placeholder="300-850" 
+                    placeholder={!isReadOnly ? '300-850' : undefined} 
                     value={underwriting.transunion_co_applicant || ''} 
                     onChange={e => updateUnderwritingField('transunion_co_applicant', e.target.value)} 
                     disabled={isReadOnly} 
@@ -253,7 +253,7 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
             <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-medium text-purple-800">Notes</label>
             <textarea 
               className="w-full h-16 p-1 text-xs border-0 resize-none bg-transparent" 
-              placeholder="Enter notes..." 
+              placeholder={!isReadOnly ? 'Enter notes...' : undefined} 
               value={underwriting.underwriting_notes || ''} 
               onChange={e => updateUnderwritingField('underwriting_notes', e.target.value)} 
               disabled={isReadOnly} 

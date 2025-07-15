@@ -39,7 +39,7 @@ const NameInformationSection: React.FC<NameInformationSectionProps> = ({ formDat
           name="first_name"
           value={formData.first_name || ''}
           onChange={e => handleNestedInputChange(['first_name'], e.target.value)}
-          placeholder={isCreate && !isReadOnly ? 'Enter first name' : undefined}
+          placeholder={!isReadOnly ? 'Enter first name' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
         />
@@ -53,7 +53,7 @@ const NameInformationSection: React.FC<NameInformationSectionProps> = ({ formDat
           name="middle_initial"
           value={formData.middle_initial || ''}
           onChange={e => handleNestedInputChange(['middle_initial'], e.target.value)}
-          placeholder={isCreate && !isReadOnly ? 'Enter middle initial' : undefined}
+          placeholder={!isReadOnly ? 'Enter middle initial' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
         />
@@ -67,7 +67,7 @@ const NameInformationSection: React.FC<NameInformationSectionProps> = ({ formDat
           name="last_name"
           value={formData.last_name || ''}
           onChange={e => handleNestedInputChange(['last_name'], e.target.value)}
-          placeholder={isCreate && !isReadOnly ? 'Enter last name' : undefined}
+          placeholder={!isReadOnly ? 'Enter last name' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
         />
@@ -97,7 +97,7 @@ const NameInformationSection: React.FC<NameInformationSectionProps> = ({ formDat
           name="maiden_name"
           value={formData.maiden_name || ''}
           onChange={e => handleNestedInputChange(['maiden_name'], e.target.value)}
-          placeholder={isCreate && !isReadOnly ? 'Enter maiden name' : undefined}
+          placeholder={!isReadOnly ? 'Enter maiden name' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
         />

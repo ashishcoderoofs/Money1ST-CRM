@@ -19,7 +19,7 @@ const DemographicsSection: React.FC<DemographicsSectionProps> = ({ formData, isR
           name="birthPlace"
           value={formData.birth_place || ''}
           onChange={e => handleNestedInputChange(['birth_place'], e.target.value)}
-          placeholder="Birth place"
+          placeholder={!isReadOnly ? 'Birth place' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
         />
@@ -32,7 +32,7 @@ const DemographicsSection: React.FC<DemographicsSectionProps> = ({ formData, isR
           name="dateOfBirth"
           value={formData.dob || ''}
           onChange={e => handleNestedInputChange(['date_of_birth'], e.target.value)}
-          placeholder="dd-mm-yyyy"
+          placeholder={!isReadOnly ? 'dd-mm-yyyy' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
         />
@@ -84,7 +84,7 @@ const DemographicsSection: React.FC<DemographicsSectionProps> = ({ formData, isR
           name="anniversary"
           value={formData.anniversary || ''}
           onChange={e => handleNestedInputChange(['anniversary'], e.target.value)}
-          placeholder="dd-mm-yyyy"
+          placeholder={!isReadOnly ? 'dd-mm-yyyy' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
         />
@@ -97,7 +97,7 @@ const DemographicsSection: React.FC<DemographicsSectionProps> = ({ formData, isR
           name="spouseName"
           value={formData.spouse_name || ''}
           onChange={e => handleNestedInputChange(['spouse_name'], e.target.value)}
-          placeholder="Spouse name"
+          placeholder={!isReadOnly ? 'Spouse name' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
         />
@@ -110,7 +110,7 @@ const DemographicsSection: React.FC<DemographicsSectionProps> = ({ formData, isR
           name="spouseOccupation"
           value={formData.spouse_occupation || ''}
           onChange={e => handleNestedInputChange(['spouse_occupation'], e.target.value)}
-          placeholder="Spouse occupation"
+          placeholder={!isReadOnly ? 'Spouse occupation' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
         />
@@ -123,7 +123,7 @@ const DemographicsSection: React.FC<DemographicsSectionProps> = ({ formData, isR
           name="numDependents"
           value={formData.number_of_dependents || ''}
           onChange={e => handleNestedInputChange(['number_of_dependents'], e.target.value)}
-          placeholder="0"
+          placeholder={!isReadOnly ? '0' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
         />

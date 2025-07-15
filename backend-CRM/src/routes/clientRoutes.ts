@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createClient, getClients, getClientById, updateClient, deleteClient, searchClients } from '../controllers/clientController';
+import { createClient, getClients, getClientById, updateClient, deleteClient, searchClients, getLoanStatus, updateLoanStatus, createLoanStatus } from '../controllers/clientController';
 // import { validateSecuriaClientCreation, validateClientUpdate } from '../middleware/clientValidation';
 
 const router = Router();
@@ -21,5 +21,10 @@ router.put('/:id', updateClient);
 
 // Delete a client
 router.delete('/:id', deleteClient);
+
+// Loan Status routes
+router.get('/:id/loan-status', getLoanStatus);
+router.post('/:id/loan-status', createLoanStatus);
+router.put('/:id/loan-status', updateLoanStatus);
 
 export default router; 

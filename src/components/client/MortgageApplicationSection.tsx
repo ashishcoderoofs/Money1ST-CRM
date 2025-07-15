@@ -62,7 +62,7 @@ const MortgageApplicationSection: React.FC<MortgageApplicationSectionProps> = ({
             <input 
               type="text" 
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:black placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm mt-1" 
-              placeholder="Enter property address" 
+              placeholder={!isReadOnly ? 'Enter property address' : undefined} 
               value={mortgage.address || ''} 
               onChange={e => updateMortgageField('address', e.target.value)} 
               disabled={isReadOnly} 
@@ -75,7 +75,7 @@ const MortgageApplicationSection: React.FC<MortgageApplicationSectionProps> = ({
             <input 
               type="text" 
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:black placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm mt-1" 
-              placeholder="Enter city" 
+              placeholder={!isReadOnly ? 'Enter city' : undefined} 
               value={mortgage.city || ''} 
               onChange={e => updateMortgageField('city', e.target.value)} 
               disabled={isReadOnly} 
@@ -141,7 +141,7 @@ const MortgageApplicationSection: React.FC<MortgageApplicationSectionProps> = ({
                   <input 
                     type="number" 
                     className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:black placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-8" 
-                    placeholder="$0.00" 
+                    placeholder={!isReadOnly ? '$0.00' : undefined} 
                     value={mortgage.first_mortgage_balance || ''} 
                     onChange={e => updateMortgageField('first_mortgage_balance', e.target.value)} 
                     disabled={isReadOnly} 

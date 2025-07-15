@@ -56,8 +56,8 @@ export const validateSecuriaClientCreation = (req: Request, res: Response, next:
       ssn: Joi.string().optional(),
     })).optional(),
     current_address: Joi.object({
-      months: Joi.string().pattern(/^\d+$/).optional(),
-      years: Joi.string().pattern(/^\d+$/).optional(),
+      months: Joi.number().min(0).max(11).optional(),
+      years: Joi.number().min(0).optional(),
       how_long_at_current_address: Joi.string().optional(),
     }).optional(),
     previous_address: Joi.object({
@@ -65,8 +65,8 @@ export const validateSecuriaClientCreation = (req: Request, res: Response, next:
       city: Joi.string().max(100).optional(),
       state: Joi.string().pattern(stateRegex).optional(),
       zip_code: Joi.string().pattern(zipRegex).optional(),
-      months: Joi.string().pattern(/^\d+$/).optional(),
-      years: Joi.string().pattern(/^\d+$/).optional(),
+      months: Joi.number().min(0).max(11).optional(),
+      years: Joi.number().min(0).optional(),
       duration: Joi.string().optional(),
     }).optional(),
     employment: Joi.object({
@@ -233,8 +233,8 @@ export const validateClientUpdate = (req: Request, res: Response, next: NextFunc
       cell_phone: Joi.string().pattern(phoneRegex).optional(),
       other_phone: Joi.string().pattern(phoneRegex).optional(),
       email: Joi.string().email().optional(),
-      months: Joi.string().pattern(/^\d+$/).optional(),
-      years: Joi.string().pattern(/^\d+$/).optional(),
+      months: Joi.number().min(0).max(11).optional(),
+      years: Joi.number().min(0).optional(),
       how_long_at_current_address: Joi.string().optional(),
       fax: Joi.string().pattern(phoneRegex).allow('').optional(),
     }).optional(),
@@ -243,8 +243,8 @@ export const validateClientUpdate = (req: Request, res: Response, next: NextFunc
       city: Joi.string().max(100).optional(),
       state: Joi.string().pattern(stateRegex).optional(),
       zip_code: Joi.string().pattern(zipRegex).optional(),
-      months: Joi.string().pattern(/^\d+$/).optional(),
-      years: Joi.string().pattern(/^\d+$/).optional(),
+      months: Joi.number().min(0).max(11).optional(),
+      years: Joi.number().min(0).optional(),
       duration: Joi.string().optional(),
     }).optional(),
     employment: Joi.object({
