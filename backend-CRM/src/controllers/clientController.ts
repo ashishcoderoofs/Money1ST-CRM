@@ -2,10 +2,26 @@ import { Request, Response } from 'express';
 import { Client, Applicant, Property, Mortgage, LoanDetails, LoanOptions, Underwriting, CHM, TUD, Liability } from '../models';
 import { CoApplicant } from '../models/CoApplicant';
 
-function validateDriverBackend(driver) {
+interface Driver {
+  fullName: string;
+  dateOfBirth: string;
+  age: number;
+  relationship: string;
+  ssn: string;
+  sex: string;
+  maritalStatus: string;
+  drivingStatus: string;
+  licenseNumber?: string;
+  state: string;
+  accidentsViolations: string | number;
+}
+
+type DriverValidationErrors = Partial<Record<keyof Driver, string>>;
+
+function validateDriverBackend(driver: Driver): DriverValidationErrors {
   const nameRegex = /^[A-Za-z\s\-']+$/;
   const ssnRegex = /^\d{3}-\d{2}-\d{4}$/;
-  const errors = {};
+  const errors: DriverValidationErrors = {};
   if (!driver.fullName || !nameRegex.test(driver.fullName)) {
     errors.fullName = 'Full Name is required and can only contain letters, spaces, hyphens, and apostrophes.';
   }
@@ -60,6 +76,24 @@ export const createClient = async (req: Request, res: Response) => {
   try {
     console.log('--- Incoming createClient request body ---');
     console.dir(req.body, { depth: null });
+
+    // Pre-validate underwriting credit scores before creating any documents
+    if (req.body.underwriting) {
+      const u = req.body.underwriting;
+      const creditFields = [
+        'equifax_applicant', 'equifax_co_applicant',
+        'experian_applicant', 'experian_co_applicant',
+        'transunion_applicant', 'transunion_co_applicant'
+      ];
+      for (const field of creditFields) {
+        if (u[field] !== undefined && (Number(u[field]) < 300 || Number(u[field]) > 850)) {
+          return res.status(400).json({
+            success: false,
+            error: `Underwriting field ${field} must be between 300 and 850`
+          });
+        }
+      }
+    }
     // Defensive: Remove client_id if present in request body
     if ('client_id' in req.body) delete req.body.client_id;
 
@@ -92,8 +126,8 @@ export const createClient = async (req: Request, res: Response) => {
 
     // Add drivers if provided
     if (req.body.drivers) {
-      const driverErrors = req.body.drivers.map(validateDriverBackend);
-      if (driverErrors.some(e => Object.keys(e).length > 0)) {
+      const driverErrors = req.body.drivers.map((driver: Driver) => validateDriverBackend(driver));
+      if (driverErrors.some((e: DriverValidationErrors) => Object.keys(e).length > 0)) {
         return res.status(400).json({ success: false, error: 'Driver validation failed', details: driverErrors });
       }
       minimalClient.drivers = req.body.drivers;
@@ -102,26 +136,54 @@ export const createClient = async (req: Request, res: Response) => {
 
     // 2. Create applicant(s) with client._id as client_id
     const applicantData = req.body.applicant;
+    // Enforce only first name, last name, and email as required
+    if (!applicantData ||
+        !applicantData.name_information ||
+        !applicantData.name_information.first_name ||
+        !applicantData.name_information.last_name ||
+        !applicantData.contact ||
+        !applicantData.contact.email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Applicant first name, last name, and email are required.'
+      });
+    }
+    // Build current_address with email from contact if present
+    let mappedCurrentAddress = undefined;
+    if (applicantData.current_address || (applicantData.contact && applicantData.contact.email)) {
+      mappedCurrentAddress = {
+        ...(applicantData.current_address || {}),
+        ...(applicantData.contact || {}),
+      };
+    }
+    // Map demographic fields into demographics_information
+    const demographics_information = {
+      birth_place: applicantData.birth_place,
+      dob: applicantData.date_of_birth,
+      marital_status: applicantData.marital_status,
+      race: applicantData.race,
+      anniversary: applicantData.anniversary,
+      spouse_name: applicantData.spouse_name,
+      spouse_occupation: applicantData.spouse_occupation,
+      number_of_dependents: applicantData.number_of_dependents
+    };
+    // Map employment with additional income fields
+    const mappedEmployment = applicantData.employment ? {
+      ...applicantData.employment,
+      other_income: applicantData.employment.other_income,
+      other_income_source: applicantData.employment.other_income_source
+    } : undefined;
     const mappedApplicant = {
       name_information: applicantData.name_information,
-      current_address: {
-        ...applicantData.contact,
-        ...applicantData.current_address
-      },
+      current_address: mappedCurrentAddress,
       previous_address: applicantData.previous_address,
-      current_employment: applicantData.employment,
+      current_employment: mappedEmployment,
       previous_employment: applicantData.previous_employment,
-      demographics_information: {
-        birth_place: applicantData.birth_place,
-        dob: applicantData.date_of_birth,
-        marital_status: applicantData.marital_status,
-        race: applicantData.race,
-        anniversary: applicantData.anniversary,
-        spouse_name: applicantData.spouse_name,
-        spouse_occupation: applicantData.spouse_occupation,
-        number_of_dependents: applicantData.number_of_dependents
-      },
       household_members: applicantData.household_members,
+      demographics_information,
+      fax: applicantData.fax,
+      contact: applicantData.contact,
+      credit_scores: applicantData.credit_scores,
       client_id: minimalClient._id, // Use ObjectId
       entry_date: applicantData.entry_date,
       payoff_amount: applicantData.payoff_amount,
@@ -136,26 +198,42 @@ export const createClient = async (req: Request, res: Response) => {
     let co_applicant = null;
     if (req.body.co_applicant) {
       const coApplicantData = req.body.co_applicant;
+      let mappedCoCurrentAddress = undefined;
+      if (coApplicantData.current_address || (coApplicantData.contact && coApplicantData.contact.email)) {
+        mappedCoCurrentAddress = {
+          ...(coApplicantData.current_address || {}),
+          ...(coApplicantData.contact || {}),
+        };
+      }
+      // Map demographic fields into demographics_information for co-applicant
+      const co_demographics_information = {
+        birth_place: coApplicantData.birth_place,
+        dob: coApplicantData.date_of_birth,
+        marital_status: coApplicantData.marital_status,
+        race: coApplicantData.race,
+        anniversary: coApplicantData.anniversary,
+        spouse_name: coApplicantData.spouse_name,
+        spouse_occupation: coApplicantData.spouse_occupation,
+        number_of_dependents: coApplicantData.number_of_dependents
+      };
+      // Map employment with additional income fields for co-applicant
+      const mappedCoEmployment = coApplicantData.employment ? {
+        ...coApplicantData.employment,
+        other_income: coApplicantData.employment.other_income,
+        other_income_source: coApplicantData.employment.other_income_source
+      } : undefined;
       const mappedCoApplicant = {
         name_information: coApplicantData.name_information,
-        current_address: {
-          ...coApplicantData.contact,
-          ...coApplicantData.current_address
-        },
+        current_address: mappedCoCurrentAddress,
         previous_address: coApplicantData.previous_address,
-        current_employment: coApplicantData.employment,
+        current_employment: mappedCoEmployment,
         previous_employment: coApplicantData.previous_employment,
-        demographics_information: {
-          birth_place: coApplicantData.birth_place,
-          dob: coApplicantData.date_of_birth,
-          marital_status: coApplicantData.marital_status,
-          race: coApplicantData.race,
-          anniversary: coApplicantData.anniversary,
-          spouse_name: coApplicantData.spouse_name,
-          spouse_occupation: coApplicantData.spouse_occupation,
-          number_of_dependents: coApplicantData.number_of_dependents
-        },
         household_members: coApplicantData.household_members,
+        demographics_information: co_demographics_information,
+        fax: coApplicantData.fax,
+        contact: coApplicantData.contact,
+        credit_scores: coApplicantData.credit_scores,
+        include_coapplicant: coApplicantData.include_coapplicant,
         client_id: minimalClient._id, // Use ObjectId
         entry_date: coApplicantData.entry_date,
         payoff_amount: coApplicantData.payoff_amount,
@@ -170,10 +248,17 @@ export const createClient = async (req: Request, res: Response) => {
 
     // 3. Create liabilities with client._id as client_id
     let liabilityIds: any[] = [];
+    // Process top-level liabilities array
+    if (req.body.liabilities && Array.isArray(req.body.liabilities) && req.body.liabilities.length > 0) {
+      const liabilitiesWithClientId = req.body.liabilities.map((l: any) => ({ ...l, client_id: minimalClient._id }));
+      const createdLiabilities = await Liability.insertMany(liabilitiesWithClientId);
+      liabilityIds = createdLiabilities.map((l: any) => l._id);
+    }
+    // Also process applicantData.liabilities if present (legacy/compat)
     if (applicantData.liabilities && Array.isArray(applicantData.liabilities) && applicantData.liabilities.length > 0) {
       const liabilitiesWithClientId = applicantData.liabilities.map((l: any) => ({ ...l, client_id: minimalClient._id }));
       const createdLiabilities = await Liability.insertMany(liabilitiesWithClientId);
-      liabilityIds = createdLiabilities.map((l: any) => l._id);
+      liabilityIds = liabilityIds.concat(createdLiabilities.map((l: any) => l._id));
     }
 
     // 4. Update applicant(s) and client to reference the created liabilities
@@ -556,19 +641,81 @@ export const updateClient = async (req: Request, res: Response) => {
     // --- Unified sub-object update logic ---
     // 1. Applicant
     if (req.body.applicant) {
+      const applicantUpdate = { ...req.body.applicant };
+      // Move demographic fields into demographics_information if present at root
+      const demographics_information = {
+        birth_place: applicantUpdate.birth_place,
+        dob: applicantUpdate.date_of_birth,
+        marital_status: applicantUpdate.marital_status,
+        race: applicantUpdate.race,
+        anniversary: applicantUpdate.anniversary,
+        spouse_name: applicantUpdate.spouse_name,
+        spouse_occupation: applicantUpdate.spouse_occupation,
+        number_of_dependents: applicantUpdate.number_of_dependents
+      };
+      // Remove from root
+      delete applicantUpdate.birth_place;
+      delete applicantUpdate.date_of_birth;
+      delete applicantUpdate.marital_status;
+      delete applicantUpdate.race;
+      delete applicantUpdate.anniversary;
+      delete applicantUpdate.spouse_name;
+      delete applicantUpdate.spouse_occupation;
+      delete applicantUpdate.number_of_dependents;
+      applicantUpdate.demographics_information = demographics_information;
+      // Map employment with additional income fields for update
+      if (applicantUpdate.employment) {
+        applicantUpdate.current_employment = {
+          ...applicantUpdate.employment,
+          other_income: applicantUpdate.employment.other_income,
+          other_income_source: applicantUpdate.employment.other_income_source
+        };
+        delete applicantUpdate.employment;
+      }
       if (client.applicant) {
-        await Applicant.findByIdAndUpdate(client.applicant, req.body.applicant, { new: true });
+        await Applicant.findByIdAndUpdate(client.applicant, applicantUpdate, { new: true });
       } else {
-        const newApplicant = await Applicant.create(req.body.applicant);
+        const newApplicant = await Applicant.create(applicantUpdate);
         client.applicant = newApplicant._id;
       }
     }
     // 2. Co-Applicant
-    if (req.body.co_applicant) {
+    if (req.body.co_applicant && req.body.co_applicant.include_coapplicant) {
+      const coApplicantUpdate = { ...req.body.co_applicant };
+      // Move demographic fields into demographics_information if present at root
+      const co_demographics_information = {
+        birth_place: coApplicantUpdate.birth_place,
+        dob: coApplicantUpdate.date_of_birth,
+        marital_status: coApplicantUpdate.marital_status,
+        race: coApplicantUpdate.race,
+        anniversary: coApplicantUpdate.anniversary,
+        spouse_name: coApplicantUpdate.spouse_name,
+        spouse_occupation: coApplicantUpdate.spouse_occupation,
+        number_of_dependents: coApplicantUpdate.number_of_dependents
+      };
+      // Remove from root
+      delete coApplicantUpdate.birth_place;
+      delete coApplicantUpdate.date_of_birth;
+      delete coApplicantUpdate.marital_status;
+      delete coApplicantUpdate.race;
+      delete coApplicantUpdate.anniversary;
+      delete coApplicantUpdate.spouse_name;
+      delete coApplicantUpdate.spouse_occupation;
+      delete coApplicantUpdate.number_of_dependents;
+      coApplicantUpdate.demographics_information = co_demographics_information;
+      // Map employment with additional income fields for co-applicant update
+      if (coApplicantUpdate.employment) {
+        coApplicantUpdate.current_employment = {
+          ...coApplicantUpdate.employment,
+          other_income: coApplicantUpdate.employment.other_income,
+          other_income_source: coApplicantUpdate.employment.other_income_source
+        };
+        delete coApplicantUpdate.employment;
+      }
       if (client.co_applicant) {
-        await Applicant.findByIdAndUpdate(client.co_applicant, req.body.co_applicant, { new: true });
+        await Applicant.findByIdAndUpdate(client.co_applicant, coApplicantUpdate, { new: true });
       } else {
-        const newCoApplicant = await Applicant.create(req.body.co_applicant);
+        const newCoApplicant = await Applicant.create(coApplicantUpdate);
         client.co_applicant = newCoApplicant._id;
       }
     }
@@ -702,8 +849,8 @@ export const updateClient = async (req: Request, res: Response) => {
         }
     // Save client
     if (req.body.drivers) {
-      const driverErrors = req.body.drivers.map(validateDriverBackend);
-      if (driverErrors.some(e => Object.keys(e).length > 0)) {
+      const driverErrors = req.body.drivers.map((driver: Driver) => validateDriverBackend(driver));
+      if (driverErrors.some((e: DriverValidationErrors) => Object.keys(e).length > 0)) {
         return res.status(400).json({ success: false, error: 'Driver validation failed', details: driverErrors });
       }
       client.drivers = req.body.drivers;

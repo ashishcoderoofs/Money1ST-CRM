@@ -1,14 +1,11 @@
 import React from 'react';
+import { US_STATES } from './ClientFormTabs';
 
 interface MortgageApplicationSectionProps {
   formData: any;
   setFormData: (updater: (prev: any) => any) => void;
   isReadOnly: boolean;
 }
-
-const usStates = [
-  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
-];
 
 const occupancyTypes = [
   'Primary Residence',
@@ -92,8 +89,10 @@ const MortgageApplicationSection: React.FC<MortgageApplicationSectionProps> = ({
               disabled={isReadOnly} 
               required
             >
-              <option value="">Enter state</option>
-              {usStates.map(s => <option key={s} value={s}>{s}</option>)}
+              <option value="">Select state</option>
+              {US_STATES.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
             </select>
           </div>
           <div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { US_STATES } from './ClientFormTabs';
 
 interface PreviousAddressSectionProps {
   formData: any;
@@ -38,16 +39,19 @@ const PreviousAddressSection: React.FC<PreviousAddressSectionProps> = ({ formDat
       </div>
       <div>
         <label htmlFor="prevState" className="text-sm font-medium text-black">State</label>
-        <input
-          type="text"
+        <select
           id="prevState"
           name="prevState"
           value={formData.previous_address?.state || ''}
           onChange={e => handleNestedInputChange(['previous_address', 'state'], e.target.value)}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          readOnly={isReadOnly}
-          placeholder={!isReadOnly ? 'Previous state' : undefined}
-        />
+          disabled={isReadOnly}
+        >
+          <option value="">Select State</option>
+          {US_STATES.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
       </div>
       <div>
         <label htmlFor="prevZipCode" className="text-sm font-medium text-black">Zip Code</label>

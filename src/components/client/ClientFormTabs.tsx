@@ -41,19 +41,19 @@ const emptyClient = {
   payoffAmount: 0,
   consultantName: '',
   processorName: '',
-  drivers: [{
-    fullName: '',
-    dateOfBirth: '',
-    age: '',
-    relationship: '',
-    ssn: '',
-    sex: '',
-    maritalStatus: '',
-    drivingStatus: '',
-    licenseNumber: '',
-    state: '',
-    accidentsViolations: '0',
-  }],
+  // drivers: [{
+  //   fullName: '',
+  //   dateOfBirth: '',
+  //   age: '',
+  //   relationship: '',
+  //   ssn: '',
+  //   sex: '',
+  //   maritalStatus: '',
+  //   drivingStatus: '',
+  //   licenseNumber: '',
+  //   state: '',
+  //   accidentsViolations: '0',
+  // }],
 };
 
 function setNestedValue(obj, path, value) {
@@ -69,32 +69,79 @@ function setNestedValue(obj, path, value) {
 
 // Fixed phone regex - removed unnecessary escaping
 const phoneRegex = /^[\+]?[1-9][\d\s\-()]{7,15}$/;
-const zipRegex = /^\d{5}(-\d{4})?$/;
-const stateRegex = /^[A-Z]{2}$/;
+// US States array for dropdowns
+export const US_STATES = [
+  { value: 'AL', label: 'Alabama' },
+  { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' },
+  { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' },
+  { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' },
+  { value: 'DE', label: 'Delaware' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' },
+  { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' },
+  { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' },
+  { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' },
+  { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' },
+  { value: 'MD', label: 'Maryland' },
+  { value: 'MA', label: 'Massachusetts' },
+  { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' },
+  { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' },
+  { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' },
+  { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' },
+  { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' },
+  { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' },
+  { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' },
+  { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' },
+  { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' },
+  { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' },
+  { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' },
+  { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' },
+  { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' },
+  { value: 'WY', label: 'Wyoming' }
+];
+
 const clientIdRegex = /^CAN\d{5}$/;
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
+// Update validation schemas
+const nameRegex = /^[A-Za-z]+$/;
+const zipRegex = /^\d{5}$/;
+
 const applicantSchema = yup.object().shape({
-  first_name: yup.string().required('First name is required'),
-  last_name: yup.string().required('Last name is required'),
-  // Address/contact validation
+  first_name: yup.string().required('First name is required').matches(nameRegex, 'First name can only contain letters'),
+  last_name: yup.string().required('Last name is required').matches(nameRegex, 'Last name can only contain letters'),
   contact: yup.object({
-    address: yup.string().max(200, 'Address too long').optional(),
-    city: yup.string().max(100, 'City too long').optional(),
-    state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
-    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
-    county: yup.string().max(100, 'County too long').optional(),
-    home_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    work_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    cell_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    other_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
     email: yup.string().email('Invalid email').required('Email is required'),
-  }).required('Contact information is required'),
+    // All other fields optional
+  }).required(),
   current_address: yup.object({
     address: yup.string().max(200, 'Address too long').optional(),
     city: yup.string().max(100, 'City too long').optional(),
-    state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
-    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
+    state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
     county: yup.string().max(100, 'County too long').optional(),
     home_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
     work_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
@@ -113,13 +160,13 @@ const applicantSchema = yup.object().shape({
       .typeError('Months must be a number')
       .optional(),
     how_long_at_current_address: yup.string().optional(),
-    fax: yup.string().matches(phoneRegex, 'Invalid fax number').optional(),
+    // fax: yup.string().matches(phoneRegex, 'Invalid fax number').optional(),
   }).optional(),
   previous_address: yup.object({
     address: yup.string().max(200, 'Address too long').optional(),
     city: yup.string().max(100, 'City too long').optional(),
-    state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
-    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
+    state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
     years: yup
       .number()
       .min(0, 'Years must be 0 or greater')
@@ -139,11 +186,11 @@ const applicantSchema = yup.object().shape({
     employer_name: yup.string().optional(),
     employer_address: yup.string().optional(),
     employer_city: yup.string().optional(),
-    employer_state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
-    employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
+    employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+    employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
     occupation: yup.string().optional(),
-    monthly_salary: yup.string().matches(/^\d+(\.\d{1,2})?$/, 'Monthly salary must be a number').optional(),
-    other_income: yup.string().matches(/^\d+(\.\d{1,2})?$/, 'Other income must be a number').optional(),
+    monthly_salary: yup.string().matches(/^[\d.]+$/, 'Monthly salary must be a number').optional(),
+    other_income: yup.string().matches(/^[\d.]+$/, 'Other income must be a number').optional(),
     start_date: yup.string().matches(dateRegex, 'Start date must be YYYY-MM-DD').optional(),
     end_date: yup.string().matches(dateRegex, 'End date must be YYYY-MM-DD').optional(),
     supervisor: yup.string().optional(),
@@ -154,8 +201,8 @@ const applicantSchema = yup.object().shape({
     employer_name: yup.string().optional(),
     employer_address: yup.string().optional(),
     employer_city: yup.string().optional(),
-    employer_state: yup.string().matches(stateRegex, 'State must be 2 uppercase letters').optional(),
-    employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits or ZIP+4').optional(),
+    employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+    employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
     from_date: yup.string().matches(dateRegex, 'From date must be YYYY-MM-DD').optional(),
     to_date: yup.string().matches(dateRegex, 'To date must be YYYY-MM-DD').optional(),
     occupation: yup.string().optional(),
@@ -167,7 +214,14 @@ const applicantSchema = yup.object().shape({
   }).optional(),
 });
 
-const coApplicantSchema = applicantSchema;
+const coApplicantSchema = yup.object().shape({
+  first_name: yup.string().matches(nameRegex, 'First name can only contain letters').optional(),
+  last_name: yup.string().matches(nameRegex, 'Last name can only contain letters').optional(),
+  contact: yup.object({
+    email: yup.string().email('Invalid email').optional(),
+  }).optional(),
+  // All other fields optional
+});
 
 // Helper functions for random data
 function randomString(length = 6) {
@@ -534,7 +588,10 @@ const ClientForm = ({
         consultantName: clientData.consultant_name || clientData.consultantName || '',
         processorName: clientData.processor_name || clientData.processorName || '',
         applicant: mapApplicantFromBackend(clientData.applicant || clientData.Applicant),
-        coApplicant: mapApplicantFromBackend(clientData.co_applicant || clientData.coApplicant),
+        coApplicant: {
+          ...mapApplicantFromBackend(clientData.co_applicant || clientData.coApplicant),
+          include_coapplicant: !!(clientData.co_applicant || clientData.coApplicant)
+        },
         liabilities: clientData.liabilities || [],
         mortgage: mortgageData,
       });
@@ -542,6 +599,9 @@ const ClientForm = ({
       setFormData(emptyClient);
     }
   }, [clientData]);
+
+  // Ensure coApplicant.include_coapplicant is always present and correct
+  // (Removed problematic useEffect that caused infinite loop)
 
   const handleNestedInputChange = (path, value) => {
     if (isReadOnly) return;
@@ -557,7 +617,12 @@ const ClientForm = ({
       const errorObj = {};
       if (err.inner) {
         err.inner.forEach((e) => {
-          errorObj[e.path] = e.message;
+          // Map email error to 'contact.email' for consistent error display
+          if (e.path === 'email' || e.path === 'contact.email') {
+            errorObj['contact.email'] = e.message;
+          } else {
+            errorObj[e.path] = e.message;
+          }
         });
       }
       return errorObj;
@@ -592,6 +657,28 @@ const ClientForm = ({
       
       if (Object.keys(applicantErrors).length > 0 || Object.keys(coApplicantErrors).length > 0) {
         toast.error('Please fix validation errors.');
+        // Scroll to first applicant error field if present
+        const applicantErrorFields = Object.keys(applicantErrors);
+        if (applicantErrorFields.length > 0) {
+          // Map schema keys to input IDs (for first_name, last_name, email)
+          const fieldIdMap = {
+            first_name: 'first_name',
+            last_name: 'last_name',
+            'contact.email': 'email',
+            email: 'email',
+          };
+          let firstErrorField = applicantErrorFields[0];
+          // If the error is for contact.email, use 'email' as id
+          if (firstErrorField.startsWith('contact.')) {
+            firstErrorField = 'email';
+          }
+          const inputId = fieldIdMap[firstErrorField] || firstErrorField;
+          const el = document.getElementById(inputId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as HTMLElement).focus();
+          }
+        }
         return;
       }
       
@@ -605,12 +692,21 @@ const ClientForm = ({
       const {
         title, first_name, middle_initial, last_name, suffix, maiden_name, is_consultant, ...restApplicant
       } = applicant;
+      // Filter out empty household members
+      const filteredHouseholdMembers = (applicant.household_members || []).filter(m =>
+        m && (m.first_name || m.last_name || m.relationship || m.dob || m.age || m.sex || m.marital_status || m.ssn)
+      );
+      // Filter out empty applicant liabilities
+      const filteredApplicantLiabilities = (formData.applicant?.liabilities || []).filter(l =>
+        l && Object.values(l).some(v => v !== '' && v !== null && v !== undefined)
+      );
       const applicantPayload = {
         ...restApplicant,
         name_information: {
           title, first_name, middle_initial, last_name, suffix, maiden_name, is_consultant
         },
-        liabilities: formData.liabilities || [] // Add liabilities to applicant payload
+        household_members: filteredHouseholdMembers.length > 0 ? filteredHouseholdMembers : undefined,
+        liabilities: filteredApplicantLiabilities.length > 0 ? filteredApplicantLiabilities : undefined
       };
       const {
         title: coTitle, first_name: coFirstName, middle_initial: coMiddleInitial, last_name: coLastName, suffix: coSuffix, maiden_name: coMaidenName, is_consultant: coIsConsultant, ...restCoApplicant
@@ -623,24 +719,24 @@ const ClientForm = ({
             },
             include_coapplicant: true
           }
-        : { include_coapplicant: false };
+        : null;
       // Remove client_id from payload
       const { clientId, coApplicant: coApplicantRaw, householdMembers, ...rest } = formData;
+      // Filter out empty drivers
+      const filteredDrivers = (formData.drivers || []).filter(d =>
+        d && Object.values(d).some(v => v !== '' && v !== null && v !== undefined)
+      );
+      // Filter out empty liabilities
+      const filteredLiabilities = (formData.liabilities || []).filter(l =>
+        l && Object.values(l).some(v => v !== '' && v !== null && v !== undefined)
+      );
       const payload = {
         ...rest,
         applicant: applicantPayload,
-        co_applicant: coApplicantPayload,
-        household_members: (applicant.household_members || []).map(m => ({
-          first_name: m.first_name || '',
-          middle_initial: m.middle_initial || '',
-          last_name: m.last_name || '',
-          relationship: m.relationship || '',
-          dob: m.dob || '',
-          age: m.age || '',
-          sex: m.sex || '',
-          marital_status: m.marital_status || '',
-          ssn: m.ssn || ''
-        })),
+        co_applicant: coApplicantPayload, // will be null if not included
+        drivers: filteredDrivers.length > 0 ? filteredDrivers : undefined,
+        liabilities: filteredLiabilities.length > 0 ? filteredLiabilities : undefined,
+        household_members: filteredHouseholdMembers.length > 0 ? filteredHouseholdMembers : undefined,
         mortgage: formData.mortgage || {}, // Add mortgage data to payload
         loanStatus: formData.loanStatus || undefined // Add loanStatus if present
       };
@@ -674,18 +770,18 @@ const ClientForm = ({
           }});
         }
         if (formData.coApplicant && formData.coApplicant._id) {
-          await updateCoApplicantBasic.mutateAsync({ clientId: formData.clientId, data: coApplicantPayload.name_information });
-          await updateCoApplicantAddress.mutateAsync({ clientId: formData.clientId, data: { currentAddress: coApplicantPayload.current_address, previousAddress: coApplicantPayload.previous_address } });
-          await updateCoApplicantEmployment.mutateAsync({ clientId: formData.clientId, data: { employment: coApplicantPayload.employment, previousEmployment: coApplicantPayload.previous_employment } });
+          await updateCoApplicantBasic.mutateAsync({ clientId: formData.clientId, data: coApplicantPayload?.name_information });
+          await updateCoApplicantAddress.mutateAsync({ clientId: formData.clientId, data: { currentAddress: coApplicantPayload?.current_address, previousAddress: coApplicantPayload?.previous_address } });
+          await updateCoApplicantEmployment.mutateAsync({ clientId: formData.clientId, data: { employment: coApplicantPayload?.employment, previousEmployment: coApplicantPayload?.previous_employment } });
           await updateCoApplicantDemographics.mutateAsync({ clientId: formData.clientId, data: {
-            birth_place: coApplicantPayload.birth_place,
-            dob: coApplicantPayload.date_of_birth,
-            race: coApplicantPayload.race,
-            marital_status: coApplicantPayload.marital_status,
-            anniversary: coApplicantPayload.anniversary,
-            spouse_name: coApplicantPayload.spouse_name,
-            spouse_occupation: coApplicantPayload.spouse_occupation,
-            number_of_dependents: coApplicantPayload.number_of_dependents
+            birth_place: coApplicantPayload?.birth_place,
+            dob: coApplicantPayload?.date_of_birth,
+            race: coApplicantPayload?.race,
+            marital_status: coApplicantPayload?.marital_status,
+            anniversary: coApplicantPayload?.anniversary,
+            spouse_name: coApplicantPayload?.spouse_name,
+            spouse_occupation: coApplicantPayload?.spouse_occupation,
+            number_of_dependents: coApplicantPayload?.number_of_dependents
           }});
         }
         const { clientId, createdAt, updatedAt, ...update } = payload;
@@ -813,13 +909,250 @@ const ClientForm = ({
   const handleFillDummyData = () => {
     setFormData(prev => ({
       ...prev,
-      applicant: randomApplicant(),
-      coApplicant: randomApplicant(),
-      status: ['Active','Pending','Inactive'][randomInt(0,2)],
-      payoffAmount: randomInt(0,100000),
-      consultantName: randomName().first + ' ' + randomName().last,
-      processorName: randomName().first + ' ' + randomName().last,
-      entryDate: dayjs().format('YYYY-MM-DD'),
+      applicant: {
+        ...randomApplicant(),
+        date_of_birth: '1990-01-01',
+        marital_status: 'Married',
+        race: 'White',
+        birth_place: 'Springfield',
+        anniversary: '2010-06-20',
+        spouse_name: 'Jane Doe',
+        spouse_occupation: 'Teacher',
+        number_of_dependents: '2',
+        fax: '+1234567890',
+        contact: {
+          address: '123 Main St',
+          city: 'Springfield',
+          state: 'CA',
+          zip_code: '90001',
+          county: 'LA',
+          home_phone: '555-1234',
+          work_phone: '555-5678',
+          cell_phone: '555-8765',
+          other_phone: '555-4321',
+          email: 'john.doe@email.com'
+        },
+        credit_scores: { equifax: '700', experian: '710', transunion: '720' },
+        household_members: [
+          {
+            first_name: 'Child1',
+            middle_initial: '',
+            last_name: 'Doe',
+            relationship: 'Son',
+            dob: '2012-03-10',
+            age: '12',
+            sex: 'Male',
+            marital_status: '',
+            ssn: ''
+          }
+        ]
+      },
+      coApplicant: {
+        ...randomApplicant(),
+        date_of_birth: '1992-02-02',
+        marital_status: 'Single',
+        race: 'Asian',
+        birth_place: 'Metropolis',
+        anniversary: '2015-05-15',
+        spouse_name: 'John Smith',
+        spouse_occupation: 'Engineer',
+        number_of_dependents: '1',
+        fax: '+1987654321',
+        contact: {
+          address: '456 Elm St',
+          city: 'Metropolis',
+          state: 'NY',
+          zip_code: '10001',
+          county: 'NYC',
+          home_phone: '555-2222',
+          work_phone: '555-3333',
+          cell_phone: '555-4444',
+          other_phone: '555-5555',
+          email: 'jane.smith@email.com'
+        },
+        credit_scores: { equifax: '750', experian: '760', transunion: '770' },
+        household_members: [
+          {
+            first_name: 'Child2',
+            middle_initial: '',
+            last_name: 'Smith',
+            relationship: 'Daughter',
+            dob: '2015-07-20',
+            age: '9',
+            sex: 'Female',
+            marital_status: '',
+            ssn: ''
+          }
+        ],
+        include_coapplicant: true
+      },
+      liabilities: [
+        {
+          debtor: 'Applicant',
+          debtName: 'Car Loan',
+          balance: '5000',
+          payment: '200',
+          payOff: false,
+          propertyAddress: '123 Main St',
+          propertyValue: '200000',
+          grossRent: '0',
+          escrow: '0',
+          taxes: '0',
+          hoi: '0',
+          totalEsc: '0',
+          netRent: '0'
+        }
+      ],
+      drivers: [
+        {
+          fullName: 'Jane Doe',
+          dateOfBirth: '1990-01-01',
+          age: '34',
+          relationship: 'Spouse',
+          ssn: '123-45-6789',
+          sex: 'Female',
+          maritalStatus: 'Married',
+          drivingStatus: 'licensed',
+          licenseNumber: 'D1234567',
+          state: 'CA',
+          accidentsViolations: '0'
+        }
+      ],
+      mortgage: {
+        address: '123 Main St',
+        city: 'Springfield',
+        state: 'CA',
+        zip_code: '90001',
+        occupancy_type: 'Primary',
+        first_mortgage_balance: '200000',
+        first_loan_amount: '250000',
+        first_mortgage_rate: '3.5',
+        first_loan_rate: '4.0',
+        first_mortgage_term: '30',
+        first_loan_term: '30',
+        first_loan_int_term: '30',
+        first_loan_new_payment: '1300',
+        first_mortgage_payment: '1200',
+        lienholder_1: 'Bank A',
+        second_mortgage_balance: '50000',
+        second_loan_amount: '60000',
+        second_mortgage_rate: '5.0',
+        second_loan_rate: '5.5',
+        second_mortgage_term: '15',
+        second_loan_term: '15',
+        second_loan_int_term: '15',
+        second_loan_new_payment: '450',
+        second_mortgage_payment: '400',
+        lienholder_2: 'Bank B',
+        existing_balance: '10000',
+        property_taxes: '2000',
+        homeowners_insurance: '1200',
+        taxes_included: true,
+        loan_purpose: 'Purchase',
+        market_value: '300000',
+        estimated_fees: '5000',
+        cash_to_close: '15000',
+        appraisal_fee: '500',
+        loan_volume: '310000',
+        arm_rate_0: '3.5',
+        arm_payment_0: '1200',
+        arm_rate_1: '4.0',
+        arm_payment_1: '1300',
+        arm_rate_2: '4.5',
+        arm_payment_2: '1400',
+        fixed_rate_0: '3.5',
+        fixed_rate_1: '4.0',
+        fixed_payment_0: '1200',
+        fixed_payment_1: '1300',
+        closing_cost: '4000',
+        dti: '35'
+      },
+      underwriting: {
+        address: '123 Main St',
+        city: 'Springfield',
+        state: 'CA',
+        chm_selection: 'credit',
+        tud_selection: 'rate',
+        equifax_applicant: 720,
+        equifax_co_applicant: 710,
+        experian_applicant: 730,
+        experian_co_applicant: 720,
+        transunion_applicant: 740,
+        transunion_co_applicant: 730,
+        underwriting_notes: 'Good credit',
+        terms: '30_year',
+        programs: 'pay_option_arm'
+      },
+      loanStatus: {
+        stage: 'Processing',
+        status: 'In Progress',
+        lastUpdated: '2025-07-16T00:00:00.000Z',
+        notes: 'Waiting for documents',
+        address: '123 Main St',
+        city: 'Springfield',
+        state: 'CA',
+        zipCode: '90001',
+        lenderId: 'LEND123',
+        loanAmount: 250000,
+        mortgageType: 'Conventional',
+        loanPurpose: 'Purchase',
+        loanStatus: 'Submitted',
+        statusDate: '2025-07-16',
+        dateCreditPulled: '2025-07-15',
+        registrationDate: '2025-07-10',
+        ausDuDateNA: false,
+        lockDate: '2025-07-12',
+        lockExpirationDate: '2025-07-30',
+        lenderDisclosuresSent: '2025-07-13',
+        lenderDisclosuresSigned: '2025-07-14',
+        brokerDisclosuresSent: '2025-07-15',
+        brokerDisclosuresSigned: '2025-07-16',
+        loanSubmissionDate: '2025-07-17',
+        conditionalApprovalReceived: '2025-07-18',
+        approvalReviewedWithCrm: '2025-07-19',
+        submittedForFinalReview: '2025-07-20',
+        clearedToCloseDate: '2025-07-21',
+        closedDate: '2025-07-22',
+        fundedDate: '2025-07-23',
+        disbursedDate: '2025-07-24',
+        disbursedAmount: 15000,
+        stackedDate: '2025-07-25',
+        stackedBy: 'Admin',
+        title: {
+          company: 'Title Co',
+          ordered: '2025-07-11',
+          feeSheetReceived: '2025-07-12',
+          docsReceived: '2025-07-13'
+        },
+        appraisal: {
+          ordered: '2025-07-14',
+          received: '2025-07-15',
+          company: 'Appraisal Co',
+          value: 300000,
+          avm: 295000,
+          fee: 500,
+          feePaid: true
+        },
+        voe: {
+          phone: '555-1111',
+          sent: '2025-07-16',
+          received: '2025-07-17',
+          contact: 'HR',
+          email: 'hr@company.com'
+        },
+        vom: {
+          sent: '2025-07-18',
+          contact: 'Manager',
+          phone: '555-2222',
+          email: 'manager@company.com',
+          received: '2025-07-19'
+        }
+      },
+      status: 'Active',
+      payoffAmount: 10000,
+      consultantName: 'Consultant X',
+      processorName: 'Processor Y',
+      entryDate: '2025-07-16'
     }));
   };
 
@@ -1017,10 +1350,9 @@ const ClientForm = ({
                             const checked = e.target.checked;
                             setFormData(prev => ({
                               ...prev,
-                              coApplicant: {
-                                ...prev.coApplicant,
-                                include_coapplicant: checked
-                              }
+                              coApplicant: checked
+                                ? { ...prev.coApplicant, include_coapplicant: true }
+                                : { include_coapplicant: false } // clear all fields if unchecked
                             }));
                           }}
                           disabled={isReadOnly}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { US_STATES } from './ClientFormTabs';
 
 interface EmploymentSectionProps {
   formData: any;
@@ -100,16 +101,19 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({ formData, isReadO
         </div>
         <div>
           <label htmlFor="employerState" className="block text-sm font-medium text-black">State</label>
-          <input
-            type="text"
+          <select
             id="employerState"
             name="employerState"
             value={formData.employment?.employer_state || ''}
             onChange={e => handleNestedInputChange(['employment', 'employer_state'], e.target.value)}
             className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            readOnly={isReadOnly}
-            placeholder="State"
-          />
+            disabled={isReadOnly}
+          >
+            <option value="">Select State</option>
+            {US_STATES.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label htmlFor="employerZipCode" className="block text-sm font-medium text-black">Zip Code</label>

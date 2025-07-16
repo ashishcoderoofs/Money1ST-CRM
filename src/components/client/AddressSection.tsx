@@ -1,4 +1,5 @@
 import React from 'react';
+import { US_STATES } from './ClientFormTabs';
 
 interface AddressSectionProps {
   formData: any;
@@ -40,16 +41,19 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
       </div>
       <div>
         <label htmlFor="state" className="text-sm font-medium text-gray-600">State</label>
-        <input
-          type="text"
+        <select
           id="state"
           name="state"
           value={formData.contact?.state || ''}
           onChange={e => handleNestedInputChange(['contact', 'state'], e.target.value)}
-          placeholder={!isReadOnly ? 'state' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          readOnly={isReadOnly}
-        />
+          disabled={isReadOnly}
+        >
+          <option value="">Select State</option>
+          {US_STATES.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
       </div>
       <div>
         <label htmlFor="zipCode" className="text-sm font-medium text-gray-600">Zip Code</label>
@@ -142,7 +146,11 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           readOnly={isReadOnly}
           required
         />
-        {errors.email && <div className="text-red-500 text-xs mt-1">{errors.email}</div>}
+        {(errors.email || errors['contact.email']) && (
+          <div className="text-red-500 text-xs mt-1">
+            {errors.email || errors['contact.email']}
+          </div>
+        )}
       </div>
       <div>
         <label htmlFor="fax" className="text-sm font-medium text-gray-600">Fax</label>
