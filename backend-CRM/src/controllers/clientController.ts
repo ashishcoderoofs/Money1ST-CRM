@@ -835,12 +835,17 @@ export const updateClient = async (req: Request, res: Response) => {
     }
     // 5. Underwriting
     if (req.body.underwriting) {
-      let existingUnderwriting = null;
-      if (client.underwriting) {
-        existingUnderwriting = await Underwriting.findByIdAndUpdate(client.underwriting, req.body.underwriting, { new: true });
-          } else {
-        existingUnderwriting = await Underwriting.create({ ...req.body.underwriting, client_id: client._id });
-        client.underwriting = existingUnderwriting._id;
+      const uw = { ...req.body.underwriting };
+      if (uw._id) {
+        // Update existing underwriting by _id
+        await Underwriting.findByIdAndUpdate(uw._id, uw, { new: true });
+        client.underwriting = uw._id;
+      } else {
+        // Remove _id if present (shouldn't be, but just in case)
+        delete uw._id;
+        // Create new underwriting
+        const newUw = await Underwriting.create({ ...uw, client_id: client._id });
+        client.underwriting = newUw._id;
       }
     }
     // 6. Loan Status

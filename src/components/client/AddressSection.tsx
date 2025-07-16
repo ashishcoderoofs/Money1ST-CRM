@@ -62,10 +62,15 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
           id="zipCode"
           name="zipCode"
           value={formData.contact?.zip_code || ''}
-          onChange={e => handleNestedInputChange(['contact', 'zip_code'], e.target.value)}
+          onChange={e => {
+            const val = e.target.value;
+            if (/^\d{0,5}$/.test(val)) handleNestedInputChange(['contact', 'zip_code'], val);
+          }}
           placeholder={!isReadOnly ? 'zip code' : undefined}
           className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           readOnly={isReadOnly}
+          maxLength={5}
+          pattern="^\d{5}$"
         />
       </div>
       <div>
