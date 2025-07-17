@@ -22,6 +22,7 @@ export default function ClientDetails() {
   }
 
   const handleSave = (updatedClient: any) => {
+    console.log(updatedClient)
     if (updatedClient === 'edit') {
       setMode('edit');
       return;

@@ -54,7 +54,7 @@ export interface IApplicant extends Document {
     employer_zip_code?: string;
     occupation?: string;
     monthly_salary?: string;
-    other_income?: string;
+    additional_income?: string;
     start_date?: string;
     end_date?: string;
     supervisor?: string;
@@ -147,7 +147,7 @@ const CurrentEmploymentSchema = new Schema({
   employer_zip_code: { type: String },
   occupation: { type: String },
   monthly_salary: { type: String },
-  other_income: { type: String },
+  additional_income: { type: String },
   start_date: { type: String },
   end_date: { type: String },
   supervisor: { type: String },

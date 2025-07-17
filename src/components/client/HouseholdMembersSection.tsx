@@ -9,6 +9,27 @@ interface HouseholdMembersSectionProps {
   handleAddHouseholdMember: () => void;
 }
 
+const RELATIONSHIP_OPTIONS = [
+  { value: 'Spouse', label: 'Spouse' },
+  { value: 'Daughter', label: 'Daughter' },
+  { value: 'Son', label: 'Son' },
+  { value: 'Parent', label: 'Parent' },
+  { value: 'Sibling', label: 'Sibling' },
+  { value: 'Other', label: 'Other' },
+];
+
+function calculateAge(dob: string): string {
+  if (!dob) return '';
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return isNaN(age) ? '' : age.toString();
+}
+
 const HouseholdMembersSection: React.FC<HouseholdMembersSectionProps> = ({
   formData,
   isReadOnly,
@@ -85,14 +106,17 @@ const HouseholdMembersSection: React.FC<HouseholdMembersSectionProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-black">Relationship</label>
-                  <input
-                    type="text"
+                  <select
                     value={member.relationship || ''}
                     onChange={e => updateHouseholdMember(index, 'relationship', e.target.value)}
                     disabled={isReadOnly}
                     className="p-2 bg-gray-50 rounded border text-sm w-full"
-                    placeholder="Relationship"
-                  />
+                  >
+                    <option value="">Select Relationship</option>
+                    {RELATIONSHIP_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-black">Date of Birth</label>
@@ -109,10 +133,9 @@ const HouseholdMembersSection: React.FC<HouseholdMembersSectionProps> = ({
                   <label className="block text-xs font-medium text-black">Age</label>
                   <input
                     type="number"
-                    value={member.age || ''}
-                    onChange={e => updateHouseholdMember(index, 'age', e.target.value)}
-                    disabled={isReadOnly}
-                    className="p-2 bg-gray-50 rounded border text-sm w-full"
+                    value={calculateAge(member.dob)}
+                    disabled
+                    className="p-2 bg-gray-50 rounded border text-sm w-full bg-gray-100"
                     placeholder="Age"
                   />
                 </div>

@@ -15,7 +15,7 @@ export interface IClient extends Document {
   consultant_name: string;
   processor_name: string;
   applicant: Types.ObjectId;
-  co_applicant: Types.ObjectId;
+  co_applicant: Types.ObjectId | null;
   liabilities: Types.ObjectId[];
   property: Types.ObjectId;
   first_mortgage: Types.ObjectId;
@@ -53,7 +53,7 @@ const ClientSchema = new Schema<IClient>({
   consultant_name: { type: String },
   processor_name: { type: String },
   applicant: { type: Schema.Types.ObjectId, ref: 'Applicant' },
-  co_applicant: { type: Schema.Types.ObjectId, ref: 'Applicant' },
+  co_applicant: { type: Schema.Types.ObjectId, ref: 'Applicant', required: false, default: null },
   liabilities: [{ type: Schema.Types.ObjectId, ref: 'Liability' }],
   property: { type: Schema.Types.ObjectId, ref: 'Property' },
   first_mortgage: { type: Schema.Types.ObjectId, ref: 'Mortgage' },

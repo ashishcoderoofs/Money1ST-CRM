@@ -189,8 +189,8 @@ const applicantSchema = yup.object().shape({
     employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
     employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
     occupation: yup.string().optional(),
-    monthly_salary: yup.string().matches(/^[\d.]+$/, 'Monthly salary must be a number').optional(),
-    other_income: yup.string().matches(/^[\d.]+$/, 'Other income must be a number').optional(),
+    // monthly_salary: yup.string().matches(/^[\d.]+$/, 'Monthly salary must be a number').optional(),
+    // other_income: yup.string().matches(/^[\d.]+$/, 'Other income must be a number').optional(),
     start_date: yup.string().matches(dateRegex, 'Start date must be YYYY-MM-DD').optional(),
     end_date: yup.string().matches(dateRegex, 'End date must be YYYY-MM-DD').optional(),
     supervisor: yup.string().optional(),
@@ -362,7 +362,7 @@ function randomApplicant() {
       employer_zip_code: zip,
       occupation,
       monthly_salary: randomInt(2000,10000).toString(),
-      other_income: randomInt(0,2000).toString(),
+      // other_income: randomInt(0,2000).toString(),
       start_date: randomDate(new Date(2000,0,1), new Date(2020,0,1)),
       end_date: randomDate(new Date(2021,0,1), new Date(2024,0,1)),
       supervisor: randomName().first,
@@ -461,8 +461,10 @@ function mapApplicantFromBackend(app: any) {
       employer_state: app.current_employment?.employer_state || '',
       employer_zip_code: app.current_employment?.employer_zip_code || '',
       occupation: app.current_employment?.occupation || '',
+      gross_monthly_salary: app.current_employment?.gross_monthly_salary || app.current_employment?.monthly_salary || '',
+      additional_income: app.current_employment?.additional_income || app.current_employment?.other_income || '',
       monthly_salary: app.current_employment?.monthly_salary || '',
-      other_income: app.current_employment?.other_income || '',
+      // other_income: app.current_employment?.other_income || '',
       start_date: app.current_employment?.start_date || '',
       end_date: app.current_employment?.end_date || '',
       supervisor: app.current_employment?.supervisor || '',
@@ -590,7 +592,10 @@ const ClientForm = ({
         applicant: mapApplicantFromBackend(clientData.applicant || clientData.Applicant),
         coApplicant: {
           ...mapApplicantFromBackend(clientData.co_applicant || clientData.coApplicant),
-          include_coapplicant: !!(clientData.co_applicant || clientData.coApplicant)
+          include_coapplicant: !!(
+            clientData.co_applicant &&
+            (clientData.co_applicant.include_coapplicant === true || clientData.co_applicant.is_consultant === true)
+          )
         },
         liabilities: clientData.liabilities || [],
         mortgage: mortgageData,
@@ -690,7 +695,7 @@ const ClientForm = ({
 
       // --- NEST name fields under name_information for backend ---
       const {
-        title, first_name, middle_initial, last_name, suffix, maiden_name, is_consultant, ...restApplicant
+        title, first_name, middle_initial, last_name, suffix, maiden_name, is_consultant, date_of_birth, birth_place, marital_status, race, anniversary, spouse_name, spouse_occupation, number_of_dependents, ...restApplicant
       } = applicant;
       // Filter out empty household members
       const filteredHouseholdMembers = (applicant.household_members || []).filter(m =>
@@ -705,6 +710,16 @@ const ClientForm = ({
         name_information: {
           title, first_name, middle_initial, last_name, suffix, maiden_name, is_consultant
         },
+        demographics_information: {
+          dob: date_of_birth || '',
+          birth_place,
+          marital_status,
+          race,
+          anniversary,
+          spouse_name,
+          spouse_occupation,
+          number_of_dependents
+        },
         household_members: filteredHouseholdMembers.length > 0 ? filteredHouseholdMembers : undefined,
         liabilities: filteredApplicantLiabilities.length > 0 ? filteredApplicantLiabilities : undefined
       };
@@ -714,12 +729,13 @@ const ClientForm = ({
       const coApplicantPayload = formData.coApplicant?.include_coapplicant
         ? {
             ...restCoApplicant,
+            is_consultant: coIsConsultant || false,
             name_information: {
-              title: coTitle, first_name: coFirstName, middle_initial: coMiddleInitial, last_name: coLastName, suffix: coSuffix, maiden_name: coMaidenName, is_consultant: coIsConsultant
+              title: coTitle, first_name: coFirstName, middle_initial: coMiddleInitial, last_name: coLastName, suffix: coSuffix, maiden_name: coMaidenName
             },
             include_coapplicant: true
           }
-        : null;
+        : { is_consultant: false, include_coapplicant: false };
       // Remove client_id from payload
       const { clientId, coApplicant: coApplicantRaw, householdMembers, ...rest } = formData;
       // Filter out empty drivers
@@ -733,7 +749,7 @@ const ClientForm = ({
       const payload = {
         ...rest,
         applicant: applicantPayload,
-        co_applicant: coApplicantPayload, // will be null if not included
+        co_applicant: coApplicantPayload, // always an object
         drivers: filteredDrivers.length > 0 ? filteredDrivers : undefined,
         liabilities: filteredLiabilities.length > 0 ? filteredLiabilities : undefined,
         household_members: filteredHouseholdMembers.length > 0 ? filteredHouseholdMembers : undefined,

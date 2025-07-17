@@ -217,8 +217,8 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({ formData, isReadO
             type="text"
             id="incomeSource"
             name="incomeSource"
-            value={formData.employment?.income_source || ''}
-            onChange={e => handleNestedInputChange(['employment', 'income_source'], e.target.value)}
+            value={formData.employment?.source || ''}
+            onChange={e => handleNestedInputChange(['employment', 'source'], e.target.value)}
             className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
             readOnly={isReadOnly}
             placeholder="Source"

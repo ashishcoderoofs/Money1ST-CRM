@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Client, Applicant, Property, Mortgage, LoanDetails, LoanOptions, Underwriting, CHM, TUD, Liability } from '../models';
-import { CoApplicant } from '../models/CoApplicant';
+import CoApplicant from '../models/CoApplicant';
 
 interface Driver {
   fullName: string;
@@ -72,335 +72,262 @@ function validateDriverBackend(driver: Driver): DriverValidationErrors {
   return errors;
 }
 
+
 export const createClient = async (req: Request, res: Response) => {
   try {
-    console.log('--- Incoming createClient request body ---');
-    console.dir(req.body, { depth: null });
-
-    // Pre-validate underwriting credit scores before creating any documents
-    if (req.body.underwriting) {
-      const u = req.body.underwriting;
-      const creditFields = [
-        'equifax_applicant', 'equifax_co_applicant',
-        'experian_applicant', 'experian_co_applicant',
-        'transunion_applicant', 'transunion_co_applicant'
-      ];
-      for (const field of creditFields) {
-        if (u[field] !== undefined && (Number(u[field]) < 300 || Number(u[field]) > 850)) {
-          return res.status(400).json({
-            success: false,
-            error: `Underwriting field ${field} must be between 300 and 850`
-          });
-        }
-      }
-    }
-    // Defensive: Remove client_id if present in request body
-    if ('client_id' in req.body) delete req.body.client_id;
-
-    // Fix status case to match enum values
-    const statusMap: { [key: string]: string } = {
-      'active': 'Active',
-      'pending': 'Pending', 
-      'inactive': 'Inactive',
-      'Active': 'Active',
-      'Pending': 'Pending',
-      'Inactive': 'Inactive'
-    };
-    const normalizedStatus = req.body.status ? statusMap[req.body.status] || req.body.status : 'Active';
+    const clientData = req.body;
+    console.log('Received client data with co_applicant:', !!clientData.co_applicant);
     
-    // 1. Create the client with minimal info (no applicant, co_applicant, or liabilities yet)
-    const minimalClient = await Client.create({
-      entry_date: req.body.entry_date,
-      status: normalizedStatus,
-      payoff_amount: req.body.payoff_amount,
-      consultant_name: req.body.consultant_name,
-      processor_name: req.body.processor_name,
+    // Extract co_applicant data
+    const coApplicantData = clientData.co_applicant;
+    console.log('Co-applicant include_coapplicant:', coApplicantData?.include_coapplicant);
+    
+    let coApplicantId = null;
+    
+    // Step 1: We'll create co_applicant AFTER client is created to avoid client_id requirement issue
+    
+    // Step 2: Create applicant
+    let applicantId = null;
+    if (clientData.applicant) {
+      try {
+        console.log('Creating applicant...');
+        const applicant = new Applicant(clientData.applicant);
+        const savedApplicant = await applicant.save();
+        applicantId = savedApplicant._id;
+        console.log('✅ Applicant created with ID:', applicantId);
+      } catch (applicantError) {
+        console.error('❌ Error creating applicant:', applicantError);
+        // Clean up co-applicant if it was created
+        if (coApplicantId) {
+          await CoApplicant.findByIdAndDelete(coApplicantId);
+        }
+        throw applicantError;
+      }
+    }
+    
+    // Step 3: Create the main client document
+    const clientDoc = {
+      entry_date: clientData.entry_date,
+      status: clientData.status || 'Active',
+      payoff_amount: clientData.payoff_amount,
+      consultant_name: clientData.consultant_name,
+      processor_name: clientData.processor_name,
+      // Reference the created documents
+      applicant: applicantId,
+      co_applicant: coApplicantId,
+      household_members: clientData.household_members,
+    };
+    
+    console.log('Client document to save:', {
+      ...clientDoc,
+      co_applicant: coApplicantId ? `ObjectId(${coApplicantId})` : null
     });
-    console.log('Created minimal client:', minimalClient);
-
-    // Add loanStatus if provided
-    if (req.body.loanStatus) {
-      minimalClient.loanStatus = req.body.loanStatus;
-      await minimalClient.save();
-    }
-
-    // Add drivers if provided
-    if (req.body.drivers) {
-      const driverErrors = req.body.drivers.map((driver: Driver) => validateDriverBackend(driver));
-      if (driverErrors.some((e: DriverValidationErrors) => Object.keys(e).length > 0)) {
-        return res.status(400).json({ success: false, error: 'Driver validation failed', details: driverErrors });
-      }
-      minimalClient.drivers = req.body.drivers;
-      await minimalClient.save();
-    }
-
-    // 2. Create applicant(s) with client._id as client_id
-    const applicantData = req.body.applicant;
-    // Enforce only first name, last name, and email as required
-    if (!applicantData ||
-        !applicantData.name_information ||
-        !applicantData.name_information.first_name ||
-        !applicantData.name_information.last_name ||
-        !applicantData.contact ||
-        !applicantData.contact.email) {
-      return res.status(400).json({
-        success: false,
-        error: 'Applicant first name, last name, and email are required.'
-      });
-    }
-    // Build current_address with email from contact if present
-    let mappedCurrentAddress = undefined;
-    if (applicantData.current_address || (applicantData.contact && applicantData.contact.email)) {
-      mappedCurrentAddress = {
-        ...(applicantData.current_address || {}),
-        ...(applicantData.contact || {}),
-      };
-    }
-    // Map demographic fields into demographics_information
-    const demographics_information = {
-      birth_place: applicantData.birth_place,
-      dob: applicantData.date_of_birth,
-      marital_status: applicantData.marital_status,
-      race: applicantData.race,
-      anniversary: applicantData.anniversary,
-      spouse_name: applicantData.spouse_name,
-      spouse_occupation: applicantData.spouse_occupation,
-      number_of_dependents: applicantData.number_of_dependents
-    };
-    // Map employment with additional income fields
-    const mappedEmployment = applicantData.employment ? {
-      ...applicantData.employment,
-      other_income: applicantData.employment.other_income,
-      other_income_source: applicantData.employment.other_income_source
-    } : undefined;
-    const mappedApplicant = {
-      name_information: applicantData.name_information,
-      current_address: mappedCurrentAddress,
-      previous_address: applicantData.previous_address,
-      current_employment: mappedEmployment,
-      previous_employment: applicantData.previous_employment,
-      household_members: applicantData.household_members,
-      demographics_information,
-      fax: applicantData.fax,
-      contact: applicantData.contact,
-      credit_scores: applicantData.credit_scores,
-      client_id: minimalClient._id, // Use ObjectId
-      entry_date: applicantData.entry_date,
-      payoff_amount: applicantData.payoff_amount,
-      notes: applicantData.notes,
-      created_at: applicantData.created_at,
-      createdAt: applicantData.createdAt,
-      updatedAt: applicantData.updatedAt
-    };
-    const applicant = await Applicant.create(mappedApplicant);
-    console.log('Created applicant:', applicant);
-
-    let co_applicant = null;
-    if (req.body.co_applicant) {
-      const coApplicantData = req.body.co_applicant;
-      let mappedCoCurrentAddress = undefined;
-      if (coApplicantData.current_address || (coApplicantData.contact && coApplicantData.contact.email)) {
-        mappedCoCurrentAddress = {
-          ...(coApplicantData.current_address || {}),
-          ...(coApplicantData.contact || {}),
+    
+    const client = new Client(clientDoc);
+    const savedClient = await client.save();
+    console.log('✅ Client created with ID:', savedClient._id);
+    
+    // Step 3.5: Now create co-applicant with the client_id
+    if (coApplicantData && coApplicantData.include_coapplicant) {
+      try {
+        console.log('Creating co-applicant with CoApplicant model...');
+        
+        // Create the co-applicant document using CoApplicant model
+        const coApplicantDoc = {
+          client_id: savedClient._id, // Now we have the client_id!
+          include_coapplicant: coApplicantData.include_coapplicant,
+          name_information: coApplicantData.name_information,
+          current_address: coApplicantData.current_address,
+          previous_address: coApplicantData.previous_address,
+          employment: coApplicantData.employment,
+          previous_employment: coApplicantData.previous_employment,
+          credit_scores: coApplicantData.credit_scores,
+          household_members: coApplicantData.household_members || [],
+          demographics_information: {
+            dob: coApplicantData.date_of_birth,
+            birth_place: coApplicantData.birth_place,
+            marital_status: coApplicantData.marital_status,
+            race: coApplicantData.race,
+            anniversary: coApplicantData.anniversary,
+            spouse_name: coApplicantData.spouse_name,
+            spouse_occupation: coApplicantData.spouse_occupation,
+            number_of_dependents: coApplicantData.number_of_dependents,
+          },
+          contact: coApplicantData.contact,
+          fax: coApplicantData.fax,
+          entry_date: new Date(),
+          created_at: new Date(),
         };
+        
+        console.log('CoApplicant data to save with client_id:', savedClient._id);
+        
+        const coApplicant = new CoApplicant(coApplicantDoc);
+        const savedCoApplicant = await coApplicant.save();
+        coApplicantId = savedCoApplicant._id;
+        console.log('✅ Co-applicant created successfully with ID:', coApplicantId);
+        
+        // Update the client with co_applicant reference
+        await Client.findByIdAndUpdate(savedClient._id, { co_applicant: coApplicantId });
+        console.log('✅ Updated client with co_applicant reference');
+        
+      } catch (coApplicantError :  any) {
+        console.error('❌ Error creating co-applicant:', coApplicantError);
+        const err = coApplicantError as Error;
+        console.error('CoApplicant error details:', err.message);
+        if ('errors' in coApplicantError) {
+          console.error('Validation errors:', (coApplicantError as any).errors);
+        }
+        // Continue without co-applicant rather than failing the entire process
       }
-      // Map demographic fields into demographics_information for co-applicant
-      const co_demographics_information = {
-        birth_place: coApplicantData.birth_place,
-        dob: coApplicantData.date_of_birth,
-        marital_status: coApplicantData.marital_status,
-        race: coApplicantData.race,
-        anniversary: coApplicantData.anniversary,
-        spouse_name: coApplicantData.spouse_name,
-        spouse_occupation: coApplicantData.spouse_occupation,
-        number_of_dependents: coApplicantData.number_of_dependents
-      };
-      // Map employment with additional income fields for co-applicant
-      const mappedCoEmployment = coApplicantData.employment ? {
-        ...coApplicantData.employment,
-        other_income: coApplicantData.employment.other_income,
-        other_income_source: coApplicantData.employment.other_income_source
-      } : undefined;
-      const mappedCoApplicant = {
-        name_information: coApplicantData.name_information,
-        current_address: mappedCoCurrentAddress,
-        previous_address: coApplicantData.previous_address,
-        current_employment: mappedCoEmployment,
-        previous_employment: coApplicantData.previous_employment,
-        household_members: coApplicantData.household_members,
-        demographics_information: co_demographics_information,
-        fax: coApplicantData.fax,
-        contact: coApplicantData.contact,
-        credit_scores: coApplicantData.credit_scores,
-        include_coapplicant: coApplicantData.include_coapplicant,
-        client_id: minimalClient._id, // Use ObjectId
-        entry_date: coApplicantData.entry_date,
-        payoff_amount: coApplicantData.payoff_amount,
-        notes: coApplicantData.notes,
-        created_at: coApplicantData.created_at,
-        createdAt: coApplicantData.createdAt,
-        updatedAt: coApplicantData.updatedAt
-      };
-      co_applicant = await Applicant.create(mappedCoApplicant);
-      console.log('Created co_applicant:', co_applicant);
+    } else {
+      console.log('Skipping co-applicant creation - include_coapplicant:', coApplicantData?.include_coapplicant);
     }
-
-    // 3. Create liabilities with client._id as client_id
-    let liabilityIds: any[] = [];
-    // Process top-level liabilities array
-    if (req.body.liabilities && Array.isArray(req.body.liabilities) && req.body.liabilities.length > 0) {
-      const liabilitiesWithClientId = req.body.liabilities.map((l: any) => ({ ...l, client_id: minimalClient._id }));
-      const createdLiabilities = await Liability.insertMany(liabilitiesWithClientId);
-      liabilityIds = createdLiabilities.map((l: any) => l._id);
+    
+    // Step 4: Create related documents and link them to the client
+    const relatedIds: {
+      liabilities?: any[];
+      first_mortgage?: any;
+      second_mortgage?: any;
+      proposed_first_loan?: any;
+      proposed_second_loan?: any;
+    } = {};
+    
+    // Create liabilities
+    if (clientData.liabilities && Array.isArray(clientData.liabilities)) {
+      const liabilityPromises = clientData.liabilities.map(async (liability: any) => {
+        const liabilityDoc = new Liability({
+          ...liability,
+          client_id: savedClient._id
+        });
+        return await liabilityDoc.save();
+      });
+      const savedLiabilities = await Promise.all(liabilityPromises);
+      relatedIds.liabilities = savedLiabilities.map((l: any) => l._id);
     }
-    // Also process applicantData.liabilities if present (legacy/compat)
-    if (applicantData.liabilities && Array.isArray(applicantData.liabilities) && applicantData.liabilities.length > 0) {
-      const liabilitiesWithClientId = applicantData.liabilities.map((l: any) => ({ ...l, client_id: minimalClient._id }));
-      const createdLiabilities = await Liability.insertMany(liabilitiesWithClientId);
-      liabilityIds = liabilityIds.concat(createdLiabilities.map((l: any) => l._id));
-    }
-
-    // 4. Update applicant(s) and client to reference the created liabilities
-    applicant.liabilities = liabilityIds;
-    await applicant.save();
-    if (co_applicant) {
-      co_applicant.liabilities = [];
-      await co_applicant.save();
-    }
-    minimalClient.applicant = applicant._id;
-    minimalClient.co_applicant = co_applicant ? co_applicant._id : undefined;
-    minimalClient.liabilities = liabilityIds;
-    await minimalClient.save();
-
-    // 5. Create mortgages if mortgage data is present
-    let firstMortgageId, secondMortgageId, proposedFirstLoanId, proposedSecondLoanId;
-    if (req.body.mortgage) {
-      const m = req.body.mortgage;
-      if (m.first_mortgage_balance || m.first_mortgage_rate || m.first_mortgage_term || m.first_mortgage_payment || m.lienholder_1 || m.address || m.city || m.state || m.zip_code || m.occupancy_type) {
-        const firstMortgage = await Mortgage.create({
-          client_id: minimalClient._id,
+    
+    // Create mortgages
+    if (clientData.mortgage) {
+      const mortgageData = clientData.mortgage;
+      
+      // First mortgage
+      if (mortgageData.first_mortgage_balance) {
+        const firstMortgage = new Mortgage({
+          client_id: savedClient._id,
           type: 'first',
-          // Property information
-          address: m.address,
-          city: m.city,
-          state: m.state,
-          zip_code: m.zip_code,
-          occupancy_type: m.occupancy_type,
-          // Mortgage details
-          balance: m.first_mortgage_balance,
-          rate: m.first_mortgage_rate,
-          term: m.first_mortgage_term,
-          payment: m.first_mortgage_payment,
-          lienholder: m.lienholder_1
+          address: mortgageData.address,
+          city: mortgageData.city,
+          state: mortgageData.state,
+          zip_code: mortgageData.zip_code,
+          occupancy_type: mortgageData.occupancy_type,
+          balance: mortgageData.first_mortgage_balance,
+          rate: mortgageData.first_mortgage_rate,
+          term: mortgageData.first_mortgage_term,
+          payment: mortgageData.first_mortgage_payment,
+          lienholder: mortgageData.lienholder_1
         });
-        firstMortgageId = firstMortgage._id;
+        const savedFirstMortgage = await firstMortgage.save();
+        relatedIds.first_mortgage = savedFirstMortgage._id;
       }
-      if (m.second_mortgage_balance || m.second_mortgage_rate || m.second_mortgage_term || m.second_mortgage_payment || m.lienholder_2) {
-        const secondMortgage = await Mortgage.create({
-          client_id: minimalClient._id,
+      
+      // Second mortgage
+      if (mortgageData.second_mortgage_balance) {
+        const secondMortgage = new Mortgage({
+          client_id: savedClient._id,
           type: 'second',
-          balance: m.second_mortgage_balance,
-          rate: m.second_mortgage_rate,
-          term: m.second_mortgage_term,
-          payment: m.second_mortgage_payment,
-          lienholder: m.lienholder_2
+          balance: mortgageData.second_mortgage_balance,
+          rate: mortgageData.second_mortgage_rate,
+          term: mortgageData.second_mortgage_term,
+          payment: mortgageData.second_mortgage_payment,
+          lienholder: mortgageData.lienholder_2
         });
-        secondMortgageId = secondMortgage._id;
+        const savedSecondMortgage = await secondMortgage.save();
+        relatedIds.second_mortgage = savedSecondMortgage._id;
       }
-      if (m.first_loan_amount || m.first_loan_rate || m.first_loan_term || m.first_loan_new_payment) {
-        const proposedFirstLoan = await Mortgage.create({
-          client_id: minimalClient._id,
+      
+      // Proposed loans (using Mortgage model with type field)
+      if (mortgageData.first_loan_amount) {
+        const proposedFirst = new Mortgage({
+          client_id: savedClient._id,
           type: 'proposed_first',
-          amount: m.first_loan_amount,
-          rate: m.first_loan_rate,
-          term: m.first_loan_term,
-          int_term: m.first_loan_int_term,
-          new_payment: m.first_loan_new_payment
+          amount: mortgageData.first_loan_amount,
+          rate: mortgageData.first_loan_rate,
+          term: mortgageData.first_loan_term,
+          new_payment: mortgageData.first_loan_new_payment
         });
-        proposedFirstLoanId = proposedFirstLoan._id;
+        const savedProposedFirst = await proposedFirst.save();
+        relatedIds.proposed_first_loan = savedProposedFirst._id;
       }
-      if (m.second_loan_amount || m.second_loan_rate || m.second_loan_term || m.second_loan_new_payment) {
-        const proposedSecondLoan = await Mortgage.create({
-          client_id: minimalClient._id,
+      
+      if (mortgageData.second_loan_amount) {
+        const proposedSecond = new Mortgage({
+          client_id: savedClient._id,
           type: 'proposed_second',
-          amount: m.second_loan_amount,
-          rate: m.second_loan_rate,
-          term: m.second_loan_term,
-          int_term: m.second_loan_int_term,
-          new_payment: m.second_loan_new_payment
+          amount: mortgageData.second_loan_amount,
+          rate: mortgageData.second_loan_rate,
+          term: mortgageData.second_loan_term,
+          new_payment: mortgageData.second_loan_new_payment
         });
-        proposedSecondLoanId = proposedSecondLoan._id;
+        const savedProposedSecond = await proposedSecond.save();
+        relatedIds.proposed_second_loan = savedProposedSecond._id;
       }
     }
-    // 6. Update client with mortgage ObjectIds
-    if (firstMortgageId) minimalClient.first_mortgage = firstMortgageId;
-    if (secondMortgageId) minimalClient.second_mortgage = secondMortgageId;
-    if (proposedFirstLoanId) minimalClient.proposed_first_loan = proposedFirstLoanId;
-    if (proposedSecondLoanId) minimalClient.proposed_second_loan = proposedSecondLoanId;
-    await minimalClient.save();
-
-    // 7. Create underwriting if underwriting data is present
-    let underwritingId;
-    if (req.body.underwriting) {
-      const underwritingData = req.body.underwriting;
-      if (Object.keys(underwritingData).length > 0) {
-        const underwriting = await Underwriting.create({
-          client_id: minimalClient._id,
-          address: underwritingData.address,
-          city: underwritingData.city,
-          state: underwritingData.state,
-          chm_selection: underwritingData.chm_selection,
-          tud_selection: underwritingData.tud_selection,
-          equifax_applicant: underwritingData.equifax_applicant,
-          equifax_co_applicant: underwritingData.equifax_co_applicant,
-          experian_applicant: underwritingData.experian_applicant,
-          experian_co_applicant: underwritingData.experian_co_applicant,
-          transunion_applicant: underwritingData.transunion_applicant,
-          transunion_co_applicant: underwritingData.transunion_co_applicant,
-          underwriting_notes: underwritingData.underwriting_notes,
-          terms: underwritingData.terms,
-          programs: underwritingData.programs
-        });
-        underwritingId = underwriting._id;
-      }
+    
+    // Create underwriting
+    if (clientData.underwriting) {
+      const underwriting = new Underwriting({
+        ...clientData.underwriting,
+        client_id: savedClient._id
+      });
+      await underwriting.save();
     }
-
-    // Optionally, create and associate other entities (property, mortgages, etc.) here as before
-    // ... (existing property, mortgage, etc. creation logic can be inserted here, using minimalClient._id as needed)
-
-    // Respond with the full client, populated
-    const populatedClient = await Client.findById(minimalClient._id)
+    
+    // Update client with loan status and related IDs
+    if (clientData.loanStatus || Object.keys(relatedIds).length > 0) {
+      const updateData: any = {};
+      if (clientData.loanStatus) {
+        updateData.loanStatus = clientData.loanStatus;
+      }
+      Object.assign(updateData, relatedIds);
+      
+      await Client.findByIdAndUpdate(savedClient._id, updateData, { new: true });
+    }
+    
+    // Step 5: Return the created client with populated data
+    console.log('Fetching final client with populations...');
+    
+    // First, let's check what's actually in the database
+    const rawClient = await Client.findById(savedClient._id).lean();
+    console.log('Raw client co_applicant field after update:', rawClient?.co_applicant);
+    
+    const populatedClient = await Client.findById(savedClient._id)
       .populate('applicant')
-      .populate('co_applicant')
+      .populate({
+        path: 'co_applicant',
+        model: 'CoApplicant' // Explicitly specify the model
+      })
       .populate('liabilities')
       .populate('first_mortgage')
       .populate('second_mortgage')
       .populate('proposed_first_loan')
       .populate('proposed_second_loan');
-      
     
-    if (!populatedClient) {
-      return res.status(500).json({ success: false, error: 'Failed to retrieve created client' });
+    console.log('Final populated client co_applicant:', populatedClient?.co_applicant ? 'EXISTS' : 'NULL');
+    if (populatedClient?.co_applicant) {
+      console.log('Co_applicant include_coapplicant:', (populatedClient.co_applicant as any).include_coapplicant);
     }
     
-    // Get underwriting data if it exists
-    let underwritingData = null;
-    if (underwritingId) {
-      underwritingData = await Underwriting.findById(underwritingId);
-    }
+    return res.status(201).json({
+      success: true,
+      data: populatedClient
+    });
     
-    // Combine client and underwriting data
-    const responseData = {
-      ...populatedClient.toObject(),
-      underwriting: underwritingData
-    };
-    
-    return res.status(201).json({ success: true, data: responseData });
   } catch (error) {
     const err = error as Error;
-    console.error('Error in createClient:', err);
-    return res.status(500).json({ success: false, error: err.message });
+    console.error('❌ Error creating client:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 };
 
@@ -465,6 +392,10 @@ export const getClients = async (req: Request, res: Response) => {
         processor: client.processor_name || 'N/A',
         totalDebt: totalDebt || 'N/A',
         status: client.status || 'N/A',
+          applicant: client.applicant,           // <-- add this line
+        co_applicant: client.co_applicant,     // <-- add this line
+        liabilities: client.liabilities,       // (optional, for full detail)
+        drivers: client.drivers,               // (optional)
       };
     });
 
@@ -552,51 +483,98 @@ export const searchClients = async (req: Request, res: Response) => {
 
 export const getClientById = async (req: Request, res: Response) => {
   try {
+    const { id } = req.params;
     let client;
     
     // Check if the ID is a valid ObjectId format
-    if (/^[a-fA-F0-9]{24}$/.test(req.params.id)) {
+    if (/^[a-fA-F0-9]{24}$/.test(id)) {
       // If it's a valid ObjectId, search by _id
-      client = await Client.findById(req.params.id)
+      client = await Client.findById(id)
         .populate('applicant')
-        .populate('co_applicant')
+        .populate({
+          path: 'co_applicant',
+          model: 'CoApplicant' // Explicit model reference
+        })
         .populate('liabilities')
         .populate('first_mortgage')
         .populate('second_mortgage')
         .populate('proposed_first_loan')
-        .populate('proposed_second_loan');
+        .populate('proposed_second_loan')
+        .populate('drivers')
+        .lean();
     } else {
       // If it's not a valid ObjectId, search by client_id
-      client = await Client.findOne({ client_id: req.params.id })
+      client = await Client.findOne({ client_id: id })
         .populate('applicant')
-        .populate('co_applicant')
+        .populate({
+          path: 'co_applicant',
+          model: 'CoApplicant' // Explicit model reference
+        })
         .populate('liabilities')
         .populate('first_mortgage')
         .populate('second_mortgage')
         .populate('proposed_first_loan')
-        .populate('proposed_second_loan');
+        .populate('proposed_second_loan')
+        .populate('drivers')
+        .lean();
     }
     
-    if (!client) return res.status(404).json({ success: false, error: 'Client not found' });
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        error: 'Client not found',
+        searchedId: id
+      });
+    }
+    
+    // Debug: Log the populated co_applicant
+    console.log('Raw client co_applicant field:', client.co_applicant);
+    console.log('Populated co_applicant:', client.co_applicant ? 'EXISTS' : 'NULL');
     
     // Get underwriting data if it exists
     let underwritingData = null;
     try {
-      underwritingData = await Underwriting.findOne({ client_id: client._id });
+      underwritingData = await Underwriting.findOne({ client_id: client._id })
+        .lean();
     } catch (error) {
-      console.log('No underwriting data found for client:', client._id);
+      console.log('Error fetching underwriting data for client:', client._id, error);
     }
     
-    // Combine client and underwriting data
+    // Combine all data - ensure we return everything
     const responseData = {
-      ...client.toObject(),
-      underwriting: underwritingData
+      ...client,
+      underwriting: underwritingData,
+      co_applicant: client.co_applicant, // This should now be populated
+      // Ensure all arrays are included even if empty
+      liabilities: client.liabilities || [],
+      drivers: client.drivers || [],
+      // Add metadata with debug info
+      _metadata: {
+        searchedBy: /^[a-fA-F0-9]{24}$/.test(id) ? '_id' : 'client_id',
+        searchedValue: id,
+        hasUnderwriting: !!underwritingData,
+        retrievedAt: new Date().toISOString(),
+        debug: {
+          coApplicantPopulated: !!client.co_applicant,
+          coApplicantType: typeof client.co_applicant,
+          coApplicantIncludeFlag: client.co_applicant ? (client.co_applicant as any).include_coapplicant : null
+        }
+      }
     };
     
-    return res.json({ success: true, data: responseData });
+    return res.json({
+      success: true,
+      data: responseData
+    });
+    
   } catch (error) {
     const err = error as Error;
-    return res.status(500).json({ success: false, error: err.message });
+    console.error('Error in getClientById:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };
 
@@ -663,14 +641,23 @@ export const updateClient = async (req: Request, res: Response) => {
       delete applicantUpdate.spouse_occupation;
       delete applicantUpdate.number_of_dependents;
       applicantUpdate.demographics_information = demographics_information;
-      // Map employment with additional income fields for update
+      // Map employment fields for update
       if (applicantUpdate.employment) {
         applicantUpdate.current_employment = {
           ...applicantUpdate.employment,
-          other_income: applicantUpdate.employment.other_income,
-          other_income_source: applicantUpdate.employment.other_income_source
+          monthly_salary: applicantUpdate.employment.gross_monthly_salary || applicantUpdate.employment.monthly_salary,
+          additional_income: applicantUpdate.employment.additional_income,
+          source: applicantUpdate.employment.source
         };
         delete applicantUpdate.employment;
+      }
+      // Map current_address and ensure fax is set from applicantUpdate.current_address if present
+      if (applicantUpdate.current_address) {
+        if (typeof applicantUpdate.current_address.fax !== 'undefined') {
+          applicantUpdate.current_address.fax = applicantUpdate.current_address.fax;
+        } else if (applicantUpdate.contact && typeof applicantUpdate.contact.fax !== 'undefined') {
+          applicantUpdate.current_address.fax = applicantUpdate.contact.fax;
+        }
       }
       if (client.applicant) {
         await Applicant.findByIdAndUpdate(client.applicant, applicantUpdate, { new: true });
@@ -681,43 +668,16 @@ export const updateClient = async (req: Request, res: Response) => {
     }
     // 2. Co-Applicant
     if (req.body.co_applicant && req.body.co_applicant.include_coapplicant) {
-      const coApplicantUpdate = { ...req.body.co_applicant };
-      // Move demographic fields into demographics_information if present at root
-      const co_demographics_information = {
-        birth_place: coApplicantUpdate.birth_place,
-        dob: coApplicantUpdate.date_of_birth,
-        marital_status: coApplicantUpdate.marital_status,
-        race: coApplicantUpdate.race,
-        anniversary: coApplicantUpdate.anniversary,
-        spouse_name: coApplicantUpdate.spouse_name,
-        spouse_occupation: coApplicantUpdate.spouse_occupation,
-        number_of_dependents: coApplicantUpdate.number_of_dependents
-      };
-      // Remove from root
-      delete coApplicantUpdate.birth_place;
-      delete coApplicantUpdate.date_of_birth;
-      delete coApplicantUpdate.marital_status;
-      delete coApplicantUpdate.race;
-      delete coApplicantUpdate.anniversary;
-      delete coApplicantUpdate.spouse_name;
-      delete coApplicantUpdate.spouse_occupation;
-      delete coApplicantUpdate.number_of_dependents;
-      coApplicantUpdate.demographics_information = co_demographics_information;
-      // Map employment with additional income fields for co-applicant update
-      if (coApplicantUpdate.employment) {
-        coApplicantUpdate.current_employment = {
-          ...coApplicantUpdate.employment,
-          other_income: coApplicantUpdate.employment.other_income,
-          other_income_source: coApplicantUpdate.employment.other_income_source
-        };
-        delete coApplicantUpdate.employment;
-      }
-      if (client.co_applicant) {
-        await Applicant.findByIdAndUpdate(client.co_applicant, coApplicantUpdate, { new: true });
-      } else {
-        const newCoApplicant = await Applicant.create(coApplicantUpdate);
-        client.co_applicant = newCoApplicant._id;
-      }
+      await CoApplicant.findByIdAndUpdate(client.co_applicant, {
+        ...req.body.co_applicant,
+        include_coapplicant: true
+      });
+    } else {
+      // Update to minimal co-applicant
+      await CoApplicant.findByIdAndUpdate(client.co_applicant, {
+        include_coapplicant: false
+        // Optionally clear other fields here if needed
+      });
     }
     // 3. Liabilities
     if (req.body.liabilities) {
@@ -739,11 +699,14 @@ export const updateClient = async (req: Request, res: Response) => {
               state: m.state,
               zip_code: m.zip_code,
               occupancy_type: m.occupancy_type,
+              amount: m.first_mortgage_amount,
               balance: m.first_mortgage_balance,
               rate: m.first_mortgage_rate,
               term: m.first_mortgage_term,
               payment: m.first_mortgage_payment,
-              lienholder: m.lienholder_1
+              lienholder: m.lienholder_1,
+              int_term: m.first_mortgage_int_term,
+              new_payment: m.first_mortgage_new_payment
             });
         } else {
           const firstMortgage = await Mortgage.create({
@@ -754,11 +717,14 @@ export const updateClient = async (req: Request, res: Response) => {
             state: m.state,
             zip_code: m.zip_code,
             occupancy_type: m.occupancy_type,
+            amount: m.first_mortgage_amount,
             balance: m.first_mortgage_balance,
             rate: m.first_mortgage_rate,
             term: m.first_mortgage_term,
             payment: m.first_mortgage_payment,
-            lienholder: m.lienholder_1
+            lienholder: m.lienholder_1,
+            int_term: m.first_mortgage_int_term,
+            new_payment: m.first_mortgage_new_payment
           });
           client.first_mortgage = firstMortgage._id;
         }
@@ -767,21 +733,37 @@ export const updateClient = async (req: Request, res: Response) => {
       if (m.second_mortgage_balance || m.second_mortgage_rate || m.second_mortgage_term || m.second_mortgage_payment || m.lienholder_2) {
         if (client.second_mortgage) {
           await Mortgage.findByIdAndUpdate(client.second_mortgage, {
+            address: m.second_address,
+            city: m.second_city,
+            state: m.second_state,
+            zip_code: m.second_zip_code,
+            occupancy_type: m.second_occupancy_type,
+            amount: m.second_mortgage_amount,
             balance: m.second_mortgage_balance,
             rate: m.second_mortgage_rate,
             term: m.second_mortgage_term,
             payment: m.second_mortgage_payment,
-            lienholder: m.lienholder_2
+            lienholder: m.lienholder_2,
+            int_term: m.second_mortgage_int_term,
+            new_payment: m.second_mortgage_new_payment
           });
         } else {
           const secondMortgage = await Mortgage.create({
             client_id: client._id,
             type: 'second',
+            address: m.second_address,
+            city: m.second_city,
+            state: m.second_state,
+            zip_code: m.second_zip_code,
+            occupancy_type: m.second_occupancy_type,
+            amount: m.second_mortgage_amount,
             balance: m.second_mortgage_balance,
             rate: m.second_mortgage_rate,
             term: m.second_mortgage_term,
             payment: m.second_mortgage_payment,
-            lienholder: m.lienholder_2
+            lienholder: m.lienholder_2,
+            int_term: m.second_mortgage_int_term,
+            new_payment: m.second_mortgage_new_payment
           });
           client.second_mortgage = secondMortgage._id;
         }
@@ -790,9 +772,17 @@ export const updateClient = async (req: Request, res: Response) => {
       if (m.first_loan_amount || m.first_loan_rate || m.first_loan_term || m.first_loan_new_payment) {
         if (client.proposed_first_loan) {
           await Mortgage.findByIdAndUpdate(client.proposed_first_loan, {
+            address: m.proposed_first_address,
+            city: m.proposed_first_city,
+            state: m.proposed_first_state,
+            zip_code: m.proposed_first_zip_code,
+            occupancy_type: m.proposed_first_occupancy_type,
             amount: m.first_loan_amount,
+            balance: m.proposed_first_balance,
             rate: m.first_loan_rate,
             term: m.first_loan_term,
+            payment: m.proposed_first_payment,
+            lienholder: m.proposed_first_lienholder,
             int_term: m.first_loan_int_term,
             new_payment: m.first_loan_new_payment
           });
@@ -800,9 +790,17 @@ export const updateClient = async (req: Request, res: Response) => {
           const proposedFirstLoan = await Mortgage.create({
             client_id: client._id,
             type: 'proposed_first',
+            address: m.proposed_first_address,
+            city: m.proposed_first_city,
+            state: m.proposed_first_state,
+            zip_code: m.proposed_first_zip_code,
+            occupancy_type: m.proposed_first_occupancy_type,
             amount: m.first_loan_amount,
+            balance: m.proposed_first_balance,
             rate: m.first_loan_rate,
             term: m.first_loan_term,
+            payment: m.proposed_first_payment,
+            lienholder: m.proposed_first_lienholder,
             int_term: m.first_loan_int_term,
             new_payment: m.first_loan_new_payment
           });
@@ -813,9 +811,17 @@ export const updateClient = async (req: Request, res: Response) => {
       if (m.second_loan_amount || m.second_loan_rate || m.second_loan_term || m.second_loan_new_payment) {
         if (client.proposed_second_loan) {
           await Mortgage.findByIdAndUpdate(client.proposed_second_loan, {
+            address: m.proposed_second_address,
+            city: m.proposed_second_city,
+            state: m.proposed_second_state,
+            zip_code: m.proposed_second_zip_code,
+            occupancy_type: m.proposed_second_occupancy_type,
             amount: m.second_loan_amount,
+            balance: m.proposed_second_balance,
             rate: m.second_loan_rate,
             term: m.second_loan_term,
+            payment: m.proposed_second_payment,
+            lienholder: m.proposed_second_lienholder,
             int_term: m.second_loan_int_term,
             new_payment: m.second_loan_new_payment
           });
@@ -823,9 +829,17 @@ export const updateClient = async (req: Request, res: Response) => {
           const proposedSecondLoan = await Mortgage.create({
             client_id: client._id,
             type: 'proposed_second',
+            address: m.proposed_second_address,
+            city: m.proposed_second_city,
+            state: m.proposed_second_state,
+            zip_code: m.proposed_second_zip_code,
+            occupancy_type: m.proposed_second_occupancy_type,
             amount: m.second_loan_amount,
+            balance: m.proposed_second_balance,
             rate: m.second_loan_rate,
             term: m.second_loan_term,
+            payment: m.proposed_second_payment,
+            lienholder: m.proposed_second_lienholder,
             int_term: m.second_loan_int_term,
             new_payment: m.second_loan_new_payment
           });
@@ -854,16 +868,13 @@ export const updateClient = async (req: Request, res: Response) => {
         }
     // Save client
     if (req.body.drivers) {
-      const driverErrors = req.body.drivers.map((driver: Driver) => validateDriverBackend(driver));
-      if (driverErrors.some((e: DriverValidationErrors) => Object.keys(e).length > 0)) {
-        return res.status(400).json({ success: false, error: 'Driver validation failed', details: driverErrors });
-      }
       client.drivers = req.body.drivers;
+      await client.save();
     }
     await client.save();
     
     console.log('UpdateClient - Populating client data');
-    const populatedClient = await Client.findById(client._id)
+    const populatedClientUpdate = await Client.findById(client._id)
       .populate('applicant')
       .populate('co_applicant')
       .populate('liabilities')
@@ -873,7 +884,7 @@ export const updateClient = async (req: Request, res: Response) => {
       .populate('proposed_second_loan');
     console.log('UpdateClient - Client populated successfully');
     
-    if (!populatedClient) {
+    if (!populatedClientUpdate) {
       return res.status(500).json({ success: false, error: 'Failed to retrieve updated client' });
     }
     
@@ -889,8 +900,9 @@ export const updateClient = async (req: Request, res: Response) => {
     // Combine client and underwriting data
     try {
       const responseData = {
-        ...populatedClient.toObject(),
-        underwriting: underwritingData
+        ...populatedClientUpdate.toObject(),
+        underwriting: underwritingData,
+        co_applicant: populatedClientUpdate.co_applicant || { include_coapplicant: false }
       };
       console.log('UpdateClient - Response data prepared successfully');
       return res.status(200).json({ success: true, data: responseData });
