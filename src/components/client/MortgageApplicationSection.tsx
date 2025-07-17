@@ -1,5 +1,5 @@
 import React from 'react';
-import { US_STATES } from './ClientFormTabs';
+import { US_STATES } from '../../constants';
 
 interface MortgageApplicationSectionProps {
   formData: any;

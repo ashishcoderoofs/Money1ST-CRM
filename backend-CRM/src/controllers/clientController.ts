@@ -116,6 +116,7 @@ export const createClient = async (req: Request, res: Response) => {
       applicant: applicantId,
       co_applicant: coApplicantId,
       household_members: clientData.household_members,
+      drivers: clientData.drivers || [], // <-- Add this line to save drivers
     };
     
     console.log('Client document to save:', {
@@ -339,7 +340,10 @@ export const getClients = async (req: Request, res: Response) => {
       .skip(skip)
       .limit(Number(limit))
       .populate('applicant')
-      .populate('co_applicant');
+      .populate({
+        path: 'co_applicant',
+        model: 'CoApplicant' // Add explicit model reference like other functions
+      });
     const total = await Client.countDocuments(filters);
     const clients = await query;
 
@@ -392,10 +396,10 @@ export const getClients = async (req: Request, res: Response) => {
         processor: client.processor_name || 'N/A',
         totalDebt: totalDebt || 'N/A',
         status: client.status || 'N/A',
-          applicant: client.applicant,           // <-- add this line
-        co_applicant: client.co_applicant,     // <-- add this line
-        liabilities: client.liabilities,       // (optional, for full detail)
-        drivers: client.drivers,               // (optional)
+        applicant: client.applicant,
+        co_applicant: client.co_applicant,
+        liabilities: client.liabilities,
+        drivers: client.drivers,
       };
     });
 
@@ -666,19 +670,60 @@ export const updateClient = async (req: Request, res: Response) => {
         client.applicant = newApplicant._id;
       }
     }
-    // 2. Co-Applicant
-    if (req.body.co_applicant && req.body.co_applicant.include_coapplicant) {
-      await CoApplicant.findByIdAndUpdate(client.co_applicant, {
-        ...req.body.co_applicant,
-        include_coapplicant: true
-      });
-    } else {
-      // Update to minimal co-applicant
-      await CoApplicant.findByIdAndUpdate(client.co_applicant, {
-        include_coapplicant: false
-        // Optionally clear other fields here if needed
-      });
+
+    // 2. Co-Applicant - Enhanced logic for proper handling
+    if (req.body.co_applicant) {
+      const coApplicantData = req.body.co_applicant;
+      
+      if (coApplicantData.include_coapplicant) {
+        // Map the data structure to match CoApplicant schema
+        const coApplicantUpdate = {
+          include_coapplicant: true,
+          name_information: coApplicantData.name_information,
+          current_address: coApplicantData.current_address,
+          previous_address: coApplicantData.previous_address,
+          employment: coApplicantData.employment,
+          previous_employment: coApplicantData.previous_employment,
+          credit_scores: coApplicantData.credit_scores,
+          household_members: coApplicantData.household_members || [],
+          demographics_information: {
+            dob: coApplicantData.date_of_birth,
+            birth_place: coApplicantData.birth_place,
+            marital_status: coApplicantData.marital_status,
+            race: coApplicantData.race,
+            anniversary: coApplicantData.anniversary,
+            spouse_name: coApplicantData.spouse_name,
+            spouse_occupation: coApplicantData.spouse_occupation,
+            number_of_dependents: coApplicantData.number_of_dependents,
+          },
+          contact: coApplicantData.contact,
+          fax: coApplicantData.fax,
+        };
+
+        if (client.co_applicant) {
+          // Update existing co_applicant
+          await CoApplicant.findByIdAndUpdate(client.co_applicant, coApplicantUpdate, { new: true });
+          console.log('UpdateClient - Updated existing co_applicant');
+        } else {
+          // Create new co_applicant
+          const newCoApplicant = await CoApplicant.create({
+            ...coApplicantUpdate,
+            client_id: client._id
+          });
+          client.co_applicant = newCoApplicant._id;
+          console.log('UpdateClient - Created new co_applicant');
+        }
+      } else {
+        // User wants to remove/disable co_applicant
+        if (client.co_applicant) {
+          await CoApplicant.findByIdAndUpdate(client.co_applicant, {
+            include_coapplicant: false
+          });
+          console.log('UpdateClient - Disabled co_applicant');
+        }
+      }
     }
+
     // 3. Liabilities
     if (req.body.liabilities) {
       // Remove existing liabilities
@@ -687,6 +732,7 @@ export const updateClient = async (req: Request, res: Response) => {
       const createdLiabilities = await Liability.insertMany(req.body.liabilities.map((l: any) => ({ ...l, client_id: client._id })));
       client.liabilities = createdLiabilities.map((l: any) => l._id);
     }
+
     // 4. Mortgage (first, second, proposed)
     if (req.body.mortgage) {
       const m = req.body.mortgage;
@@ -847,6 +893,7 @@ export const updateClient = async (req: Request, res: Response) => {
         }
       }
     }
+
     // 5. Underwriting
     if (req.body.underwriting) {
       const uw = { ...req.body.underwriting };
@@ -862,21 +909,25 @@ export const updateClient = async (req: Request, res: Response) => {
         client.underwriting = newUw._id;
       }
     }
+
     // 6. Loan Status
     if (req.body.loanStatus) {
       client.loanStatus = req.body.loanStatus;
-        }
+    }
+
     // Save client
     if (req.body.drivers) {
       client.drivers = req.body.drivers;
-      await client.save();
     }
     await client.save();
     
     console.log('UpdateClient - Populating client data');
     const populatedClientUpdate = await Client.findById(client._id)
       .populate('applicant')
-      .populate('co_applicant')
+      .populate({
+        path: 'co_applicant',
+        model: 'CoApplicant' // Add explicit model reference
+      })
       .populate('liabilities')
       .populate('first_mortgage')
       .populate('second_mortgage')
@@ -905,6 +956,7 @@ export const updateClient = async (req: Request, res: Response) => {
         co_applicant: populatedClientUpdate.co_applicant || { include_coapplicant: false }
       };
       console.log('UpdateClient - Response data prepared successfully');
+      console.log('UpdateClient - Co_applicant populated:', !!populatedClientUpdate.co_applicant);
       return res.status(200).json({ success: true, data: responseData });
     } catch (error) {
       console.error('UpdateClient - Error preparing response data:', error);
@@ -977,3 +1029,4 @@ export const createLoanStatus = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, error: (error as Error).message });
   }
 };
+
