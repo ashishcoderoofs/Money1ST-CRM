@@ -183,17 +183,19 @@ const AddressSection: React.FC<AddressSectionProps> = ({ formData, isReadOnly, i
             className="bg-white flex h-10 rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-40"
             placeholder="Years"
           />
-          <input
-            type="number"
+          <select
+            id="currentAddressMonths"
             name="currentAddressMonths"
-            min={0}
-            max={11}
             value={formData.current_address?.months ?? ''}
             onChange={e => handleNestedInputChange(['current_address', 'months'], e.target.value === '' ? '' : Number(e.target.value))}
+            className="bg-white flex h-10 w-full rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
             disabled={isReadOnly}
-            className="bg-white flex h-10 rounded-md border border-input px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-40"
-            placeholder="Months (0-11)"
-          />
+          >
+            <option value="">Months (0-11)</option>
+            {[...Array(12).keys()].map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
         </div>
       </div>
     </div>
