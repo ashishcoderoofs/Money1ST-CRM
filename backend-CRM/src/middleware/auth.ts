@@ -21,7 +21,7 @@ export const authenticate = async (
 
     if (!token) {
       logger.warn('No token provided');
-      res.status(401).json({ error: 'Access denied. No token provided.' });
+      res.status(401).json({ error: 'Access denied. No token provided.', redirectTo: '/login' });
       return;
     }
 
@@ -38,7 +38,7 @@ export const authenticate = async (
       logger.info('Decoded JWT:', decoded);
     } catch (err) {
       logger.warn('JWT verification failed:', err);
-      res.status(401).json({ error: 'Invalid token.' });
+      res.status(401).json({ error: 'Invalid token.', redirectTo: '/login' });
       return;
     }
 
@@ -47,7 +47,7 @@ export const authenticate = async (
 
     if (!user) {
       logger.warn('User not found for id:', decoded.id);
-      res.status(401).json({ error: 'Invalid token. User not found.' });
+      res.status(401).json({ error: 'Invalid token. User not found.', redirectTo: '/login' });
       return;
     }
 
@@ -55,7 +55,7 @@ export const authenticate = async (
     const statusCheck = validateUserStatus(user);
     if (!statusCheck.isValid) {
       logger.warn(`Access denied for user ${user.email}: ${statusCheck.reason}`);
-      res.status(401).json({ error: `Access denied. ${statusCheck.reason}` });
+      res.status(401).json({ error: `Access denied. ${statusCheck.reason}`, redirectTo: '/login' });
       return;
     }
 
@@ -63,14 +63,14 @@ export const authenticate = async (
     next();
   } catch (error) {
     logger.error('Unexpected error in authenticate:', error);
-    res.status(401).json({ error: 'Invalid token.' });
+    res.status(401).json({ error: 'Invalid token.', redirectTo: '/login' });
   }
 };
 
 export const authorize = (...roles: UserRole[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({ error: 'Authentication required.' });
+      res.status(401).json({ error: 'Authentication required.', redirectTo: '/login' });
       return;
     }
 
