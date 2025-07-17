@@ -1,14 +1,11 @@
 import React, { useEffect } from 'react';
+import { US_STATES } from '../../constants';
 
 interface UnderwritingSectionProps {
   formData: any;
   setFormData: (updater: (prev: any) => any) => void;
   isReadOnly: boolean;
 }
-
-const usStates = [
-  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
-];
 
 const chmOptions = [
   { value: 'credit', label: 'Credit' },
@@ -120,8 +117,8 @@ const UnderwritingSection: React.FC<UnderwritingSectionProps> = ({ formData, set
             disabled={isReadOnly} 
             required
           >
-            <option value="">IL</option>
-            {usStates.map(s => <option key={s} value={s}>{s}</option>)}
+            <option value="">Select State</option>
+            {US_STATES.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
           </select>
         </div>
       </div>

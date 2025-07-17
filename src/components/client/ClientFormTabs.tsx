@@ -132,173 +132,173 @@ const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const nameRegex = /^[A-Za-z]+$/;
 const zipRegex = /^\d{5}$/;
 
-const applicantSchema = yup.object().shape({
-  first_name: yup.string().required('First name is required').matches(nameRegex, 'First name can only contain letters'),
-  last_name: yup.string().required('Last name is required').matches(nameRegex, 'Last name can only contain letters'),
-  contact: yup.object({
-    email: yup.string().email('Invalid email').required('Email is required'),
-    // All other fields optional
-  }).required(),
-  current_address: yup.object({
-    address: yup.string().max(200, 'Address too long').optional(),
-    city: yup.string().max(100, 'City too long').optional(),
-    state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
-    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
-    county: yup.string().max(100, 'County too long').optional(),
-    home_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    work_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    cell_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    other_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    email: yup.string().email('Invalid email').optional(),
-    years: yup
-      .number()
-      .min(0, 'Years must be 0 or greater')
-      .typeError('Years must be a number')
-      .optional(),
-    months: yup
-      .number()
-      .min(0, 'Months must be between 0 and 11')
-      .max(11, 'Months must be between 0 and 11')
-      .typeError('Months must be a number')
-      .optional(),
-    how_long_at_current_address: yup.string().optional(),
-    // fax: yup.string().matches(phoneRegex, 'Invalid fax number').optional(),
-  }).optional(),
-  previous_address: yup.object({
-    address: yup.string().max(200, 'Address too long').optional(),
-    city: yup.string().max(100, 'City too long').optional(),
-    state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
-    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
-    years: yup
-      .number()
-      .min(0, 'Years must be 0 or greater')
-      .typeError('Years must be a number')
-      .optional(),
-    months: yup
-      .number()
-      .min(0, 'Months must be between 0 and 11')
-      .max(11, 'Months must be between 0 and 11')
-      .typeError('Months must be a number')
-      .optional(),
-    duration: yup.string().optional(),
-  }).optional(),
-  employment: yup.object({
-    status: yup.string().oneOf(['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student', 'Part time', 'Contract']).optional(),
-    is_business_owner: yup.string().optional(),
-    employer_name: yup.string().optional(),
-    employer_address: yup.string().optional(),
-    employer_city: yup.string().optional(),
-    employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
-    employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
-    occupation: yup.string().optional(),
-    // monthly_salary: yup.string().matches(/^[\d.]+$/, 'Monthly salary must be a number').optional(),
-    // other_income: yup.string().matches(/^[\d.]+$/, 'Other income must be a number').optional(),
-    start_date: yup.string().matches(dateRegex, 'Start date must be YYYY-MM-DD').optional(),
-    end_date: yup.string().matches(dateRegex, 'End date must be YYYY-MM-DD').optional(),
-    supervisor: yup.string().optional(),
-    supervisor_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    source: yup.string().optional(),
-  }).optional(),
-  previous_employment: yup.object({
-    employer_name: yup.string().optional(),
-    employer_address: yup.string().optional(),
-    employer_city: yup.string().optional(),
-    employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
-    employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
-    from_date: yup.string().matches(dateRegex, 'From date must be YYYY-MM-DD').optional(),
-    to_date: yup.string().matches(dateRegex, 'To date must be YYYY-MM-DD').optional(),
-    occupation: yup.string().optional(),
-  }).optional(),
-  credit_scores: yup.object({
-    equifax: yup.string().matches(/^\d+$/, 'Equifax score must be a number').optional(),
-    experian: yup.string().matches(/^\d+$/, 'Experian score must be a number').optional(),
-    transunion: yup.string().matches(/^\d+$/, 'Transunion score must be a number').optional(),
-  }).optional(),
-});
+// const applicantSchema = yup.object().shape({
+//   first_name: yup.string().required('First name is required').matches(nameRegex, 'First name can only contain letters'),
+//   last_name: yup.string().required('Last name is required').matches(nameRegex, 'Last name can only contain letters'),
+//   contact: yup.object({
+//     email: yup.string().email('Invalid email').required('Email is required'),
+//     // All other fields optional
+//   }).required(),
+//   current_address: yup.object({
+//     address: yup.string().max(200, 'Address too long').optional(),
+//     city: yup.string().max(100, 'City too long').optional(),
+//     state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+//     zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
+//     county: yup.string().max(100, 'County too long').optional(),
+//     home_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+//     work_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+//     cell_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+//     other_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+//     email: yup.string().email('Invalid email').optional(),
+//     years: yup
+//       .number()
+//       .min(0, 'Years must be 0 or greater')
+//       .typeError('Years must be a number')
+//       .optional(),
+//     months: yup
+//       .number()
+//       .min(0, 'Months must be between 0 and 11')
+//       .max(11, 'Months must be between 0 and 11')
+//       .typeError('Months must be a number')
+//       .optional(),
+//     how_long_at_current_address: yup.string().optional(),
+//     // fax: yup.string().matches(phoneRegex, 'Invalid fax number').optional(),
+//   }).optional(),
+//   previous_address: yup.object({
+//     address: yup.string().max(200, 'Address too long').optional(),
+//     city: yup.string().max(100, 'City too long').optional(),
+//     state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+//     zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
+//     years: yup
+//       .number()
+//       .min(0, 'Years must be 0 or greater')
+//       .typeError('Years must be a number')
+//       .optional(),
+//     months: yup
+//       .number()
+//       .min(0, 'Months must be between 0 and 11')
+//       .max(11, 'Months must be between 0 and 11')
+//       .typeError('Months must be a number')
+//       .optional(),
+//     duration: yup.string().optional(),
+//   }).optional(),
+//   employment: yup.object({
+//     status: yup.string().oneOf(['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student', 'Part time', 'Contract']).optional(),
+//     is_business_owner: yup.string().optional(),
+//     employer_name: yup.string().optional(),
+//     employer_address: yup.string().optional(),
+//     employer_city: yup.string().optional(),
+//     employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+//     employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
+//     occupation: yup.string().optional(),
+//     // monthly_salary: yup.string().matches(/^[\d.]+$/, 'Monthly salary must be a number').optional(),
+//     // other_income: yup.string().matches(/^[\d.]+$/, 'Other income must be a number').optional(),
+//     start_date: yup.string().matches(dateRegex, 'Start date must be YYYY-MM-DD').optional(),
+//     end_date: yup.string().matches(dateRegex, 'End date must be YYYY-MM-DD').optional(),
+//     supervisor: yup.string().optional(),
+//     supervisor_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+//     source: yup.string().optional(),
+//   }).optional(),
+//   previous_employment: yup.object({
+//     employer_name: yup.string().optional(),
+//     employer_address: yup.string().optional(),
+//     employer_city: yup.string().optional(),
+//     employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+//     employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
+//     from_date: yup.string().matches(dateRegex, 'From date must be YYYY-MM-DD').optional(),
+//     to_date: yup.string().matches(dateRegex, 'To date must be YYYY-MM-DD').optional(),
+//     occupation: yup.string().optional(),
+//   }).optional(),
+//   credit_scores: yup.object({
+//     equifax: yup.string().matches(/^\d+$/, 'Equifax score must be a number').optional(),
+//     experian: yup.string().matches(/^\d+$/, 'Experian score must be a number').optional(),
+//     transunion: yup.string().matches(/^\d+$/, 'Transunion score must be a number').optional(),
+//   }).optional(),
+// });
 
-const coApplicantSchema = yup.object().shape({
-  first_name: yup.string().matches(nameRegex, 'First name can only contain letters').optional(),
-  last_name: yup.string().matches(nameRegex, 'Last name can only contain letters').optional(),
-  contact: yup.object({
-    email: yup.string().email('Invalid email').optional(),
-  }).optional(),
-  // All other fields optional
-  current_address: yup.object({
-    address: yup.string().max(200, 'Address too long').optional(),
-    city: yup.string().max(100, 'City too long').optional(),
-    state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
-    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
-    county: yup.string().max(100, 'County too long').optional(),
-    home_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    work_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    cell_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    other_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    email: yup.string().email('Invalid email').optional(),
-    years: yup
-      .number()
-      .min(0, 'Years must be 0 or greater')
-      .typeError('Years must be a number')
-      .optional(),
-    months: yup
-      .number()
-      .min(0, 'Months must be between 0 and 11')
-      .max(11, 'Months must be between 0 and 11')
-      .typeError('Months must be a number')
-      .optional(),
-    how_long_at_current_address: yup.string().optional(),
-    // fax: yup.string().matches(phoneRegex, 'Invalid fax number').optional(),
-  }).optional(),
-  previous_address: yup.object({
-    address: yup.string().max(200, 'Address too long').optional(),
-    city: yup.string().max(100, 'City too long').optional(),
-    state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
-    zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
-    years: yup
-      .number()
-      .min(0, 'Years must be 0 or greater')
-      .typeError('Years must be a number')
-      .optional(),
-    months: yup
-      .number()
-      .min(0, 'Months must be between 0 and 11')
-      .max(11, 'Months must be between 0 and 11')
-      .typeError('Months must be a number')
-      .optional(),
-    duration: yup.string().optional(),
-  }).optional(),
-  employment: yup.object({
-    status: yup.string().oneOf(['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student', 'Part time', 'Contract']).optional(),
-    is_business_owner: yup.string().optional(),
-    employer_name: yup.string().optional(),
-    employer_address: yup.string().optional(),
-    employer_city: yup.string().optional(),
-    employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
-    employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
-    occupation: yup.string().optional(),
-    // monthly_salary: yup.string().matches(/^[\d.]+$/, 'Monthly salary must be a number').optional(),
-    // other_income: yup.string().matches(/^[\d.]+$/, 'Other income must be a number').optional(),
-    start_date: yup.string().matches(dateRegex, 'Start date must be YYYY-MM-DD').optional(),
-    end_date: yup.string().matches(dateRegex, 'End date must be YYYY-MM-DD').optional(),
-    supervisor: yup.string().optional(),
-    supervisor_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
-    source: yup.string().optional(),
-  }).optional(),
-  previous_employment: yup.object({
-    employer_name: yup.string().optional(),
-    employer_address: yup.string().optional(),
-    employer_city: yup.string().optional(),
-    employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
-    employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
-    from_date: yup.string().matches(dateRegex, 'From date must be YYYY-MM-DD').optional(),
-    to_date: yup.string().matches(dateRegex, 'To date must be YYYY-MM-DD').optional(),
-    occupation: yup.string().optional(),
-  }).optional(),
-  credit_scores: yup.object({
-    equifax: yup.string().matches(/^\d+$/, 'Equifax score must be a number').optional(),
-    experian: yup.string().matches(/^\d+$/, 'Experian score must be a number').optional(),
-    transunion: yup.string().matches(/^\d+$/, 'Transunion score must be a number').optional(),
-  }).optional(),
-});
+// const coApplicantSchema = yup.object().shape({
+//   first_name: yup.string().matches(nameRegex, 'First name can only contain letters').optional(),
+//   last_name: yup.string().matches(nameRegex, 'Last name can only contain letters').optional(),
+//   contact: yup.object({
+//     email: yup.string().email('Invalid email').optional(),
+//   }).optional(),
+//   // All other fields optional
+//   current_address: yup.object({
+//     address: yup.string().max(200, 'Address too long').optional(),
+//     city: yup.string().max(100, 'City too long').optional(),
+//     state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+//     zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
+//     county: yup.string().max(100, 'County too long').optional(),
+//     home_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+//     work_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+//     cell_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+//     other_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+//     email: yup.string().email('Invalid email').optional(),
+//     years: yup
+//       .number()
+//       .min(0, 'Years must be 0 or greater')
+//       .typeError('Years must be a number')
+//       .optional(),
+//     months: yup
+//       .number()
+//       .min(0, 'Months must be between 0 and 11')
+//       .max(11, 'Months must be between 0 and 11')
+//       .typeError('Months must be a number')
+//       .optional(),
+//     how_long_at_current_address: yup.string().optional(),
+//     // fax: yup.string().matches(phoneRegex, 'Invalid fax number').optional(),
+//   }).optional(),
+//   previous_address: yup.object({
+//     address: yup.string().max(200, 'Address too long').optional(),
+//     city: yup.string().max(100, 'City too long').optional(),
+//     state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+//     zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
+//     years: yup
+//       .number()
+//       .min(0, 'Years must be 0 or greater')
+//       .typeError('Years must be a number')
+//       .optional(),
+//     months: yup
+//       .number()
+//       .min(0, 'Months must be between 0 and 11')
+//       .max(11, 'Months must be between 0 and 11')
+//       .typeError('Months must be a number')
+//       .optional(),
+//     duration: yup.string().optional(),
+//   }).optional(),
+//   employment: yup.object({
+//     status: yup.string().oneOf(['Employed', 'Self-Employed', 'Unemployed', 'Retired', 'Student', 'Part time', 'Contract']).optional(),
+//     is_business_owner: yup.string().optional(),
+//     employer_name: yup.string().optional(),
+//     employer_address: yup.string().optional(),
+//     employer_city: yup.string().optional(),
+//     employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+//     employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
+//     occupation: yup.string().optional(),
+//     // monthly_salary: yup.string().matches(/^[\d.]+$/, 'Monthly salary must be a number').optional(),
+//     // other_income: yup.string().matches(/^[\d.]+$/, 'Other income must be a number').optional(),
+//     start_date: yup.string().matches(dateRegex, 'Start date must be YYYY-MM-DD').optional(),
+//     end_date: yup.string().matches(dateRegex, 'End date must be YYYY-MM-DD').optional(),
+//     supervisor: yup.string().optional(),
+//     supervisor_phone: yup.string().matches(phoneRegex, 'Invalid phone number').optional(),
+//     source: yup.string().optional(),
+//   }).optional(),
+//   previous_employment: yup.object({
+//     employer_name: yup.string().optional(),
+//     employer_address: yup.string().optional(),
+//     employer_city: yup.string().optional(),
+//     employer_state: yup.string().oneOf(US_STATES.map(s => s.value), 'Select a valid state').optional(),
+//     employer_zip_code: yup.string().matches(zipRegex, 'Zip code must be 5 digits').optional(),
+//     from_date: yup.string().matches(dateRegex, 'From date must be YYYY-MM-DD').optional(),
+//     to_date: yup.string().matches(dateRegex, 'To date must be YYYY-MM-DD').optional(),
+//     occupation: yup.string().optional(),
+//   }).optional(),
+//   credit_scores: yup.object({
+//     equifax: yup.string().matches(/^\d+$/, 'Equifax score must be a number').optional(),
+//     experian: yup.string().matches(/^\d+$/, 'Experian score must be a number').optional(),
+//     transunion: yup.string().matches(/^\d+$/, 'Transunion score must be a number').optional(),
+//   }).optional(),
+// });
 
 // Helper functions for random data
 function randomString(length = 6) {
@@ -692,8 +692,8 @@ const ClientForm = ({
 
   const validateSection = async (section, data) => {
     try {
-      if (section === 'applicant') await applicantSchema.validate(data, { abortEarly: false });
-      if (section === 'coApplicant') await coApplicantSchema.validate(data, { abortEarly: false });
+      //if (section === 'applicant') await applicantSchema.validate(data, { abortEarly: false });
+      //if (section === 'coApplicant') await coApplicantSchema.validate(data, { abortEarly: false });
       return {};
     } catch (err) {
       const errorObj = {};
@@ -738,7 +738,11 @@ const ClientForm = ({
       console.log('CoApplicant validation errors:', coApplicantErrors);
       
       if (Object.keys(applicantErrors).length > 0 || Object.keys(coApplicantErrors).length > 0) {
-        toast.error('Please fix validation errors.');
+        const errorMessages = [
+          ...Object.values(applicantErrors),
+          ...Object.values(coApplicantErrors)
+        ];
+        toast.error('Please fix validation errors: ' + errorMessages.join('; '));
         // Scroll to first applicant error field if present
         const applicantErrorFields = Object.keys(applicantErrors);
         if (applicantErrorFields.length > 0) {
@@ -784,6 +788,7 @@ const ClientForm = ({
       );
       const applicantPayload = {
         ...restApplicant,
+        employment: applicant.employment, // Ensure all employment fields, including additional_income, are included
         name_information: {
           title, first_name, middle_initial, last_name, suffix, maiden_name, is_consultant
         },

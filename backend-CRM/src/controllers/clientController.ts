@@ -86,24 +86,78 @@ export const createClient = async (req: Request, res: Response) => {
     
     // Step 1: We'll create co_applicant AFTER client is created to avoid client_id requirement issue
     
-    // Step 2: Create applicant
     let applicantId = null;
-    if (clientData.applicant) {
-      try {
-        console.log('Creating applicant...');
-        const applicant = new Applicant(clientData.applicant);
-        const savedApplicant = await applicant.save();
-        applicantId = savedApplicant._id;
-        console.log('✅ Applicant created with ID:', applicantId);
-      } catch (applicantError) {
-        console.error('❌ Error creating applicant:', applicantError);
-        // Clean up co-applicant if it was created
-        if (coApplicantId) {
-          await CoApplicant.findByIdAndDelete(coApplicantId);
-        }
-        throw applicantError;
-      }
+// Step 2: Create applicant with proper demographics mapping
+if (clientData.applicant) {
+  try {
+    console.log('Creating applicant with fixed demographics mapping...');
+    
+    // Handle demographics_information properly
+    let demographicsInfo;
+    
+    if (clientData.applicant.demographics_information) {
+      // If demographics_information exists as nested object, use it directly
+      demographicsInfo = {
+        ...clientData.applicant.demographics_information,
+        // Ensure dob is converted to Date object
+        dob: clientData.applicant.demographics_information.dob 
+          ? new Date(clientData.applicant.demographics_information.dob)
+          : clientData.applicant.demographics_information.dob
+      };
+    } else {
+      // Fallback: map from root level fields (for backward compatibility)
+      demographicsInfo = {
+        birth_place: clientData.applicant.birth_place,
+        dob: clientData.applicant.date_of_birth 
+          ? new Date(clientData.applicant.date_of_birth)
+          : clientData.applicant.dob 
+            ? new Date(clientData.applicant.dob)
+            : undefined,
+        marital_status: clientData.applicant.marital_status,
+        race: clientData.applicant.race,
+        anniversary: clientData.applicant.anniversary,
+        spouse_name: clientData.applicant.spouse_name,
+        spouse_occupation: clientData.applicant.spouse_occupation,
+        number_of_dependents: clientData.applicant.number_of_dependents
+      };
     }
+    
+    const mappedApplicant = {
+      name_information: clientData.applicant.name_information,
+      current_address: {
+        ...clientData.applicant.contact, // merge all contact fields here
+        ...clientData.applicant.current_address // months, years, etc.
+      },
+      previous_address: clientData.applicant.previous_address,
+      current_employment: clientData.applicant.employment, // ✅ Employment mapping
+      previous_employment: clientData.applicant.previous_employment,
+      demographics_information: demographicsInfo, // ✅ Fixed demographics mapping
+      household_members: clientData.applicant.household_members || [],
+      client_id: clientData.applicant.client_id,
+      entry_date: clientData.applicant.entry_date,
+      payoff_amount: clientData.applicant.payoff_amount,
+      notes: clientData.applicant.notes,
+      created_at: clientData.applicant.created_at,
+      createdAt: clientData.applicant.createdAt,
+      updatedAt: clientData.applicant.updatedAt
+    };
+    
+    console.log('Mapped demographics_information:', mappedApplicant.demographics_information);
+    console.log('DOB type:', typeof mappedApplicant.demographics_information.dob);
+    
+    const applicant = new Applicant(mappedApplicant);
+    const savedApplicant = await applicant.save();
+    applicantId = savedApplicant._id;
+    console.log('✅ Applicant created with ID:', applicantId);
+  } catch (applicantError) {
+    console.error('❌ Error creating applicant:', applicantError);
+    // Clean up co-applicant if it was created
+    if (coApplicantId) {
+      await CoApplicant.findByIdAndDelete(coApplicantId);
+    }
+    throw applicantError;
+  }
+}
     
     // Step 3: Create the main client document
     const clientDoc = {
