@@ -21,6 +21,9 @@ import UnderwritingSection from './UnderwritingSection';
 import LoanStatusTab from './LoanStatusTab';
 import DriverSection from './DriverSection';
 import { US_STATES } from '../../constants';
+import IncomeProtectionSection from './IncomeProtectionSection';
+import VehicleCoverageSection from './VehicleCoverageSection';
+import RetirementSection from './RetirementSection';
 
 interface ClientFormProps {
   mode?: 'view' | 'edit' | 'create';
@@ -724,7 +727,8 @@ const ClientForm = ({
     setLastSubmitTime(now);
     setIsSubmitting(true);
     setErrorMsg(null);
-    
+    // incomeProtection: formData.incomeProtection || undefined,
+
     try {
       // Validate applicant and co-applicant
       const applicantErrors = await validateSection('applicant', formData.applicant);
@@ -836,7 +840,10 @@ const ClientForm = ({
         liabilities: filteredLiabilities.length > 0 ? filteredLiabilities : undefined,
         household_members: filteredHouseholdMembers.length > 0 ? filteredHouseholdMembers : undefined,
         mortgage: formData.mortgage || {}, // Add mortgage data to payload
-        loanStatus: formData.loanStatus || undefined // Add loanStatus if present
+        loanStatus: formData.loanStatus || undefined, // Add loanStatus if present
+        incomeProtection: formData.incomeProtection || undefined,
+        vehicleCoverage: formData.vehicleCoverage || undefined,
+        retirement: formData.retirement || undefined,
       };
       
       if (isCreate) {
@@ -896,7 +903,10 @@ const ClientForm = ({
           liabilities: formData.liabilities || undefined,
           mortgage: formData.mortgage || undefined,
           underwriting: formData.underwriting || undefined,
-          loanStatus: formData.loanStatus || undefined
+          loanStatus: formData.loanStatus || undefined,
+          incomeProtection: formData.incomeProtection || undefined,
+          vehicleCoverage: formData.vehicleCoverage || undefined,
+          retirement: formData.retirement || undefined,
         };
         delete updateSnake.entryDate;
         delete updateSnake.payoffAmount;
@@ -1246,6 +1256,398 @@ const ClientForm = ({
           received: '2025-07-19'
         }
       },
+      incomeProtection: {
+  applicant: {
+    firstName: "John",
+    middleInitial: "A",
+    lastName: "Doe",
+    address: "123 Main St",
+    city: "Springfield",
+    state: "IL",
+    zip: "62704",
+    dateIn: "2025-07-22",
+    timeIn: "10:30",
+    agent: "Agent Smith",
+    fieldTrainer: "Trainer Jane",
+    referringAgent: "Ref Agent"
+  },
+  coApplicant: {
+    firstName: "Jane",
+    middleInitial: "B",
+    lastName: "Doe"
+  },
+  bankComparison: {
+    bankA: {
+      provider: "ABC Life",
+      faceAmount: 250000,
+      insuranceType: "Term",
+      term: 20,
+      monthlyPremium: 45.00,
+      annualPremium: 540.00
+    },
+    bankB: {
+      provider: "XYZ Life",
+      faceAmount: 250000,
+      insuranceType: "Term",
+      term: 20,
+      monthlyPremium: 30.00,
+      annualPremium: 360.00,
+      savings: 180.00
+    }
+  },
+  applicationDetails: {
+    applicationDate: "2025-07-20",
+    policyNumber: "POL123456",
+    rating: "Preferred",
+    tableRating: "A",
+    policyStatus: "Approved",
+    statusDate: "2025-07-21",
+    issueDate: "2025-07-22",
+    disburseDate: "2025-07-23",
+    numberOfUnits: 1,
+    processingManager: "Manager Name",
+    dft: "DFT Info",
+    dftNo: "DFT123",
+    grossAnnualPremium: 360.00,
+    gap: 360.00
+  },
+  familyMembers: [
+    {
+      name: "Anna Doe",
+      dob: "2010-05-15",
+      age: 15,
+      sex: "F",
+      relationship: "Daughter",
+      ssn: "123-45-6789",
+      height: "5'2\"",
+      weight: "110",
+      tobacco: false,
+      quitDate: "",
+      military: false,
+      flyingHazard: false,
+      dutyAircraft: "",
+      rider: "None",
+      isStudent: true
+    }
+  ],
+  owner: {
+    name: "John Doe",
+    relationship: "Father",
+    address: "123 Main St",
+    ssn: "111-22-3333"
+  },
+  processMilestones: {
+    implementation: "2025-07-20",
+    applicationSigned: "2025-07-20",
+    personalHistoryInterviewCompleted: "2025-07-21",
+    appSubmission: "2025-07-21",
+    paramedsOrdered: "2025-07-21",
+    paramedsScheduled: "2025-07-22",
+    paramedsDecisioned: "2025-07-22",
+    paramedsCompleted: "2025-07-23",
+    apsOrdered: "2025-07-23",
+    apsDecisioned: "2025-07-24",
+    issuedDate: "2025-07-24",
+    approvedRating: "Preferred",
+    datePolicyMailedToClient: "2025-07-25",
+    deliveryRequirementsReceived: "2025-07-26",
+    commissionsReceived: "2025-07-27"
+  }
+      },
+      vehicleCoverage: {
+        applicant: {
+          firstName: "John",
+          middleInitial: "A",
+          lastName: "Doe",
+          coApplicant: {
+            firstName: "Jane",
+            middleInitial: "B",
+            lastName: "Doe"
+          },
+          address: "123 Main St",
+          city: "Springfield",
+          state: "IL",
+          zip: "62704",
+          dateIn: "2025-07-22",
+          timeIn: "09:30",
+          fieldTrainer: "Mike Smith",
+          bma: "BMA Name",
+          stateLicensed: "Yes"
+        },
+        insuranceDetails: {
+          bankA: {
+            carrier: "State Farm",
+            sixMonthPremium: 600,
+            annualPremium: 1200,
+            savings: 100
+          },
+          bankB: {
+            carrier: "Geico",
+            sixMonthPremium: 550,
+            annualPremium: 1100
+          },
+          application: {
+            applicationDate: "2025-07-01",
+            status: "Pending",
+            statusDate: "2025-07-15",
+            issueDate: "2025-07-20",
+            disburseDate: "2025-07-21",
+            dft: "John Admin",
+            dftNo: "DFT123456",
+            numberOfUnits: 2,
+            expirationDate: "2026-07-01"
+          }
+        },
+        householdMembers: [
+          {
+            firstName: "John",
+            middleInitial: "A",
+            lastName: "Doe",
+            sex: "M",
+            dob: "1985-04-10",
+            age: 40,
+            ssn: "123-45-6789",
+            relationship: "Self",
+            maritalStatus: "Married",
+            drivingStatus: "Active",
+            licenseNumber: "D1234567",
+            state: "IL",
+            accidentsOrViolations: "None"
+          },
+          {
+            firstName: "Jane",
+            middleInitial: "B",
+            lastName: "Doe",
+            sex: "F",
+            dob: "1986-05-15",
+            age: 39,
+            ssn: "987-65-4321",
+            relationship: "Spouse",
+            maritalStatus: "Married",
+            drivingStatus: "Active",
+            licenseNumber: "D7654321",
+            state: "IL",
+            accidentsOrViolations: "1 speeding ticket"
+          }
+        ],
+        currentVehicleCoverage: {
+          bankA: [
+            {
+              year: 2018,
+              make: "Toyota",
+              model: "Camry",
+              vin: "1HGCM82633A004352",
+              premium: 600,
+              comprehensive: 100,
+              collision: 200,
+              bodilyInjury: 100000,
+              propertyDamage: 50000,
+              medicalPayment: 5000,
+              towing: 100,
+              rental: 300
+            }
+          ],
+          numberOfVehicles: 1
+        },
+        proposedVehicleCoverage: {
+          bankB: [
+            {
+              year: 2022,
+              make: "Honda",
+              model: "Civic",
+              vin: "2HGFB2F59CH512345",
+              premium: 550,
+              comprehensive: 120,
+              collision: 180,
+              bodilyInjury: 100000,
+              propertyDamage: 60000,
+              medicalPayment: 6000,
+              towing: 120,
+              rental: 350
+            }
+          ],
+          numberOfVehicles: 1
+        },
+        processMilestones: {
+          finalQuoteSentToUW: "2025-07-10",
+          finalQuoteReceived: "2025-07-12",
+          finalQuoteExpires: "2025-08-01",
+          finalQuoteClientReviewDate: "2025-07-15",
+          clientDecision: "Accepted",
+          dateBinded: "2025-07-20",
+          netAnnualPremium: 1100,
+          totalAnnualPremium: 1150,
+          bindedPremiumPaid: true,
+          autoPremiumPaid: true
+        }
+      },
+      retirement: {
+        applicant: {
+          firstName: "John",
+          middleInitial: "A",
+          lastName: "Doe",
+          address: "123 Main St",
+          city: "Springfield",
+          state: "IL",
+          zip: "62704",
+          dateIn: "2025-07-22",
+          timeIn: "10:00",
+          agent: "Jane Smith",
+          fieldTrainer: "Mike Trainer",
+          referringAgent: "Agent Referral",
+          coApplicant: {
+            firstName: "Jane",
+            middleInitial: "B",
+            lastName: "Doe"
+          }
+        },
+        investmentAccounts: {
+          bankA: [
+            {
+              accountId: "1A",
+              accountName: "Retirement Fund A",
+              investmentFirm: "Fidelity",
+              accountBalance: 100000,
+              investmentAccountType: "IRA",
+              investmentType: "Stocks",
+              ownership: "Joint Tenancy",
+              remarks: "Long-term"
+            },
+            {
+              accountId: "2A",
+              accountName: "Growth Fund",
+              investmentFirm: "Vanguard",
+              accountBalance: 75000,
+              investmentAccountType: "Roth IRA",
+              investmentType: "Bonds",
+              ownership: "Individual",
+              remarks: "Stable"
+            }
+          ],
+          bankB: [
+            {
+              accountId: "1B",
+              accountName: "Trust Fund",
+              investmentFirm: "Chase",
+              accountBalance: 200,
+              investmentAccountType: "401K",
+              investmentType: "Mixed",
+              ownership: "Individual",
+              remarks: ""
+            },
+            {
+              accountId: "2B",
+              accountName: "Emergency Fund",
+              investmentFirm: "Wells Fargo",
+              accountBalance: 300,
+              investmentAccountType: "Cash",
+              investmentType: "Money Market",
+              ownership: "Joint Tenancy",
+              remarks: ""
+            }
+          ]
+        },
+        pensionInformation: {
+          pensionAmount: 3500,
+          pensionInfo: "Monthly military pension",
+          remarks: "COLA adjusted yearly",
+          totalInvestmentValue: 175500,
+          totalQualifiedAccounts: 140000,
+          totalNonQualifiedAccounts: 35500
+        },
+        additionalIncomeSources: [
+          {
+            incomeSource: "Rental Property",
+            amount: 1200,
+            taxable: true,
+            colaAdjusted: false,
+            startAge: 60,
+            endAge: 80
+          },
+          {
+            incomeSource: "Consulting",
+            amount: 800,
+            taxable: true,
+            colaAdjusted: true,
+            startAge: 62,
+            endAge: 70
+          }
+        ],
+        processMilestones: [
+          {
+            accountId: "1B",
+            accountName: "Trust Fund",
+            investmentFirm: "Chase",
+            accountBalance: 200,
+            investmentAccountType: "401K",
+            investmentType: "Mixed",
+            ownership: "Individual",
+            remarks: "",
+            milestones: {
+              implementationCall: true,
+              financialSuitabilityCompleted: true,
+              applicationSentToClient: true,
+              applicationSignedAndSubmitted: true,
+              suitabilityApprovedByAthene: true,
+              suitabilityEmailSent: true,
+              transferFormsSent: true,
+              medallionSignatureObtained: true,
+              wetSignatureMailed: true,
+              wetSignatureReceived: true,
+              wetSignatureSentToAthene: true,
+              wetSignatureFaxedToProvider: true,
+              threeWayClientCall: false,
+              tspCall1: false,
+              tspCall2: false,
+              accountLiquidated: false,
+              fundsMailedToClient: true,
+              checkReceived: false,
+              fundsReceivedByAthene: true,
+              contractIssued: true,
+              expectedFunds: 200,
+              actualReceivedFunds: 200,
+              policyAcknowledged: true,
+              athenePortalSetup: true
+            }
+          },
+          {
+            accountId: "2B",
+            accountName: "Emergency Fund",
+            investmentFirm: "Wells Fargo",
+            accountBalance: 300,
+            investmentAccountType: "Cash",
+            investmentType: "Money Market",
+            ownership: "Joint Tenancy",
+            remarks: "",
+            milestones: {
+              implementationCall: true,
+              financialSuitabilityCompleted: true,
+              applicationSentToClient: true,
+              applicationSignedAndSubmitted: true,
+              suitabilityApprovedByAthene: true,
+              suitabilityEmailSent: true,
+              transferFormsSent: true,
+              medallionSignatureObtained: true,
+              wetSignatureMailed: true,
+              wetSignatureReceived: true,
+              wetSignatureSentToAthene: true,
+              wetSignatureFaxedToProvider: true,
+              threeWayClientCall: false,
+              tspCall1: false,
+              tspCall2: false,
+              accountLiquidated: true,
+              fundsMailedToClient: true,
+              checkReceived: false,
+              fundsReceivedByAthene: true,
+              contractIssued: true,
+              expectedFunds: 300,
+              actualReceivedFunds: 300,
+              policyAcknowledged: true,
+              athenePortalSetup: true
+            }
+          }
+        ]
+      },
       status: 'Active',
       payoffAmount: 10000,
       consultantName: 'Consultant X',
@@ -1374,11 +1776,14 @@ const ClientForm = ({
                 <button type="button" role="tab" aria-selected={activeTab === 'underwriting'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'underwriting' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('underwriting')}>Underwriting</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'loan-status'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'loan-status' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('loan-status')}>Loan Status</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'driver'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'driver' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('driver')}>Driver</button>
-                  </div>
-                  <div className="m-2 mt-6  bg-gray-200 rounded-xl">
-                    {activeTab === 'applicant' && (
-                      <>
-                        <CaseInformationSection
+                <button type="button" role="tab" aria-selected={activeTab === 'income-protection'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'income-protection' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('income-protection')}>Income Protection</button>
+                <button type="button" role="tab" aria-selected={activeTab === 'vehicle-coverage'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'vehicle-coverage' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('vehicle-coverage')}>Vehicle Coverage</button>
+                <button type="button" role="tab" aria-selected={activeTab === 'retirement'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'retirement' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('retirement')}>Retirement</button>
+              </div>
+              <div className="m-2 mt-6  bg-gray-200 rounded-xl">
+                {activeTab === 'applicant' && (
+                  <>
+                    <CaseInformationSection
                           clientId={formData.clientId}
                           entryDate={formData.entryDate}
                           payoffAmount={formData.payoffAmount}
@@ -1524,6 +1929,27 @@ const ClientForm = ({
                       fullName: '', dateOfBirth: '', age: '', relationship: '', ssn: '', sex: '', maritalStatus: '', drivingStatus: '', licenseNumber: '', state: '', accidentsViolations: '0',
                     }]}
                     setDrivers={drivers => setFormData(prev => ({ ...prev, drivers }))}
+                    isReadOnly={isReadOnly}
+                  />
+                )}
+                {activeTab === 'income-protection' && (
+                    <IncomeProtectionSection
+                      formData={formData}
+                      setFormData={setFormData}
+                      isReadOnly={isReadOnly}
+                    />
+                  )}
+                  {activeTab === 'vehicle-coverage' && (
+                  <VehicleCoverageSection
+                    formData={formData}
+                    setFormData={setFormData}
+                    isReadOnly={isReadOnly}
+                  />
+                )}
+                {activeTab === 'retirement' && (
+                  <RetirementSection
+                    formData={formData}
+                    setFormData={setFormData}
                     isReadOnly={isReadOnly}
                   />
                 )}
