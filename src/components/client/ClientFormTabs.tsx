@@ -24,6 +24,8 @@ import { US_STATES } from '../../constants';
 import IncomeProtectionSection from './IncomeProtectionSection';
 import VehicleCoverageSection from './VehicleCoverageSection';
 import RetirementSection from './RetirementSection';
+import HomeownersSection from './HomeownersSection';
+import RentersSection from './RentersSection';
 
 interface ClientFormProps {
   mode?: 'view' | 'edit' | 'create';
@@ -844,6 +846,8 @@ const ClientForm = ({
         incomeProtection: formData.incomeProtection || undefined,
         vehicleCoverage: formData.vehicleCoverage || undefined,
         retirement: formData.retirement || undefined,
+        homeowners: formData.homeowners || undefined,
+
       };
       
       if (isCreate) {
@@ -907,6 +911,8 @@ const ClientForm = ({
           incomeProtection: formData.incomeProtection || undefined,
           vehicleCoverage: formData.vehicleCoverage || undefined,
           retirement: formData.retirement || undefined,
+          homeowners: formData.homeowners || undefined,
+          renters: formData.renters || undefined,
         };
         delete updateSnake.entryDate;
         delete updateSnake.payoffAmount;
@@ -1648,6 +1654,209 @@ const ClientForm = ({
           }
         ]
       },
+      homeowners: {
+      applicant: {
+        firstName: "John",
+        middleInitial: "A",
+        lastName: "Doe"
+      },
+      coApplicant: {
+        firstName: "Jane",
+        middleInitial: "B",
+        lastName: "Doe"
+      },
+      contactInfo: {
+        address: "123 Main St",
+        city: "Springfield",
+        state: "IL",
+        zip: "62704"
+      },
+      additionalInfo: {
+        dateIn: "2025-07-22",
+        timeIn: "10:00",
+        fieldTrainer: "Mike Trainer",
+        BMA: "BMA Springfield",
+        stateLicensed: "Yes"
+      },
+      scheduledProperty: {
+        propertyDescription: "Two-story colonial home with attached garage",
+        value: 350000,
+        bankA: {
+          carrier: "State Farm",
+          premium: 1200,
+          deductible: 1000,
+          medicalPayments: 5000,
+          liability: 300000,
+          savings: 200
+        },
+        bankB: {
+          carrier: "Allstate",
+          premium: 1000,
+          deductible: 1000,
+          medicalPayments: 5000,
+          liability: 300000,
+          savings: 400
+        }
+      },
+      applicationDetails: {
+        applicationDate: "2025-07-01",
+        status: "Approved",
+        statusDate: "2025-07-15",
+        issueDate: "2025-07-20",
+        policyNumber: "HO-123456789",
+        disburseDate: "2025-07-21",
+        DFT: "John Admin",
+        DFTNo: "DFT789",
+        numberOfUnits: 1
+      },
+      propertyCharacteristics: {
+        yearBuilt: 1995,
+        mortgageBalance: 250000,
+        housingType: "Single Family",
+        style: "Colonial",
+        ownerOccupied: true,
+        tenantOccupied: false,
+        monthlyRentalIncome: 0,
+        squareFootage: 2500,
+        foundation: "Basement",
+        foundationPercent: 100,
+        construction: "Frame",
+        roof: "Asphalt Shingle",
+        purchaseDate: "2020-06-15",
+        newPurchase: false,
+        payment: 1800,
+        offeredSaleLast12Months: false,
+        refinancedLast12Months: false,
+        businessOnPremises: false,
+        percentBasementFinished: 50,
+        deckSqFootage: 200,
+        openPorchSqFt: 0,
+        enclosedPorchSqFt: 0,
+        garage: "Attached",
+        numCarsGarageCanHold: 2,
+        numFullBaths: 3,
+        numHalfBaths: 1,
+        numFireplaces: 1,
+        pool: false,
+        trampoline: false,
+        numPets: 1,
+        selfLockingGate: false,
+        numClaimsLast5Years: 0,
+        amtOfClaims: 0
+      },
+      credits: {
+        homeAssocFee: 0,
+        floodPolicy: false,
+        monitoredBurglarAlarm: true,
+        monitoredFireAlarm: true,
+        twentyFourHrSecurity: false,
+        fireExtinguisher: true,
+        smokeProtector: true,
+        nonSmokingHousehold: true,
+        deadboltLocks: true,
+        accountCredit: 50
+      },
+      processMilestones: {
+        finalQuoteSentToUW: "2025-07-10",
+        finalQuoteReceived: "2025-07-12",
+        finalQuoteExpires: "2025-08-01",
+        finalQuoteClientReviewDate: "2025-07-15",
+        clientDecision: "Accepted",
+        dateBinded: "2025-07-20",
+        netAnnualPremium: 1000,
+        totalAnnualPremium: 1050,
+        bindedPremiumPaid: true,
+        homePremiumPaid: true
+      },
+      bindingMilestones: {
+        frontRearSidePhotosProvided: true,
+        photosReceived: true,
+        newMortgageClause: "Wells Fargo Bank, N.A.",
+        newLoanNumber: "WF12345678",
+        paymentSentForm: true,
+        paymentFormReceived: true
+      }
+    },
+    renters: {
+        applicant: {
+          firstName: "John",
+          middleInitial: "A",
+          lastName: "Doe"
+        },
+        coApplicant: {
+          firstName: "Jane",
+          middleInitial: "B",
+          lastName: "Doe"
+        },
+        contactInfo: {
+          address: "456 Rental Ave",
+          city: "Springfield",
+          state: "IL",
+          zip: "62704"
+        },
+        additionalInfo: {
+          dateIn: "2025-07-22",
+          timeIn: "14:30",
+          fieldTrainer: "Sarah Trainer",
+          BMA: "BMA Renters",
+          stateLicensed: "Yes"
+        },
+        bankInfo: {
+          bankA: {
+            carrier: "State Farm",
+            premium: 180,
+            expirationDate: "2025-12-31",
+            savings: 50
+          },
+          bankB: {
+            carrier: "Progressive",
+            premium: 130,
+            expirationDate: "2026-07-31",
+            savings: 100
+          }
+        },
+        applicationDetails: {
+          applicationDate: "2025-07-01",
+          rentStatus: "Approved",
+          statusDate: "2025-07-15",
+          issueDate: "2025-07-20",
+          policyNumber: "RN-987654321",
+          disburseDate: "2025-07-21",
+          DFT: "Jane Admin",
+          DFTNo: "DFT456",
+          GAP: 130,
+          numberOfUnits: 1
+        },
+        propertyCharacteristics: {
+          yearBuilt: 2010,
+          yearsAtCurrentAddress: 2,
+          housingType: "Apartment",
+          style: "Contemporary",
+          numberOfStories: 3,
+          squareFootage: 1200,
+          construction: "Frame",
+          roof: "Asphalt Shingle",
+          garage: "None"
+        },
+        coverage: {
+          current: {
+            deductible: 500,
+            liability: 100000,
+            contents: 25000,
+            medicalPayments: 1000,
+            scheduledProperty: 5000,
+            propertyTypeAndValue: "Electronics: $3000, Jewelry: $2000"
+          },
+          proposed: {
+            deductible: 500,
+            liability: 300000,
+            contents: 30000,
+            medicalPayments: 5000,
+            scheduledProperty: 8000,
+            propertyTypeAndValue: "Electronics: $4000, Jewelry: $3000, Art: $1000"
+          }
+        }
+      },
       status: 'Active',
       payoffAmount: 10000,
       consultantName: 'Consultant X',
@@ -1779,6 +1988,8 @@ const ClientForm = ({
                 <button type="button" role="tab" aria-selected={activeTab === 'income-protection'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'income-protection' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('income-protection')}>Income Protection</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'vehicle-coverage'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'vehicle-coverage' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('vehicle-coverage')}>Vehicle Coverage</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'retirement'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'retirement' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('retirement')}>Retirement</button>
+                <button type="button" role="tab" aria-selected={activeTab === 'homeowners'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'homeowners' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('homeowners')}>Homeowners</button>
+                <button type="button" role="tab" aria-selected={activeTab === 'renters'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'renters' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('renters')}>Renters</button>
               </div>
               <div className="m-2 mt-6  bg-gray-200 rounded-xl">
                 {activeTab === 'applicant' && (
@@ -1948,6 +2159,20 @@ const ClientForm = ({
                 )}
                 {activeTab === 'retirement' && (
                   <RetirementSection
+                    formData={formData}
+                    setFormData={setFormData}
+                    isReadOnly={isReadOnly}
+                  />
+                )}
+                {activeTab === 'homeowners' && (
+                  <HomeownersSection
+                    formData={formData}
+                    setFormData={setFormData}
+                    isReadOnly={isReadOnly}
+                  />
+                )}
+                {activeTab === 'renters' && (
+                  <RentersSection
                     formData={formData}
                     setFormData={setFormData}
                     isReadOnly={isReadOnly}
