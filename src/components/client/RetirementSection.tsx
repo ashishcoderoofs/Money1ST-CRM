@@ -1,9 +1,8 @@
 import React from 'react';
-import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, Trash2 } from 'lucide-react';
 
 const RetirementSection = ({ formData, setFormData, isReadOnly }) => {
   const retirement = formData.retirement || {};
-  const [expandedMilestones, setExpandedMilestones] = React.useState({});
 
   const updateRetirement = (path, value) => {
     if (isReadOnly) return;
@@ -14,7 +13,6 @@ const RetirementSection = ({ formData, setFormData, isReadOnly }) => {
         newData.retirement = {};
       }
       
-      // Handle nested path updates
       const pathArray = path.split('.');
       let current = newData.retirement;
       
@@ -30,74 +28,193 @@ const RetirementSection = ({ formData, setFormData, isReadOnly }) => {
     });
   };
 
-  const addInvestmentAccount = (bank) => {
+  // Generate unique account ID
+  const generateAccountId = (bankIndex, accountIndex) => {
+    const clientId = formData.clientId || 'CLI001';
+    const bankId = `B${String(bankIndex + 1).padStart(2, '0')}`;
+    const accountNum = String(accountIndex + 1).padStart(2, '0');
+    return `RET${clientId}${bankId}${accountNum}`;
+  };
+
+  // Initialize default structure
+  React.useEffect(() => {
+    if (!retirement.banks || retirement.banks.length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        retirement: {
+          ...prev.retirement,
+          banks: [{
+            id: 'bank-a',
+            name: 'Bank A',
+            accounts: [
+              { 
+                id: '1a', 
+                accountId: generateAccountId(0, 0),
+                nameOfAccount: '', 
+                investmentFirm: '', 
+                accountBalance: 0, 
+                typeOfInvestmentAccount: '', 
+                investmentType: '', 
+                ownership: '', 
+                remarks: '',
+                processMilestones: {}
+              }
+            ]
+          }]
+        }
+      }));
+    }
+  }, []);
+
+  // Bank management
+  const addBank = () => {
     if (isReadOnly) return;
     
-    const newAccount = {
-      accountId: '',
-      accountName: '',
-      investmentFirm: '',
-      accountBalance: '',
-      investmentAccountType: '',
-      investmentType: '',
-      ownership: '',
-      remarks: ''
+    const bankCount = (retirement.banks || []).length;
+    const bankLetter = String.fromCharCode(65 + bankCount);
+    
+    const newBank = {
+      id: `bank-${bankLetter.toLowerCase()}`,
+      name: `Bank ${bankLetter}`,
+      accounts: [
+        { 
+          id: `1${bankLetter.toLowerCase()}`, 
+          accountId: generateAccountId(bankCount, 0),
+          nameOfAccount: '', 
+          investmentFirm: '', 
+          accountBalance: 0, 
+          typeOfInvestmentAccount: '', 
+          investmentType: '', 
+          ownership: '', 
+          remarks: '',
+          processMilestones: {}
+        }
+      ]
     };
     
     setFormData(prev => ({
       ...prev,
       retirement: {
         ...prev.retirement,
-        investmentAccounts: {
-          ...prev.retirement?.investmentAccounts,
-          [bank]: [...(prev.retirement?.investmentAccounts?.[bank] || []), newAccount]
-        }
+        banks: [...(prev.retirement?.banks || []), newBank]
       }
     }));
   };
 
-  const removeInvestmentAccount = (bank, index) => {
+  const removeBank = (bankIndex) => {
     if (isReadOnly) return;
     
     setFormData(prev => ({
       ...prev,
       retirement: {
         ...prev.retirement,
-        investmentAccounts: {
-          ...prev.retirement?.investmentAccounts,
-          [bank]: prev.retirement?.investmentAccounts?.[bank]?.filter((_, i) => i !== index) || []
-        }
+        banks: prev.retirement?.banks?.filter((_, i) => i !== bankIndex) || []
       }
     }));
   };
 
-  const updateInvestmentAccount = (bank, index, field, value) => {
+  const addAccount = (bankIndex) => {
     if (isReadOnly) return;
     
     setFormData(prev => ({
       ...prev,
       retirement: {
         ...prev.retirement,
-        investmentAccounts: {
-          ...prev.retirement?.investmentAccounts,
-          [bank]: prev.retirement?.investmentAccounts?.[bank]?.map((account, i) => 
-            i === index ? { ...account, [field]: value } : account
-          ) || []
-        }
+        banks: prev.retirement?.banks?.map((bank, i) => 
+          i === bankIndex ? {
+            ...bank,
+            accounts: [...(bank.accounts || []), {
+              id: `${Date.now()}`,
+              accountId: generateAccountId(bankIndex, bank.accounts?.length || 0),
+              nameOfAccount: '', 
+              investmentFirm: '', 
+              accountBalance: 0, 
+              typeOfInvestmentAccount: '', 
+              investmentType: '', 
+              ownership: '', 
+              remarks: '',
+              processMilestones: {}
+            }]
+          } : bank
+        ) || []
       }
     }));
   };
 
+  const removeAccount = (bankIndex, accountIndex) => {
+    if (isReadOnly) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      retirement: {
+        ...prev.retirement,
+        banks: prev.retirement?.banks?.map((bank, i) => 
+          i === bankIndex ? {
+            ...bank,
+            accounts: bank.accounts?.filter((_, j) => j !== accountIndex) || []
+          } : bank
+        ) || []
+      }
+    }));
+  };
+
+  const updateAccount = (bankIndex, accountIndex, field, value) => {
+    if (isReadOnly) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      retirement: {
+        ...prev.retirement,
+        banks: prev.retirement?.banks?.map((bank, i) => 
+          i === bankIndex ? {
+            ...bank,
+            accounts: bank.accounts?.map((account, j) => 
+              j === accountIndex ? { ...account, [field]: value } : account
+            ) || []
+          } : bank
+        ) || []
+      }
+    }));
+  };
+
+  const updateProcessMilestone = (bankIndex, accountIndex, field, value) => {
+    if (isReadOnly) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      retirement: {
+        ...prev.retirement,
+        banks: prev.retirement?.banks?.map((bank, i) => 
+          i === bankIndex ? {
+            ...bank,
+            accounts: bank.accounts?.map((account, j) => 
+              j === accountIndex ? { 
+                ...account, 
+                processMilestones: {
+                  ...account.processMilestones,
+                  [field]: value
+                }
+              } : account
+            ) || []
+          } : bank
+        ) || []
+      }
+    }));
+  };
+
+  // Additional Income Sources management
   const addIncomeSource = () => {
     if (isReadOnly) return;
     
     const newSource = {
+      id: `income-${Date.now()}`,
       incomeSource: '',
-      amount: '',
-      taxable: false,
-      colaAdjusted: false,
+      amount: 0,
+      taxable: '',
+      colaAdjusted: '',
       startAge: '',
-      endAge: ''
+      endAge: '',
+      actions: ''
     };
     
     setFormData(prev => ({
@@ -135,127 +252,54 @@ const RetirementSection = ({ formData, setFormData, isReadOnly }) => {
     }));
   };
 
-  const addProcessMilestone = () => {
-    if (isReadOnly) return;
-    
-    const newMilestone = {
-      accountId: '',
-      accountName: '',
-      investmentFirm: '',
-      accountBalance: '',
-      investmentAccountType: '',
-      investmentType: '',
-      ownership: '',
-      remarks: '',
-      milestones: {
-        implementationCall: false,
-        financialSuitabilityCompleted: false,
-        applicationSentToClient: false,
-        applicationSignedAndSubmitted: false,
-        suitabilityApprovedByAthene: false,
-        suitabilityEmailSent: false,
-        transferFormsSent: false,
-        medallionSignatureObtained: false,
-        wetSignatureMailed: false,
-        wetSignatureReceived: false,
-        wetSignatureSentToAthene: false,
-        wetSignatureFaxedToProvider: false,
-        threeWayClientCall: false,
-        tspCall1: false,
-        tspCall2: false,
-        accountLiquidated: false,
-        fundsMailedToClient: false,
-        checkReceived: false,
-        fundsReceivedByAthene: false,
-        contractIssued: false,
-        expectedFunds: '',
-        actualReceivedFunds: '',
-        policyAcknowledged: false,
-        athenePortalSetup: false
-      }
-    };
-    
-    setFormData(prev => ({
-      ...prev,
-      retirement: {
-        ...prev.retirement,
-        processMilestones: [...(prev.retirement?.processMilestones || []), newMilestone]
-      }
-    }));
-  };
-
-  const removeProcessMilestone = (index) => {
-    if (isReadOnly) return;
-    
-    setFormData(prev => ({
-      ...prev,
-      retirement: {
-        ...prev.retirement,
-        processMilestones: prev.retirement?.processMilestones?.filter((_, i) => i !== index) || []
-      }
-    }));
-  };
-
-  const updateProcessMilestone = (index, field, value) => {
-    if (isReadOnly) return;
-    
-    setFormData(prev => ({
-      ...prev,
-      retirement: {
-        ...prev.retirement,
-        processMilestones: prev.retirement?.processMilestones?.map((milestone, i) => 
-          i === index ? { ...milestone, [field]: value } : milestone
-        ) || []
-      }
-    }));
-  };
-
-  const updateProcessMilestoneMilestone = (index, field, value) => {
-    if (isReadOnly) return;
-    
-    setFormData(prev => ({
-      ...prev,
-      retirement: {
-        ...prev.retirement,
-        processMilestones: prev.retirement?.processMilestones?.map((milestone, i) => 
-          i === index ? { 
-            ...milestone, 
-            milestones: { ...milestone.milestones, [field]: value }
-          } : milestone
-        ) || []
-      }
-    }));
-  };
-
-  const toggleMilestoneExpansion = (index) => {
-    setExpandedMilestones(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
-  };
-
-  const InputField = ({ label, value, onChange, type = "text", required = false, className = "" }) => (
-    <div className={`space-y-2 ${className}`}>
-      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+  const InputField = ({ label, value, onChange, type = "text", required = false, className = "", placeholder = "", readOnly = false }) => (
+    <div className={`space-y-1 ${className}`}>
+      {label && (
+        <label className="text-xs font-medium leading-none text-gray-700">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
       <input
-        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-8 w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
         type={type}
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        readOnly={isReadOnly}
+        readOnly={isReadOnly || readOnly}
+        placeholder={placeholder}
       />
     </div>
   );
 
+  const CurrencyField = ({ label, value, onChange, required = false, className = "" }) => (
+    <div className={`space-y-1 ${className}`}>
+      {label && (
+        <label className="text-xs font-medium leading-none text-gray-700">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
+      <div className="relative">
+        <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">$</span>
+        <input
+          className="flex h-8 w-full rounded border border-gray-300 bg-white pl-6 pr-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+          type="number"
+          step="0.01"
+          value={value || ''}
+          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+          readOnly={isReadOnly}
+        />
+      </div>
+    </div>
+  );
+
   const SelectField = ({ label, value, onChange, options, required = false, className = "" }) => (
-    <div className={`space-y-2 ${className}`}>
-      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+    <div className={`space-y-1 ${className}`}>
+      {label && (
+        <label className="text-xs font-medium leading-none text-gray-700">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
       <select
-        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-8 w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         disabled={isReadOnly}
@@ -277,21 +321,23 @@ const RetirementSection = ({ formData, setFormData, isReadOnly }) => {
         checked={checked || false}
         onChange={(e) => onChange(e.target.checked)}
         disabled={isReadOnly}
-        className="h-4 w-4 rounded border border-input"
+        className="h-4 w-4 rounded border border-gray-300"
       />
-      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+      <label className="text-xs font-medium leading-none text-gray-700">
         {label}
       </label>
     </div>
   );
 
   const TextAreaField = ({ label, value, onChange, required = false, className = "" }) => (
-    <div className={`space-y-2 ${className}`}>
-      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+    <div className={`space-y-1 ${className}`}>
+      {label && (
+        <label className="text-xs font-medium leading-none text-gray-700">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
       <textarea
-        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex min-h-[60px] w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         readOnly={isReadOnly}
@@ -299,365 +345,251 @@ const RetirementSection = ({ formData, setFormData, isReadOnly }) => {
     </div>
   );
 
+  // Dropdown options
+  const typeOfInvestmentAccountOptions = [
+    { value: 'Qualified: Traditional', label: 'Qualified: Traditional' },
+    { value: 'Qualified: Roth', label: 'Qualified: Roth' },
+    { value: 'Non Qualified: Taxable', label: 'Non Qualified: Taxable' }
+  ];
+
+  const investmentTypeOptions = [
+    { value: 'Annuities', label: 'Annuities' },
+    { value: 'Brokerage Account', label: 'Brokerage Account' },
+    { value: 'Mutual Funds', label: 'Mutual Funds' }
+  ];
+
+  const ownershipOptions = [
+    { value: 'Client', label: 'Client' },
+    { value: 'Spouse', label: 'Spouse' },
+    { value: 'Joint Tenancy', label: 'Joint Tenancy' }
+  ];
+
   return (
     <div className="space-y-6 p-6">
-      <h2 className="text-2xl font-semibold mb-6">Retirement Planning</h2>
+      <h2 className="text-2xl font-semibold mb-6">Retirement Form</h2>
 
-      {/* Applicant Information */}
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div className="flex flex-col space-y-1.5 p-6">
-          <h3 className="text-lg font-semibold">Applicant Information</h3>
-        </div>
-        <div className="p-6 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <InputField
-              label="First Name"
-              value={retirement.applicant?.firstName}
-              onChange={(value) => updateRetirement('applicant.firstName', value)}
-              required
-            />
-            <InputField
-              label="Middle Initial"
-              value={retirement.applicant?.middleInitial}
-              onChange={(value) => updateRetirement('applicant.middleInitial', value)}
-            />
-            <InputField
-              label="Last Name"
-              value={retirement.applicant?.lastName}
-              onChange={(value) => updateRetirement('applicant.lastName', value)}
-              required
-            />
-            <InputField
-              label="Address"
-              value={retirement.applicant?.address}
-              onChange={(value) => updateRetirement('applicant.address', value)}
-              className="md:col-span-3"
-            />
-            <InputField
-              label="City"
-              value={retirement.applicant?.city}
-              onChange={(value) => updateRetirement('applicant.city', value)}
-            />
-            <InputField
-              label="State"
-              value={retirement.applicant?.state}
-              onChange={(value) => updateRetirement('applicant.state', value)}
-            />
-            <InputField
-              label="ZIP Code"
-              value={retirement.applicant?.zip}
-              onChange={(value) => updateRetirement('applicant.zip', value)}
-            />
-            <InputField
-              label="Date In"
-              type="date"
-              value={retirement.applicant?.dateIn}
-              onChange={(value) => updateRetirement('applicant.dateIn', value)}
-            />
-            <InputField
-              label="Time In"
-              type="time"
-              value={retirement.applicant?.timeIn}
-              onChange={(value) => updateRetirement('applicant.timeIn', value)}
-            />
-            <InputField
-              label="Agent"
-              value={retirement.applicant?.agent}
-              onChange={(value) => updateRetirement('applicant.agent', value)}
-            />
-            <InputField
-              label="Field Trainer"
-              value={retirement.applicant?.fieldTrainer}
-              onChange={(value) => updateRetirement('applicant.fieldTrainer', value)}
-            />
-            <InputField
-              label="Referring Agent"
-              value={retirement.applicant?.referringAgent}
-              onChange={(value) => updateRetirement('applicant.referringAgent', value)}
-            />
-          </div>
-
-          {/* Co-Applicant */}
-          <div className="mt-6">
-            <h4 className="font-medium mb-4">Co-Applicant</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <InputField
-                label="First Name"
-                value={retirement.applicant?.coApplicant?.firstName}
-                onChange={(value) => updateRetirement('applicant.coApplicant.firstName', value)}
-              />
-              <InputField
-                label="Middle Initial"
-                value={retirement.applicant?.coApplicant?.middleInitial}
-                onChange={(value) => updateRetirement('applicant.coApplicant.middleInitial', value)}
-              />
-              <InputField
-                label="Last Name"
-                value={retirement.applicant?.coApplicant?.lastName}
-                onChange={(value) => updateRetirement('applicant.coApplicant.lastName', value)}
-              />
-            </div>
-          </div>
+      {/* Header Section */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="grid grid-cols-3 gap-4">
+          <InputField
+            label="Date In"
+            type="date"
+            value={retirement.processing?.dateIn}
+            onChange={(value) => updateRetirement('processing.dateIn', value)}
+          />
+          <InputField
+            label="Time In"
+            type="time"
+            value={retirement.processing?.timeIn}
+            onChange={(value) => updateRetirement('processing.timeIn', value)}
+          />
+          <InputField
+            label="Agent"
+            value={retirement.processing?.agent}
+            onChange={(value) => updateRetirement('processing.agent', value)}
+          />
+          <InputField
+            label="Field Trainer"
+            value={retirement.processing?.fieldTrainer}
+            onChange={(value) => updateRetirement('processing.fieldTrainer', value)}
+          />
+          <InputField
+            label="Referring Agent"
+            value={retirement.processing?.referringAgent}
+            onChange={(value) => updateRetirement('processing.referringAgent', value)}
+          />
         </div>
       </div>
 
-      {/* Investment Accounts */}
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div className="flex flex-col space-y-1.5 p-6">
-          <h3 className="text-lg font-semibold">Investment Accounts</h3>
-        </div>
-        <div className="p-6 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Bank A Accounts */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-blue-600">Bank A Accounts</h4>
-                {!isReadOnly && (
-                  <button
-                    type="button"
-                    onClick={() => addInvestmentAccount('bankA')}
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-8 px-3"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Account
-                  </button>
-                )}
-              </div>
-              {(retirement.investmentAccounts?.bankA || []).map((account, index) => (
-                <div key={index} className="border rounded-lg p-3 relative">
-                  {!isReadOnly && (
-                    <button
-                      type="button"
-                      onClick={() => removeInvestmentAccount('bankA', index)}
-                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                  <div className="grid grid-cols-1 gap-3">
-                    <InputField
-                      label="Account ID"
-                      value={account.accountId}
-                      onChange={(value) => updateInvestmentAccount('bankA', index, 'accountId', value)}
-                    />
-                    <InputField
-                      label="Account Name"
-                      value={account.accountName}
-                      onChange={(value) => updateInvestmentAccount('bankA', index, 'accountName', value)}
-                    />
-                    <InputField
-                      label="Investment Firm"
-                      value={account.investmentFirm}
-                      onChange={(value) => updateInvestmentAccount('bankA', index, 'investmentFirm', value)}
-                    />
-                    <InputField
-                      label="Account Balance"
-                      type="number"
-                      step="0.01"
-                      value={account.accountBalance}
-                      onChange={(value) => updateInvestmentAccount('bankA', index, 'accountBalance', parseFloat(value) || 0)}
-                    />
-                    <SelectField
-                      label="Account Type"
-                      value={account.investmentAccountType}
-                      onChange={(value) => updateInvestmentAccount('bankA', index, 'investmentAccountType', value)}
-                      options={[
-                        { value: 'IRA', label: 'IRA' },
-                        { value: 'Roth IRA', label: 'Roth IRA' },
-                        { value: '401K', label: '401K' },
-                        { value: 'Cash', label: 'Cash' },
-                        { value: 'Brokerage', label: 'Brokerage' }
-                      ]}
-                    />
-                    <SelectField
-                      label="Investment Type"
-                      value={account.investmentType}
-                      onChange={(value) => updateInvestmentAccount('bankA', index, 'investmentType', value)}
-                      options={[
-                        { value: 'Stocks', label: 'Stocks' },
-                        { value: 'Bonds', label: 'Bonds' },
-                        { value: 'Mixed', label: 'Mixed' },
-                        { value: 'Money Market', label: 'Money Market' },
-                        { value: 'Mutual Funds', label: 'Mutual Funds' }
-                      ]}
-                    />
-                    <SelectField
-                      label="Ownership"
-                      value={account.ownership}
-                      onChange={(value) => updateInvestmentAccount('bankA', index, 'ownership', value)}
-                      options={[
-                        { value: 'Individual', label: 'Individual' },
-                        { value: 'Joint Tenancy', label: 'Joint Tenancy' },
-                        { value: 'Trust', label: 'Trust' }
-                      ]}
-                    />
-                    <TextAreaField
-                      label="Remarks"
-                      value={account.remarks}
-                      onChange={(value) => updateInvestmentAccount('bankA', index, 'remarks', value)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Bank B Accounts */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-green-600">Bank B Accounts</h4>
-                {!isReadOnly && (
-                  <button
-                    type="button"
-                    onClick={() => addInvestmentAccount('bankB')}
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-700 h-8 px-3"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Account
-                  </button>
-                )}
-              </div>
-              {(retirement.investmentAccounts?.bankB || []).map((account, index) => (
-                <div key={index} className="border rounded-lg p-3 relative">
-                  {!isReadOnly && (
-                    <button
-                      type="button"
-                      onClick={() => removeInvestmentAccount('bankB', index)}
-                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                  <div className="grid grid-cols-1 gap-3">
-                    <InputField
-                      label="Account ID"
-                      value={account.accountId}
-                      onChange={(value) => updateInvestmentAccount('bankB', index, 'accountId', value)}
-                    />
-                    <InputField
-                      label="Account Name"
-                      value={account.accountName}
-                      onChange={(value) => updateInvestmentAccount('bankB', index, 'accountName', value)}
-                    />
-                    <InputField
-                      label="Investment Firm"
-                      value={account.investmentFirm}
-                      onChange={(value) => updateInvestmentAccount('bankB', index, 'investmentFirm', value)}
-                    />
-                    <InputField
-                      label="Account Balance"
-                      type="number"
-                      step="0.01"
-                      value={account.accountBalance}
-                      onChange={(value) => updateInvestmentAccount('bankB', index, 'accountBalance', parseFloat(value) || 0)}
-                    />
-                    <SelectField
-                      label="Account Type"
-                      value={account.investmentAccountType}
-                      onChange={(value) => updateInvestmentAccount('bankB', index, 'investmentAccountType', value)}
-                      options={[
-                        { value: 'IRA', label: 'IRA' },
-                        { value: 'Roth IRA', label: 'Roth IRA' },
-                        { value: '401K', label: '401K' },
-                        { value: 'Cash', label: 'Cash' },
-                        { value: 'Brokerage', label: 'Brokerage' }
-                      ]}
-                    />
-                    <SelectField
-                      label="Investment Type"
-                      value={account.investmentType}
-                      onChange={(value) => updateInvestmentAccount('bankB', index, 'investmentType', value)}
-                      options={[
-                        { value: 'Stocks', label: 'Stocks' },
-                        { value: 'Bonds', label: 'Bonds' },
-                        { value: 'Mixed', label: 'Mixed' },
-                        { value: 'Money Market', label: 'Money Market' },
-                        { value: 'Mutual Funds', label: 'Mutual Funds' }
-                      ]}
-                    />
-                    <SelectField
-                      label="Ownership"
-                      value={account.ownership}
-                      onChange={(value) => updateInvestmentAccount('bankB', index, 'ownership', value)}
-                      options={[
-                        { value: 'Individual', label: 'Individual' },
-                        { value: 'Joint Tenancy', label: 'Joint Tenancy' },
-                        { value: 'Trust', label: 'Trust' }
-                      ]}
-                    />
-                    <TextAreaField
-                      label="Remarks"
-                      value={account.remarks}
-                      onChange={(value) => updateInvestmentAccount('bankB', index, 'remarks', value)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* Investment Accounts Section */}
+      <div className="bg-white border rounded-lg">
+        <div className="p-4 border-b">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Investment Accounts</h3>
+            {!isReadOnly && (
+              <button
+                type="button"
+                onClick={addBank}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4" />
+                Add Bank
+              </button>
+            )}
           </div>
         </div>
+
+        {(retirement.banks || []).map((bank, bankIndex) => (
+          <div key={bank.id} className="p-4 border-b">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-medium text-blue-700">{bank.name}</h4>
+              <div className="flex gap-2">
+                {!isReadOnly && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => addAccount(bankIndex)}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add Account
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeBank(bankIndex)}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Remove Bank
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Accounts Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full border border-gray-300">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border border-gray-300 p-2 text-left text-xs font-medium">Account ID</th>
+                    <th className="border border-gray-300 p-2 text-left text-xs font-medium">Name of Account</th>
+                    <th className="border border-gray-300 p-2 text-left text-xs font-medium">Investment Firm</th>
+                    <th className="border border-gray-300 p-2 text-left text-xs font-medium">Account Balance</th>
+                    <th className="border border-gray-300 p-2 text-left text-xs font-medium">Type of Investment Account</th>
+                    <th className="border border-gray-300 p-2 text-left text-xs font-medium">Investment Type</th>
+                    <th className="border border-gray-300 p-2 text-left text-xs font-medium">Ownership</th>
+                    <th className="border border-gray-300 p-2 text-left text-xs font-medium">Remarks</th>
+                    <th className="border border-gray-300 p-2 text-left text-xs font-medium">Actions</th>
+                    <th className="border border-gray-300 p-2 text-left text-xs font-medium">Remove</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(bank.accounts || []).map((account, accountIndex) => (
+                    <tr key={account.id}>
+                      <td className="border border-gray-300 p-1">
+                        <InputField
+                          value={account.accountId}
+                          onChange={(value) => updateAccount(bankIndex, accountIndex, 'accountId', value)}
+                          readOnly label={undefined}                        />
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        <InputField
+                          value={account.nameOfAccount}
+                          onChange={(value) => updateAccount(bankIndex, accountIndex, 'nameOfAccount', value)} label={undefined}                        />
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        <InputField
+                          value={account.investmentFirm}
+                          onChange={(value) => updateAccount(bankIndex, accountIndex, 'investmentFirm', value)} label={undefined}                        />
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        <CurrencyField
+                          value={account.accountBalance}
+                          onChange={(value) => updateAccount(bankIndex, accountIndex, 'accountBalance', value)} label={undefined}                        />
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        <SelectField
+                          value={account.typeOfInvestmentAccount}
+                          onChange={(value) => updateAccount(bankIndex, accountIndex, 'typeOfInvestmentAccount', value)}
+                          options={typeOfInvestmentAccountOptions} label={undefined}                        />
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        <SelectField
+                          value={account.investmentType}
+                          onChange={(value) => updateAccount(bankIndex, accountIndex, 'investmentType', value)}
+                          options={investmentTypeOptions} label={undefined}                        />
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        <SelectField
+                          value={account.ownership}
+                          onChange={(value) => updateAccount(bankIndex, accountIndex, 'ownership', value)}
+                          options={ownershipOptions} label={undefined}                        />
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        <InputField
+                          value={account.remarks}
+                          onChange={(value) => updateAccount(bankIndex, accountIndex, 'remarks', value)} label={undefined}                        />
+                      </td>
+                      <td className="border border-gray-300 p-1">
+                        <InputField
+                          value={account.actions || ''}
+                          onChange={(value) => updateAccount(bankIndex, accountIndex, 'actions', value)}
+                          label={undefined}
+                          readOnly={isReadOnly}
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-1 text-center">
+                        {!isReadOnly && (
+                          <button
+                            type="button"
+                            onClick={() => removeAccount(bankIndex, accountIndex)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Pension Information */}
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div className="flex flex-col space-y-1.5 p-6">
+      <div className="bg-white border rounded-lg">
+        <div className="p-4 border-b">
           <h3 className="text-lg font-semibold">Pension Information</h3>
         </div>
-        <div className="p-6 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
+        <div className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CurrencyField
               label="Pension Amount"
-              type="number"
-              step="0.01"
-              value={retirement.pensionInformation?.pensionAmount}
-              onChange={(value) => updateRetirement('pensionInformation.pensionAmount', parseFloat(value) || 0)}
+              value={retirement.pensionInfo?.pensionAmount}
+              onChange={(value) => updateRetirement('pensionInfo.pensionAmount', value)}
             />
-            <InputField
+            <CurrencyField
               label="Total Investment Value"
-              type="number"
-              step="0.01"
-              value={retirement.pensionInformation?.totalInvestmentValue}
-              onChange={(value) => updateRetirement('pensionInformation.totalInvestmentValue', parseFloat(value) || 0)}
+              value={retirement.pensionInfo?.totalInvestmentValue}
+              onChange={(value) => updateRetirement('pensionInfo.totalInvestmentValue', value)}
             />
-            <InputField
+            <CurrencyField
               label="Total Qualified Accounts"
-              type="number"
-              step="0.01"
-              value={retirement.pensionInformation?.totalQualifiedAccounts}
-              onChange={(value) => updateRetirement('pensionInformation.totalQualifiedAccounts', parseFloat(value) || 0)}
+              value={retirement.pensionInfo?.totalQualifiedAccounts}
+              onChange={(value) => updateRetirement('pensionInfo.totalQualifiedAccounts', value)}
             />
-            <InputField
+            <CurrencyField
               label="Total Non-Qualified Accounts"
-              type="number"
-              step="0.01"
-              value={retirement.pensionInformation?.totalNonQualifiedAccounts}
-              onChange={(value) => updateRetirement('pensionInformation.totalNonQualifiedAccounts', parseFloat(value) || 0)}
+              value={retirement.pensionInfo?.totalNonQualifiedAccounts}
+              onChange={(value) => updateRetirement('pensionInfo.totalNonQualifiedAccounts', value)}
             />
             <TextAreaField
               label="Pension Info"
-              value={retirement.pensionInformation?.pensionInfo}
-              onChange={(value) => updateRetirement('pensionInformation.pensionInfo', value)}
-              className="md:col-span-2"
+              value={retirement.pensionInfo?.pensionInfo}
+              onChange={(value) => updateRetirement('pensionInfo.pensionInfo', value)}
             />
             <TextAreaField
               label="Remarks"
-              value={retirement.pensionInformation?.remarks}
-              onChange={(value) => updateRetirement('pensionInformation.remarks', value)}
-              className="md:col-span-2"
+              value={retirement.pensionInfo?.remarks}
+              onChange={(value) => updateRetirement('pensionInfo.remarks', value)}
             />
           </div>
         </div>
       </div>
 
       {/* Additional Income Sources */}
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div className="flex flex-col space-y-1.5 p-6">
+      <div className="bg-white border rounded-lg">
+        <div className="p-4 border-b">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Additional Income Sources</h3>
             {!isReadOnly && (
               <button
                 type="button"
                 onClick={addIncomeSource}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-9 px-3"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
               >
                 <Plus className="w-4 h-4" />
                 Add Income Source
@@ -665,303 +597,336 @@ const RetirementSection = ({ formData, setFormData, isReadOnly }) => {
             )}
           </div>
         </div>
-        <div className="p-6 pt-0">
-          {(retirement.additionalIncomeSources || []).map((source, index) => (
-            <div key={index} className="border rounded-lg p-4 mb-4 relative">
-              {!isReadOnly && (
-                <button
-                  type="button"
-                  onClick={() => removeIncomeSource(index)}
-                  className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <InputField
-                  label="Income Source"
-                  value={source.incomeSource}
-                  onChange={(value) => updateIncomeSource(index, 'incomeSource', value)}
-                />
-                <InputField
-                  label="Amount"
-                  type="number"
-                  step="0.01"
-                  value={source.amount}
-                  onChange={(value) => updateIncomeSource(index, 'amount', parseFloat(value) || 0)}
-                />
-                <InputField
-                  label="Start Age"
-                  type="number"
-                  value={source.startAge}
-                  onChange={(value) => updateIncomeSource(index, 'startAge', parseInt(value) || 0)}
-                />
-                <InputField
-                  label="End Age"
-                  type="number"
-                  value={source.endAge}
-                  onChange={(value) => updateIncomeSource(index, 'endAge', parseInt(value) || 0)}
-                />
-                <CheckboxField
-                  label="Taxable"
-                  checked={source.taxable}
-                  onChange={(value) => updateIncomeSource(index, 'taxable', value)}
-                />
-                <CheckboxField
-                  label="COLA Adjusted"
-                  checked={source.colaAdjusted}
-                  onChange={(value) => updateIncomeSource(index, 'colaAdjusted', value)}
-                />
-              </div>
-            </div>
-          ))}
+        
+        <div className="overflow-x-auto">
+          <table className="w-full border border-gray-300">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border border-gray-300 p-2 text-left text-xs font-medium">Income Source</th>
+                <th className="border border-gray-300 p-2 text-left text-xs font-medium">Amount</th>
+                <th className="border border-gray-300 p-2 text-left text-xs font-medium">Taxable?</th>
+                <th className="border border-gray-300 p-2 text-left text-xs font-medium">COLA Adjusted?</th>
+                <th className="border border-gray-300 p-2 text-left text-xs font-medium">Start Age</th>
+                <th className="border border-gray-300 p-2 text-left text-xs font-medium">End Age</th>
+                <th className="border border-gray-300 p-2 text-left text-xs font-medium">Actions</th>
+                {!isReadOnly && <th className="border border-gray-300 p-2 text-left text-xs font-medium">Remove</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {(retirement.additionalIncomeSources || []).map((source, index) => (
+                <tr key={source.id || index}>
+                  <td className="border border-gray-300 p-1">
+                    <InputField
+                      value={source.incomeSource}
+                      onChange={(value) => updateIncomeSource(index, 'incomeSource', value)} label={undefined}                    />
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <CurrencyField
+                      value={source.amount}
+                      onChange={(value) => updateIncomeSource(index, 'amount', value)} label={undefined}                    />
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <SelectField
+                      value={source.taxable}
+                      onChange={(value) => updateIncomeSource(index, 'taxable', value)}
+                      options={[
+                        { value: 'Yes', label: 'Yes' },
+                        { value: 'No', label: 'No' }
+                      ]} label={undefined}                    />
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <SelectField
+                      value={source.colaAdjusted}
+                      onChange={(value) => updateIncomeSource(index, 'colaAdjusted', value)}
+                      options={[
+                        { value: 'Yes', label: 'Yes' },
+                        { value: 'No', label: 'No' }
+                      ]} label={undefined}                    />
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <InputField
+                      type="number"
+                      value={source.startAge}
+                      onChange={(value) => updateIncomeSource(index, 'startAge', parseInt(value) || '')}
+                      placeholder="18-100" label={undefined}                    />
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <InputField
+                      type="number"
+                      value={source.endAge}
+                      onChange={(value) => updateIncomeSource(index, 'endAge', parseInt(value) || '')}
+                      placeholder="> Start Age" label={undefined}                    />
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <InputField
+                      value={source.actions}
+                      onChange={(value) => updateIncomeSource(index, 'actions', value)} label={undefined}                    />
+                  </td>
+                  {!isReadOnly && (
+                    <td className="border border-gray-300 p-1 text-center">
+                      <button
+                        type="button"
+                        onClick={() => removeIncomeSource(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Process Milestones */}
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div className="flex flex-col space-y-1.5 p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Process Milestones</h3>
-            {!isReadOnly && (
-              <button
-                type="button"
-                onClick={addProcessMilestone}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-9 px-3"
-              >
-                <Plus className="w-4 h-4" />
-                Add Account Milestone
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="p-6 pt-0">
-          {(retirement.processMilestones || []).map((milestone, index) => (
-            <div key={index} className="border rounded-lg p-4 mb-4">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-medium">Account: {milestone.accountName || milestone.accountId || 'New Account'}</h4>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => toggleMilestoneExpansion(index)}
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
-                  >
-                    {expandedMilestones[index] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    {expandedMilestones[index] ? 'Collapse' : 'Expand'} Milestones
-                  </button>
-                  {!isReadOnly && (
-                    <button
-                      type="button"
-                      onClick={() => removeProcessMilestone(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
+      {/* Process Milestones for each account */}
+      {(retirement.banks || []).map((bank, bankIndex) => 
+        bank.accounts?.map((account, accountIndex) => (
+          <div key={`${bank.id}-${account.id}`} className="bg-white border rounded-lg">
+            <div className="p-4 border-b">
+              <h3 className="text-lg font-semibold">Process Milestones - {bank.name} - Account {account.accountId}</h3>
+            </div>
+            <div className="p-4">
+              {/* Implementation Process */}
+              <div className="mb-6">
+                <h4 className="text-md font-medium mb-4 text-blue-600">Implementation Process</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <InputField
+                      label="Implementation Call"
+                      type="date"
+                      value={account.processMilestones?.implementationCallDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'implementationCallDate', value)} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <InputField
+                      label="Financial Suitability Information Completed"
+                      type="date"
+                      value={account.processMilestones?.financialSuitabilityCompletedDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'financialSuitabilityCompletedDate', value)} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <InputField
+                      label="Application Sent to Client"
+                      type="date"
+                      value={account.processMilestones?.applicationSentToClientDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'applicationSentToClientDate', value)} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <InputField
+                      label="Suitability Approved by Athene"
+                      type="date"
+                      value={account.processMilestones?.suitabilityApprovedDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'suitabilityApprovedDate', value)} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <InputField
+                      label="Suitability Approved Email Sent to Client"
+                      type="date"
+                      value={account.processMilestones?.suitabilityEmailSentDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'suitabilityEmailSentDate', value)} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <InputField
+                      label="Transfer Forms Sent to Client"
+                      type="date"
+                      value={account.processMilestones?.transferFormsSentDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'transferFormsSentDate', value)} />
+                  </div>
                 </div>
               </div>
-              
-              {/* Account Information */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <InputField
-                  label="Account ID"
-                  value={milestone.accountId}
-                  onChange={(value) => updateProcessMilestone(index, 'accountId', value)}
-                />
-                <InputField
-                  label="Account Name"
-                  value={milestone.accountName}
-                  onChange={(value) => updateProcessMilestone(index, 'accountName', value)}
-                />
-                <InputField
-                  label="Investment Firm"
-                  value={milestone.investmentFirm}
-                  onChange={(value) => updateProcessMilestone(index, 'investmentFirm', value)}
-                />
-                <InputField
-                  label="Account Balance"
-                  type="number"
-                  step="0.01"
-                  value={milestone.accountBalance}
-                  onChange={(value) => updateProcessMilestone(index, 'accountBalance', parseFloat(value) || 0)}
-                />
-                <SelectField
-                  label="Account Type"
-                  value={milestone.investmentAccountType}
-                  onChange={(value) => updateProcessMilestone(index, 'investmentAccountType', value)}
-                  options={[
-                    { value: 'IRA', label: 'IRA' },
-                    { value: 'Roth IRA', label: 'Roth IRA' },
-                    { value: '401K', label: '401K' },
-                    { value: 'Cash', label: 'Cash' }
-                  ]}
-                />
-                <SelectField
-                  label="Investment Type"
-                  value={milestone.investmentType}
-                  onChange={(value) => updateProcessMilestone(index, 'investmentType', value)}
-                  options={[
-                    { value: 'Stocks', label: 'Stocks' },
-                    { value: 'Bonds', label: 'Bonds' },
-                    { value: 'Mixed', label: 'Mixed' },
-                    { value: 'Money Market', label: 'Money Market' }
-                  ]}
-                />
-                <SelectField
-                  label="Ownership"
-                  value={milestone.ownership}
-                  onChange={(value) => updateProcessMilestone(index, 'ownership', value)}
-                  options={[
-                    { value: 'Individual', label: 'Individual' },
-                    { value: 'Joint Tenancy', label: 'Joint Tenancy' },
-                    { value: 'Trust', label: 'Trust' }
-                  ]}
-                />
-                <TextAreaField
-                  label="Remarks"
-                  value={milestone.remarks}
-                  onChange={(value) => updateProcessMilestone(index, 'remarks', value)}
-                />
+
+              {/* Transfer Process */}
+              <div className="mb-6">
+                <h4 className="text-md font-medium mb-4 text-green-600">Transfer Process</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InputField
+                    label="Medallion Signature Obtained"
+                    type="date"
+                    value={account.processMilestones?.medallionSignatureObtained}
+                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'medallionSignatureObtained', value)}
+                  />
+                  
+                  <InputField
+                    label="Wet-signed/Medallion Signature Forms Mailed"
+                    type="date"
+                    value={account.processMilestones?.wetSignedFormsMailed}
+                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsMailed', value)}
+                  />
+                  
+                  <InputField
+                    label="Wet-signed/Medallion Signature Forms Received"
+                    type="date"
+                    value={account.processMilestones?.wetSignedFormsReceived}
+                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsReceived', value)}
+                  />
+                  
+                  <InputField
+                    label="Wet-signed/Medallion Signature Forms Sent to Athene"
+                    type="date"
+                    value={account.processMilestones?.wetSignedFormsSentToAthene}
+                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsSentToAthene', value)}
+                  />
+                  
+                  <InputField
+                    label="Wet-signed/Medallion Signature Forms Faxed/Mailed to Current Provider"
+                    type="date"
+                    value={account.processMilestones?.wetSignedFormsFaxedToProvider}
+                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsFaxedToProvider', value)}
+                  />
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <CheckboxField
+                        label="Check Received by Client (N/A if checked)"
+                        checked={account.processMilestones?.checkReceivedNA}
+                        onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'checkReceivedNA', value)}
+                      />
+                    </div>
+                    <InputField
+                      type="date"
+                      value={account.processMilestones?.checkReceivedDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'checkReceivedDate', value)}
+                      readOnly={account.processMilestones?.checkReceivedNA} label={undefined}                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <CheckboxField
+                        label="3 Way Client Call w/current provider (N/A if checked)"
+                        checked={account.processMilestones?.threeWayCallNA}
+                        onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'threeWayCallNA', value)}
+                      />
+                    </div>
+                    <InputField
+                      type="date"
+                      value={account.processMilestones?.threeWayCallDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'threeWayCallDate', value)}
+                      readOnly={account.processMilestones?.threeWayCallNA} label={undefined}                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <CheckboxField
+                        label="1st TSP Call - initiate transfer (N/A if checked)"
+                        checked={account.processMilestones?.firstTspCallNA}
+                        onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'firstTspCallNA', value)}
+                      />
+                    </div>
+                    <InputField
+                      type="date"
+                      value={account.processMilestones?.firstTspCallDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'firstTspCallDate', value)}
+                      readOnly={account.processMilestones?.firstTspCallNA} label={undefined}                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <CheckboxField
+                        label="2nd TSP Call - complete transfer (N/A if checked)"
+                        checked={account.processMilestones?.secondTspCallNA}
+                        onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'secondTspCallNA', value)}
+                      />
+                    </div>
+                    <InputField
+                      type="date"
+                      value={account.processMilestones?.secondTspCallDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'secondTspCallDate', value)}
+                      readOnly={account.processMilestones?.secondTspCallNA} label={undefined}                    />
+                  </div>
+                  
+                  <InputField
+                    label="Account Liquidated"
+                    type="date"
+                    value={account.processMilestones?.accountLiquidated}
+                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'accountLiquidated', value)}
+                  />
+                  
+                  <InputField
+                    label="Funds Mailed to Client/Athene"
+                    type="date"
+                    value={account.processMilestones?.fundsMailedToAthene}
+                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'fundsMailedToAthene', value)}
+                  />
+                </div>
               </div>
 
-              {/* Milestones Checkboxes */}
-              {expandedMilestones[index] && (
-                <div className="border-t pt-4">
-                  <h5 className="font-medium mb-4">Process Milestones</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <CheckboxField
-                      label="Implementation Call"
-                      checked={milestone.milestones?.implementationCall}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'implementationCall', value)}
-                    />
-                    <CheckboxField
-                      label="Financial Suitability Completed"
-                      checked={milestone.milestones?.financialSuitabilityCompleted}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'financialSuitabilityCompleted', value)}
-                    />
-                    <CheckboxField
-                      label="Application Sent to Client"
-                      checked={milestone.milestones?.applicationSentToClient}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'applicationSentToClient', value)}
-                    />
-                    <CheckboxField
-                      label="Application Signed and Submitted"
-                      checked={milestone.milestones?.applicationSignedAndSubmitted}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'applicationSignedAndSubmitted', value)}
-                    />
-                    <CheckboxField
-                      label="Suitability Approved by Athene"
-                      checked={milestone.milestones?.suitabilityApprovedByAthene}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'suitabilityApprovedByAthene', value)}
-                    />
-                    <CheckboxField
-                      label="Suitability Email Sent"
-                      checked={milestone.milestones?.suitabilityEmailSent}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'suitabilityEmailSent', value)}
-                    />
-                    <CheckboxField
-                      label="Transfer Forms Sent"
-                      checked={milestone.milestones?.transferFormsSent}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'transferFormsSent', value)}
-                    />
-                    <CheckboxField
-                      label="Medallion Signature Obtained"
-                      checked={milestone.milestones?.medallionSignatureObtained}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'medallionSignatureObtained', value)}
-                    />
-                    <CheckboxField
-                      label="Wet Signature Mailed"
-                      checked={milestone.milestones?.wetSignatureMailed}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'wetSignatureMailed', value)}
-                    />
-                    <CheckboxField
-                      label="Wet Signature Received"
-                      checked={milestone.milestones?.wetSignatureReceived}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'wetSignatureReceived', value)}
-                    />
-                    <CheckboxField
-                      label="Wet Signature Sent to Athene"
-                      checked={milestone.milestones?.wetSignatureSentToAthene}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'wetSignatureSentToAthene', value)}
-                    />
-                    <CheckboxField
-                      label="Wet Signature Faxed to Provider"
-                      checked={milestone.milestones?.wetSignatureFaxedToProvider}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'wetSignatureFaxedToProvider', value)}
-                    />
-                    <CheckboxField
-                      label="Three Way Client Call"
-                      checked={milestone.milestones?.threeWayClientCall}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'threeWayClientCall', value)}
-                    />
-                    <CheckboxField
-                      label="TSP Call 1"
-                      checked={milestone.milestones?.tspCall1}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'tspCall1', value)}
-                    />
-                    <CheckboxField
-                      label="TSP Call 2"
-                      checked={milestone.milestones?.tspCall2}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'tspCall2', value)}
-                    />
-                    <CheckboxField
-                      label="Account Liquidated"
-                      checked={milestone.milestones?.accountLiquidated}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'accountLiquidated', value)}
-                    />
-                    <CheckboxField
-                      label="Funds Mailed to Client"
-                      checked={milestone.milestones?.fundsMailedToClient}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'fundsMailedToClient', value)}
-                    />
-                    <CheckboxField
-                      label="Check Received"
-                      checked={milestone.milestones?.checkReceived}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'checkReceived', value)}
-                    />
+              {/* Final Process Steps */}
+              <div className="mb-6">
+                <h4 className="text-md font-medium mb-4 text-purple-600">Final Process Steps</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <CheckboxField
                       label="Funds Received by Athene"
-                      checked={milestone.milestones?.fundsReceivedByAthene}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'fundsReceivedByAthene', value)}
+                      checked={account.processMilestones?.fundsReceivedByAthene}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'fundsReceivedByAthene', value)}
                     />
+                    <InputField
+                      type="date"
+                      value={account.processMilestones?.fundsReceivedByAtheneDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'fundsReceivedByAtheneDate', value)} label={undefined}                    />
+                  </div>
+                  
+                  <div className="space-y-2">
                     <CheckboxField
                       label="Contract Issued"
-                      checked={milestone.milestones?.contractIssued}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'contractIssued', value)}
+                      checked={account.processMilestones?.contractIssued}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'contractIssued', value)}
                     />
-                    <CheckboxField
-                      label="Policy Acknowledged"
-                      checked={milestone.milestones?.policyAcknowledged}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'policyAcknowledged', value)}
-                    />
-                    <CheckboxField
-                      label="Athene Portal Setup"
-                      checked={milestone.milestones?.athenePortalSetup}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'athenePortalSetup', value)}
-                    />
+                    <InputField
+                      type="date"
+                      value={account.processMilestones?.contractIssuedDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'contractIssuedDate', value)} label={undefined}                    />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <InputField
-                      label="Expected Funds"
-                      type="number"
-                      step="0.01"
-                      value={milestone.milestones?.expectedFunds}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'expectedFunds', parseFloat(value) || 0)}
+                  
+                  <CurrencyField
+                    label="Expected Funds"
+                    value={account.processMilestones?.expectedFunds}
+                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'expectedFunds', value)}
+                  />
+                  
+                  <CurrencyField
+                    label="Actual Received Funds"
+                    value={account.processMilestones?.actualReceivedFunds}
+                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'actualReceivedFunds', value)}
+                  />
+                  
+                  <div className="space-y-2">
+                    <CheckboxField
+                      label="Policy Delivery Acknowledgement"
+                      checked={account.processMilestones?.policyDeliveryAck}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'policyDeliveryAck', value)}
                     />
                     <InputField
-                      label="Actual Received Funds"
-                      type="number"
-                      step="0.01"
-                      value={milestone.milestones?.actualReceivedFunds}
-                      onChange={(value) => updateProcessMilestoneMilestone(index, 'actualReceivedFunds', parseFloat(value) || 0)}
+                      type="date"
+                      value={account.processMilestones?.policyDeliveryAckDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'policyDeliveryAckDate', value)} label={undefined}                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <CheckboxField
+                      label="Athene Account Portal Set Up and Contract Reviewed"
+                      checked={account.processMilestones?.athenePortalSetup}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'athenePortalSetup', value)}
                     />
+                    
+                    <InputField
+                      type="date"
+                      value={account.processMilestones?.athenePortalSetupDate}
+                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'athenePortalSetupDate', value)} label={undefined}                    />
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        ))
+      )}
     </div>
   );
 };

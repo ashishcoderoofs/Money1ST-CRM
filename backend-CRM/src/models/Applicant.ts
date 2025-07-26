@@ -5,11 +5,11 @@ export type ApplicantSuffix = 'Jr.' | 'Sr.' | 'II' | 'III' | 'IV' | 'V' | 'MD' |
 export type MaritalStatus = 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
 export type Race = 'American Indian or Alaska Native' | 'Asian' | 'Black or African American' | 'Hispanic or Latino' | 'Native Hawaiian or Other Pacific Islander' | 'White' | 'Two or More Races' | 'Other';
 export type EmploymentStatus = 'Employed' | 'Self-Employed' | 'Unemployed' | 'Retired' | 'Student' | 'Part time' | 'Contract';
-export type ClientStatus = 'Active' | 'Pending' | 'Inactive';
-
-
 
 export interface IApplicant extends Document {
+  _id: Types.ObjectId;
+  
+  // Name Information
   name_information: {
     title?: ApplicantTitle;
     first_name: string;
@@ -19,7 +19,9 @@ export interface IApplicant extends Document {
     maiden_name?: string;
     is_consultant?: boolean;
   };
-  current_address?: {
+  
+  // Contact Information
+  current_address: {
     address?: string;
     city?: string;
     state?: string;
@@ -35,6 +37,8 @@ export interface IApplicant extends Document {
     how_long_at_current_address?: string;
     fax?: string;
   };
+  
+  // Previous Address
   previous_address?: {
     address?: string;
     city?: string;
@@ -44,6 +48,8 @@ export interface IApplicant extends Document {
     years?: string;
     duration?: string;
   };
+  
+  // Employment Information
   current_employment?: {
     status?: EmploymentStatus;
     is_business_owner?: string;
@@ -61,6 +67,8 @@ export interface IApplicant extends Document {
     supervisor_phone?: string;
     source?: string;
   };
+  
+  // Previous Employment
   previous_employment?: {
     employer_name?: string;
     employer_address?: string;
@@ -71,6 +79,8 @@ export interface IApplicant extends Document {
     to_date?: string;
     occupation?: string;
   };
+  
+  // Demographics Information
   demographics_information: {
     birth_place?: string;
     dob: Date;
@@ -81,6 +91,8 @@ export interface IApplicant extends Document {
     spouse_occupation?: string;
     number_of_dependents?: string;
   };
+  
+  // Household Members
   household_members: Array<{
     first_name: string;
     middle_initial?: string;
@@ -92,49 +104,57 @@ export interface IApplicant extends Document {
     marital_status?: string;
     ssn?: string;
   }>;
-  client_id: string;
-  entry_date: Date;
-  payoff_amount: number;
+  
+  // Credit Scores
+  credit_scores?: {
+    equifax?: string;
+    experian?: string;
+    transunion?: string;
+  };
+  
+  // Metadata
   notes?: string;
-  created_at?: Date;
+  created_at: Date;
   createdAt: Date;
   updatedAt: Date;
-  liabilities?: Types.ObjectId[]; // Add this line to the interface
 }
 
-
-
+// Sub-schemas
 const NameInformationSchema = new Schema({
   title: { type: String, enum: ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'] },
   first_name: { type: String, required: true },
-  middle_initial: { type: String },
+  middle_initial: { type: String, maxlength: 1 },
   last_name: { type: String, required: true },
   suffix: { type: String, enum: ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V', 'MD', 'PhD'] },
   maiden_name: { type: String },
-  is_consultant: { type: Boolean }
+  is_consultant: { type: Boolean, default: false }
 }, { _id: false });
 
-const DemographicsInformationSchema = new Schema({
-  birth_place: { type: String },
-  dob: { type: Date },
-  marital_status: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] },
-  race: { type: String, enum: ['American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'Native Hawaiian or Other Pacific Islander', 'White', 'Two or More Races', 'Other'] },
-  anniversary: { type: String },
-  spouse_name: { type: String },
-  spouse_occupation: { type: String },
-  number_of_dependents: { type: String }
+const CurrentAddressSchema = new Schema({
+  address: { type: String, maxlength: 200 },
+  city: { type: String, maxlength: 100 },
+  state: { type: String, maxlength: 2 },
+  zip_code: { type: String, maxlength: 10 },
+  county: { type: String, maxlength: 100 },
+  home_phone: { type: String },
+  work_phone: { type: String },
+  cell_phone: { type: String },
+  other_phone: { type: String },
+  email: { type: String, lowercase: true },
+  months: { type: String },
+  years: { type: String },
+  how_long_at_current_address: { type: String },
+  fax: { type: String }
 }, { _id: false });
 
-const HouseholdMemberSchema = new Schema({
-  first_name: { type: String },
-  middle_initial: { type: String },
-  last_name: { type: String },
-  relationship: { type: String },
-  dob: { type: String },
-  age: { type: String },
-  sex: { type: String },
-  marital_status: { type: String },
-  ssn: { type: String }
+const PreviousAddressSchema = new Schema({
+  address: { type: String, maxlength: 200 },
+  city: { type: String, maxlength: 100 },
+  state: { type: String, maxlength: 2 },
+  zip_code: { type: String, maxlength: 10 },
+  months: { type: String },
+  years: { type: String },
+  duration: { type: String }
 }, { _id: false });
 
 const CurrentEmploymentSchema = new Schema({
@@ -143,8 +163,8 @@ const CurrentEmploymentSchema = new Schema({
   employer_name: { type: String },
   employer_address: { type: String },
   employer_city: { type: String },
-  employer_state: { type: String },
-  employer_zip_code: { type: String },
+  employer_state: { type: String, maxlength: 2 },
+  employer_zip_code: { type: String, maxlength: 10 },
   occupation: { type: String },
   monthly_salary: { type: String },
   additional_income: { type: String },
@@ -155,54 +175,58 @@ const CurrentEmploymentSchema = new Schema({
   source: { type: String }
 }, { _id: false });
 
+const PreviousEmploymentSchema = new Schema({
+  employer_name: { type: String },
+  employer_address: { type: String },
+  employer_city: { type: String },
+  employer_state: { type: String, maxlength: 2 },
+  employer_zip_code: { type: String, maxlength: 10 },
+  from_date: { type: String },
+  to_date: { type: String },
+  occupation: { type: String }
+}, { _id: false });
+
+const DemographicsInformationSchema = new Schema({
+  birth_place: { type: String },
+  dob: { type: Date, required: true },
+  marital_status: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'] },
+  race: { type: String, enum: ['American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'Native Hawaiian or Other Pacific Islander', 'White', 'Two or More Races', 'Other'] },
+  anniversary: { type: String },
+  spouse_name: { type: String },
+  spouse_occupation: { type: String },
+  number_of_dependents: { type: String }
+}, { _id: false });
+
+const HouseholdMemberSchema = new Schema({
+  first_name: { type: String, required: true },
+  middle_initial: { type: String, maxlength: 1 },
+  last_name: { type: String, required: true },
+  relationship: { type: String, required: true },
+  dob: { type: String },
+  age: { type: String },
+  sex: { type: String },
+  marital_status: { type: String },
+  ssn: { type: String }
+}, { _id: false });
+
+const CreditScoresSchema = new Schema({
+  equifax: { type: String },
+  experian: { type: String },
+  transunion: { type: String }
+}, { _id: false });
+
+// Main Applicant Schema
 const ApplicantSchema = new Schema<IApplicant>({
-  name_information: NameInformationSchema,
-  current_address: {
-    address: { type: String },
-    city: { type: String },
-    state: { type: String },
-    zip_code: { type: String },
-    county: { type: String },
-    home_phone: { type: String },
-    work_phone: { type: String },
-    cell_phone: { type: String },
-    other_phone: { type: String },
-    email: { type: String },
-    months: { type: String },
-    years: { type: String },
-    how_long_at_current_address: { type: String },
-    fax: { type: String }
-  },
-  previous_address: {
-    address: { type: String },
-    city: { type: String },
-    state: { type: String },
-    zip_code: { type: String },
-    months: { type: String },
-    years: { type: String },
-    duration: { type: String }
-  },
-  current_employment: CurrentEmploymentSchema,
-  previous_employment: {
-    employer_name: { type: String },
-    employer_address: { type: String },
-    employer_city: { type: String },
-    employer_state: { type: String },
-    employer_zip_code: { type: String },
-    from_date: { type: String },
-    to_date: { type: String },
-    occupation: { type: String }
-  },
-  demographics_information: DemographicsInformationSchema,
-  household_members: [HouseholdMemberSchema],
-  client_id: { type: String, index: true },
-  entry_date: { type: Date, default: Date.now },
-  payoff_amount: { type: Number },
+  name_information: { type: NameInformationSchema, required: true },
+  current_address: { type: CurrentAddressSchema },
+  previous_address: { type: PreviousAddressSchema },
+  current_employment: { type: CurrentEmploymentSchema },
+  previous_employment: { type: PreviousEmploymentSchema },
+  demographics_information: { type: DemographicsInformationSchema, required: true },
+  household_members: [{ type: HouseholdMemberSchema }],
+  credit_scores: { type: CreditScoresSchema },
   notes: { type: String },
-  created_at: { type: Date, default: Date.now },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-  liabilities: [{ type: Schema.Types.ObjectId, ref: 'Liability' }], // Add this line to the schema
+  created_at: { type: Date, default: Date.now }
 }, { timestamps: true });
 
 export default model<IApplicant>('Applicant', ApplicantSchema);
