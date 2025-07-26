@@ -688,240 +688,384 @@ const RetirementSection = ({ formData, setFormData, isReadOnly }) => {
               <h3 className="text-lg font-semibold">Process Milestones - {bank.name} - Account {account.accountId}</h3>
             </div>
             <div className="p-4">
-              {/* Implementation Process */}
-              <div className="mb-6">
-                <h4 className="text-md font-medium mb-4 text-blue-600">Implementation Process</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <InputField
-                      label="Implementation Call"
-                      type="date"
-                      value={account.processMilestones?.implementationCallDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'implementationCallDate', value)} />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <InputField
-                      label="Financial Suitability Information Completed"
-                      type="date"
-                      value={account.processMilestones?.financialSuitabilityCompletedDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'financialSuitabilityCompletedDate', value)} />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <InputField
-                      label="Application Sent to Client"
-                      type="date"
-                      value={account.processMilestones?.applicationSentToClientDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'applicationSentToClientDate', value)} />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <InputField
-                      label="Suitability Approved by Athene"
-                      type="date"
-                      value={account.processMilestones?.suitabilityApprovedDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'suitabilityApprovedDate', value)} />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <InputField
-                      label="Suitability Approved Email Sent to Client"
-                      type="date"
-                      value={account.processMilestones?.suitabilityEmailSentDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'suitabilityEmailSentDate', value)} />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <InputField
-                      label="Transfer Forms Sent to Client"
-                      type="date"
-                      value={account.processMilestones?.transferFormsSentDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'transferFormsSentDate', value)} />
-                  </div>
-                </div>
-              </div>
+              {/* Process Milestones Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="border border-gray-300 px-3 py-2 text-left font-medium">Process Milestone</th>
+                      <th className="border border-gray-300 px-3 py-2 text-left font-medium">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Implementation Call */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Implementation Call</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.implementationCallDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'implementationCallDate', value)}
+                          readOnly={account.processMilestones?.implementationCallNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
 
-              {/* Transfer Process */}
-              <div className="mb-6">
-                <h4 className="text-md font-medium mb-4 text-green-600">Transfer Process</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InputField
-                    label="Medallion Signature Obtained"
-                    type="date"
-                    value={account.processMilestones?.medallionSignatureObtained}
-                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'medallionSignatureObtained', value)}
-                  />
-                  
-                  <InputField
-                    label="Wet-signed/Medallion Signature Forms Mailed"
-                    type="date"
-                    value={account.processMilestones?.wetSignedFormsMailed}
-                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsMailed', value)}
-                  />
-                  
-                  <InputField
-                    label="Wet-signed/Medallion Signature Forms Received"
-                    type="date"
-                    value={account.processMilestones?.wetSignedFormsReceived}
-                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsReceived', value)}
-                  />
-                  
-                  <InputField
-                    label="Wet-signed/Medallion Signature Forms Sent to Athene"
-                    type="date"
-                    value={account.processMilestones?.wetSignedFormsSentToAthene}
-                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsSentToAthene', value)}
-                  />
-                  
-                  <InputField
-                    label="Wet-signed/Medallion Signature Forms Faxed/Mailed to Current Provider"
-                    type="date"
-                    value={account.processMilestones?.wetSignedFormsFaxedToProvider}
-                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsFaxedToProvider', value)}
-                  />
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <CheckboxField
-                        label="Check Received by Client (N/A if checked)"
-                        checked={account.processMilestones?.checkReceivedNA}
-                        onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'checkReceivedNA', value)}
-                      />
-                    </div>
-                    <InputField
-                      type="date"
-                      value={account.processMilestones?.checkReceivedDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'checkReceivedDate', value)}
-                      readOnly={account.processMilestones?.checkReceivedNA} label={undefined}                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <CheckboxField
-                        label="3 Way Client Call w/current provider (N/A if checked)"
-                        checked={account.processMilestones?.threeWayCallNA}
-                        onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'threeWayCallNA', value)}
-                      />
-                    </div>
-                    <InputField
-                      type="date"
-                      value={account.processMilestones?.threeWayCallDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'threeWayCallDate', value)}
-                      readOnly={account.processMilestones?.threeWayCallNA} label={undefined}                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <CheckboxField
-                        label="1st TSP Call - initiate transfer (N/A if checked)"
-                        checked={account.processMilestones?.firstTspCallNA}
-                        onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'firstTspCallNA', value)}
-                      />
-                    </div>
-                    <InputField
-                      type="date"
-                      value={account.processMilestones?.firstTspCallDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'firstTspCallDate', value)}
-                      readOnly={account.processMilestones?.firstTspCallNA} label={undefined}                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <CheckboxField
-                        label="2nd TSP Call - complete transfer (N/A if checked)"
-                        checked={account.processMilestones?.secondTspCallNA}
-                        onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'secondTspCallNA', value)}
-                      />
-                    </div>
-                    <InputField
-                      type="date"
-                      value={account.processMilestones?.secondTspCallDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'secondTspCallDate', value)}
-                      readOnly={account.processMilestones?.secondTspCallNA} label={undefined}                    />
-                  </div>
-                  
-                  <InputField
-                    label="Account Liquidated"
-                    type="date"
-                    value={account.processMilestones?.accountLiquidated}
-                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'accountLiquidated', value)}
-                  />
-                  
-                  <InputField
-                    label="Funds Mailed to Client/Athene"
-                    type="date"
-                    value={account.processMilestones?.fundsMailedToAthene}
-                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'fundsMailedToAthene', value)}
-                  />
-                </div>
-              </div>
+                    {/* Financial Suitability Information Completed */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Financial Suitability Information Completed</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.financialSuitabilityCompletedDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'financialSuitabilityCompletedDate', value)}
+                          readOnly={account.processMilestones?.financialSuitabilityCompletedNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
 
-              {/* Final Process Steps */}
-              <div className="mb-6">
-                <h4 className="text-md font-medium mb-4 text-purple-600">Final Process Steps</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <CheckboxField
-                      label="Funds Received by Athene"
-                      checked={account.processMilestones?.fundsReceivedByAthene}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'fundsReceivedByAthene', value)}
-                    />
-                    <InputField
-                      type="date"
-                      value={account.processMilestones?.fundsReceivedByAtheneDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'fundsReceivedByAtheneDate', value)} label={undefined}                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <CheckboxField
-                      label="Contract Issued"
-                      checked={account.processMilestones?.contractIssued}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'contractIssued', value)}
-                    />
-                    <InputField
-                      type="date"
-                      value={account.processMilestones?.contractIssuedDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'contractIssuedDate', value)} label={undefined}                    />
-                  </div>
-                  
-                  <CurrencyField
-                    label="Expected Funds"
-                    value={account.processMilestones?.expectedFunds}
-                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'expectedFunds', value)}
-                  />
-                  
-                  <CurrencyField
-                    label="Actual Received Funds"
-                    value={account.processMilestones?.actualReceivedFunds}
-                    onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'actualReceivedFunds', value)}
-                  />
-                  
-                  <div className="space-y-2">
-                    <CheckboxField
-                      label="Policy Delivery Acknowledgement"
-                      checked={account.processMilestones?.policyDeliveryAck}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'policyDeliveryAck', value)}
-                    />
-                    <InputField
-                      type="date"
-                      value={account.processMilestones?.policyDeliveryAckDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'policyDeliveryAckDate', value)} label={undefined}                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <CheckboxField
-                      label="Athene Account Portal Set Up and Contract Reviewed"
-                      checked={account.processMilestones?.athenePortalSetup}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'athenePortalSetup', value)}
-                    />
-                    
-                    <InputField
-                      type="date"
-                      value={account.processMilestones?.athenePortalSetupDate}
-                      onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'athenePortalSetupDate', value)} label={undefined}                    />
-                  </div>
-                </div>
+                    {/* Application Sent to Client */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Application Sent to Client</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.applicationSentToClientDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'applicationSentToClientDate', value)}
+                          readOnly={account.processMilestones?.applicationSentToClientNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Application Signed by Client and Submitted to Athene */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Application Signed by Client and Submitted to Athene</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.applicationSignedAndSubmittedDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'applicationSignedAndSubmittedDate', value)}
+                          readOnly={account.processMilestones?.applicationSignedAndSubmittedNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Suitability Approved by Athene */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Suitability Approved by Athene</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.suitabilityApprovedDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'suitabilityApprovedDate', value)}
+                          readOnly={account.processMilestones?.suitabilityApprovedNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Suitability Approved Email Sent to Client (by Back Office) */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Suitability Approved Email Sent to Client (by Back Office)</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.suitabilityEmailSentDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'suitabilityEmailSentDate', value)}
+                          readOnly={account.processMilestones?.suitabilityEmailSentNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Transfer Forms Sent to Client (if applicable, by Back Office) */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Transfer Forms Sent to Client (if applicable, by Back Office)</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.transferFormsSentDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'transferFormsSentDate', value)}
+                          readOnly={account.processMilestones?.transferFormsSentNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Medallion Signature Obtained (by Client) */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Medallion Signature Obtained (by Client)</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.medallionSignatureObtained}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'medallionSignatureObtained', value)}
+                          readOnly={account.processMilestones?.medallionSignatureObtainedNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Wet-signed/Medallion Signature Forms Mailed (by Client to Back Office) */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Wet-signed/Medallion Signature Forms Mailed (by Client to Back Office)</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.wetSignedFormsMailed}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsMailed', value)}
+                          readOnly={account.processMilestones?.wetSignedFormsMailedNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Wet-signed/Medallion Signature Forms Received (by Back Office) */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Wet-signed/Medallion Signature Forms Received (by Back Office)</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.wetSignedFormsReceived}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsReceived', value)}
+                          readOnly={account.processMilestones?.wetSignedFormsReceivedNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Wet-signed/Medallion Signature Forms Sent to Athene (by Back Office) */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Wet-signed/Medallion Signature Forms Sent to Athene (by Back Office)</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.wetSignedFormsSentToAthene}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsSentToAthene', value)}
+                          readOnly={account.processMilestones?.wetSignedFormsSentToAtheneNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Wet-signed/Medallion Signature Forms Faxed/Mailed to Current Provider (by Athene) */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Wet-signed/Medallion Signature Forms Faxed/Mailed to Current Provider (by Athene)</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.wetSignedFormsFaxedToProvider}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'wetSignedFormsFaxedToProvider', value)}
+                          readOnly={account.processMilestones?.wetSignedFormsFaxedToProviderNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* 3 Way Client Call - WITH CHECKBOX */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <div className="flex items-center space-x-2">
+                          <CheckboxField
+                            label="3 Way Client Call w/current provider (Check if not applicable)"
+                            checked={account.processMilestones?.threeWayCallChecked }
+                            onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'threeWayCallChecked', value)}
+                          />
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.threeWayCallDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'threeWayCallDate', value)}
+                          readOnly={account.processMilestones?.threeWayCallChecked || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* 1st TSP Call - WITH CHECKBOX */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <div className="flex items-center space-x-2">
+                          <CheckboxField
+                            label="1st TSP Call - initiate transfer (Check if not applicable)"
+                            checked={account.processMilestones?.firstTspCallChecked}
+                            onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'firstTspCallChecked', value)}
+                          />
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          type="date"
+                          value={account.processMilestones?.firstTspCallDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'firstTspCallDate', value)}
+                          readOnly={account.processMilestones?.firstTspCallChecked || isReadOnly} label={undefined}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* 2nd TSP Call - WITH CHECKBOX */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <div className="flex items-center space-x-2">
+                          <CheckboxField
+                            label="2nd TSP Call (7 days later) - complete transfer (Check if not applicable)"
+                            checked={account.processMilestones?.secondTspCallChecked}
+                            onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'secondTspCallChecked', value)}
+                          />
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          type="date"
+                          value={account.processMilestones?.secondTspCallDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'secondTspCallDate', value)}
+                          readOnly={account.processMilestones?.secondTspCallChecked || isReadOnly} label={undefined}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Account Liquidated */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Account Liquidated</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.accountLiquidated}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'accountLiquidated', value)}
+                          readOnly={account.processMilestones?.accountLiquidatedNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Funds Mailed to Client/Athene */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Funds Mailed to Client/Athene</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.fundsMailedToAthene}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'fundsMailedToAthene', value)}
+                          readOnly={account.processMilestones?.fundsMailedToAtheneNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Check Received by Client - WITH CHECKBOX */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <div className="flex items-center space-x-2">
+                          <CheckboxField
+                            label="Check Received by Client (Check if not applicable)"
+                            checked={account.processMilestones?.checkReceivedNA}
+                            onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'checkReceivedNA', value)}
+                          />
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          type="date"
+                          value={account.processMilestones?.checkReceivedDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'checkReceivedDate', value)}
+                          readOnly={account.processMilestones?.checkReceivedNA || isReadOnly} label={undefined}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Funds Received by Athene */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Funds Received by Athene</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.fundsReceivedByAtheneDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'fundsReceivedByAtheneDate', value)}
+                          readOnly={account.processMilestones?.fundsReceivedByAtheneNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Contract Issued */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Contract Issued</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.contractIssuedDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'contractIssuedDate', value)}
+                          readOnly={account.processMilestones?.contractIssuedNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Expected Funds */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Expected Funds</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <div className="flex items-center">
+                          <span className="text-gray-600 mr-2">$</span>
+                          <CurrencyField
+                            label=""
+                            value={account.processMilestones?.expectedFunds}
+                            onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'expectedFunds', value)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Actual Received Funds */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Actual Received Funds</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <div className="flex items-center">
+                          <span className="text-gray-600 mr-2">$</span>
+                          <CurrencyField
+                            label=""
+                            value={account.processMilestones?.actualReceivedFunds}
+                            onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'actualReceivedFunds', value)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Policy Delivery Acknowledgement (by Client) */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Policy Delivery Acknowledgement (by Client)</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.policyDeliveryAckDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'policyDeliveryAckDate', value)}
+                          readOnly={account.processMilestones?.policyDeliveryAckNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Account Portal Set Up and Contract Reviewed w/Client (CRM) */}
+                    <tr>
+                      <td className="border border-gray-300 px-3 py-2">Account Portal Set Up and Contract Reviewed w/Client (CRM)</td>
+                      <td className="border border-gray-300 px-3 py-2">
+                        <InputField
+                          label=""
+                          type="date"
+                          value={account.processMilestones?.athenePortalSetupDate}
+                          onChange={(value) => updateProcessMilestone(bankIndex, accountIndex, 'athenePortalSetupDate', value)}
+                          readOnly={account.processMilestones?.athenePortalSetupNA || isReadOnly}
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

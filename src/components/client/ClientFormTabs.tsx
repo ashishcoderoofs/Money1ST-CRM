@@ -1986,8 +1986,8 @@ const ClientForm = ({
                 <button type="button" role="tab" aria-selected={activeTab === 'loan-status'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'loan-status' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('loan-status')}>Loan Status</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'driver'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'driver' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('driver')}>Driver</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'income-protection'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'income-protection' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('income-protection')}>Income Protection</button>
-                <button type="button" role="tab" aria-selected={activeTab === 'vehicle-coverage'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'vehicle-coverage' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('vehicle-coverage')}>Vehicle Coverage</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'retirement'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'retirement' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('retirement')}>Retirement</button>
+                <button type="button" role="tab" aria-selected={activeTab === 'vehicle-coverage'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'vehicle-coverage' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('vehicle-coverage')}>Vehicle Coverage</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'homeowners'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'homeowners' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('homeowners')}>Homeowners</button>
                 <button type="button" role="tab" aria-selected={activeTab === 'renters'} className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-xs px-2 py-1.5 flex-shrink-0 ${activeTab === 'renters' ? 'bg-background text-foreground shadow-sm' : ''}`} onClick={() => setActiveTab('renters')}>Renters</button>
               </div>
@@ -2150,15 +2150,15 @@ const ClientForm = ({
                       isReadOnly={isReadOnly}
                     />
                   )}
+                  {activeTab === 'retirement' && (
+                    <RetirementSection
+                      formData={formData}
+                      setFormData={setFormData}
+                      isReadOnly={isReadOnly}
+                    />
+                  )}
                   {activeTab === 'vehicle-coverage' && (
                   <VehicleCoverageSection
-                    formData={formData}
-                    setFormData={setFormData}
-                    isReadOnly={isReadOnly}
-                  />
-                )}
-                {activeTab === 'retirement' && (
-                  <RetirementSection
                     formData={formData}
                     setFormData={setFormData}
                     isReadOnly={isReadOnly}
